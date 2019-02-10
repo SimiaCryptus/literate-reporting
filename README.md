@@ -1,2 +1,2 @@
-# literate-reporting
-Reporting Toolkit for Literate Programming
+# java-utilities
+Miscellaneous Utilities and Function Library
