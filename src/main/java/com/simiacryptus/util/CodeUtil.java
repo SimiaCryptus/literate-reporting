@@ -372,7 +372,7 @@ public class CodeUtil {
       logger.addAppender(appender);
       return new LogInterception(counter){
         @Override
-        public void close() throws Exception {
+        public void close() {
           logger.detachAppender(appender);
           appender.stop();
         }

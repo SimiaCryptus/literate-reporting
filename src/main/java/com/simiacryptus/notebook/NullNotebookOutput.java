@@ -87,7 +87,7 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void write() throws IOException {
+  public void write() {
   }
 
   @javax.annotation.Nonnull
