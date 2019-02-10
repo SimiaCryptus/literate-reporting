@@ -82,7 +82,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   /**
    * The constant MAX_OUTPUT.
    */
-  public static int MAX_OUTPUT = 1024;
+  public static int MAX_OUTPUT = 1024*16;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
   @javax.annotation.Nonnull
