@@ -24,22 +24,21 @@
     <parent>
         <groupId>com.simiacryptus</groupId>
         <artifactId>java-parent</artifactId>
-        <version>1.6.0</version>
+        <version>1.6.1</version>
         <relativePath>../java-parent</relativePath>
     </parent>
 
     <artifactId>literate-reporting</artifactId>
     <description>Reporting Toolkit for Literate Programming</description>
-    <url>https://simiacryptus.github.io/${github.project}/${github.path}</url>
+    <url>https://simiacryptus.github.io/${github.project}/</url>
 
     <properties>
         <github.project>literate-reporting</github.project>
-        <github.path></github.path>
     </properties>
     <distributionManagement>
         <site>
             <id>github</id>
-            <url>https://simiacryptus.github.io/${github.project}/${github.path}</url>
+            <url>https://simiacryptus.github.io/${github.project}/</url>
         </site>
     </distributionManagement>
 
