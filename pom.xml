@@ -32,9 +32,8 @@
     <description>Reporting Toolkit for Literate Programming</description>
 
     <properties>
-        <github.project>utilities</github.project>
-        <github.path>java-util/</github.path>
-        <aws-java-sdk.version>1.11.24</aws-java-sdk.version>
+        <github.project>literate-reporting</github.project>
+        <github.path></github.path>
     </properties>
     <distributionManagement>
         <site>
