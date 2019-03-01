@@ -34,6 +34,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
+/***
+ * Class forked from https://github.com/NanoHttpd/nanohttpd
+ *
+ * TODO: Is this fork needed?
+ */
 public abstract class NanoHTTPD {
 
   public static final int SOCKET_READ_TIMEOUT = 5000;
