@@ -338,7 +338,7 @@ public class CodeUtil {
               String caption = String.format("Log at %s", date);
               String filename = String.format("%s_%s.log", loggerName, date);
               out = new PrintWriter(sublog.file(filename));
-              sublog.out("[%s](etc/%s)", caption, filename);
+              sublog.p("[%s](etc/%s)", caption, filename);
               sublog.write();
             } catch (Throwable e) {
               throw new RuntimeException(e);
