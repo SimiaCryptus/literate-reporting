@@ -35,7 +35,7 @@ public class ReportingUtil {
   /**
    * The constant AUTO_BROWSE.
    */
-  public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(false)));
+  public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(true)));
 
   /**
    * Browse.
