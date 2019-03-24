@@ -312,16 +312,10 @@ public class CodeUtil {
     if (classSourceInfo.containsKey("test/" + codePath)) return classSourceInfo.get("test/" + codePath) + "test/" + codePath;
     return codePath;
   }
-  public abstract static class LogInterception implements AutoCloseable {
-    public final AtomicLong counter;
 
-    public LogInterception(AtomicLong counter) {
-      this.counter = counter;
-    }
-  }
   public static LogInterception intercept(NotebookOutput log, String loggerName) {
     AtomicLong counter = new AtomicLong(0);
-    return log.subreport("log_" + loggerName, sublog->{
+    return log.subreport("log_" + loggerName, sublog -> {
       ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
       logger.setLevel(Level.ALL);
       logger.setAdditive(false);
@@ -329,6 +323,7 @@ public class CodeUtil {
         PrintWriter out;
         long remainingOut = 0;
         long killAt = 0;
+
         @Override
         protected synchronized void append(ILoggingEvent iLoggingEvent) {
           if (null == out) {
@@ -352,7 +347,7 @@ public class CodeUtil {
           int length = formattedMessage.length();
           remainingOut -= length;
           counter.addAndGet(length);
-          if(remainingOut <0 || killAt < System.currentTimeMillis()) {
+          if (remainingOut < 0 || killAt < System.currentTimeMillis()) {
             out.close();
             out = null;
           }
@@ -360,7 +355,7 @@ public class CodeUtil {
 
         @Override
         public void stop() {
-          if(null != out) {
+          if (null != out) {
             out.close();
             out = null;
           }
@@ -370,7 +365,7 @@ public class CodeUtil {
       appender.setName(UUID.randomUUID().toString());
       appender.start();
       logger.addAppender(appender);
-      return new LogInterception(counter){
+      return new LogInterception(counter) {
         @Override
         public void close() {
           logger.detachAppender(appender);
@@ -378,5 +373,13 @@ public class CodeUtil {
         }
       };
     });
+  }
+
+  public abstract static class LogInterception implements AutoCloseable {
+    public final AtomicLong counter;
+
+    public LogInterception(AtomicLong counter) {
+      this.counter = counter;
+    }
   }
 }

@@ -101,7 +101,7 @@ public class TableOutput {
       final CharSequence propKey = prop.getKey();
       if (null != propKey) {
         Object value = prop.getValue();
-        if(null != value) {
+        if (null != value) {
           final Class<?> cellType = value.getClass();
           Class<?> colType = schema.getOrDefault(propKey, cellType);
           if (!colType.isAssignableFrom(cellType)) {
@@ -211,7 +211,7 @@ public class TableOutput {
                 case "String":
                   return "%-" + rows.stream().mapToInt(x -> {
                     Object val = x.getOrDefault(e.getKey(), "");
-                    return null==val?0:val.toString().length();
+                    return null == val ? 0 : val.toString().length();
                   }).max().getAsInt() + "s";
                 case "Integer":
                   return "%6d";
