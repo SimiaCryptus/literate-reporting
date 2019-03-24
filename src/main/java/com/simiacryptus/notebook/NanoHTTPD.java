@@ -447,8 +447,8 @@ public abstract class NanoHTTPD {
   public static class Cookie {
 
     protected final String n,
-    v,
-    e;
+        v,
+        e;
 
     public Cookie(String name, String value) {
       this(name, value, 30);

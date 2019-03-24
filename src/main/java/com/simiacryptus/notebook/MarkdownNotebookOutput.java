@@ -69,8 +69,6 @@ import static com.simiacryptus.util.Util.stripPrefix;
  */
 public class MarkdownNotebookOutput implements NotebookOutput {
 
-  private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
-
   /**
    * The constant random.
    */
@@ -79,10 +77,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
    * The Logger.
    */
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
+  private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   /**
    * The constant MAX_OUTPUT.
    */
-  public static int MAX_OUTPUT = 1024*16;
+  public static int MAX_OUTPUT = 1024 * 16;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
   @javax.annotation.Nonnull

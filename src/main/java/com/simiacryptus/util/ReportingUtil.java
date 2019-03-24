@@ -69,7 +69,7 @@ public class ReportingUtil {
    */
   public static void report(@javax.annotation.Nonnull final Stream<CharSequence> fragments) throws IOException {
     @javax.annotation.Nonnull final File outDir;
-    if(new File("target").exists()) {
+    if (new File("target").exists()) {
       outDir = new File("target/reports");
     } else {
       outDir = new File("reports");
