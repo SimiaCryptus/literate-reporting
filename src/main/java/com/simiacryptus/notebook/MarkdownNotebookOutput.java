@@ -22,6 +22,7 @@ package com.simiacryptus.notebook;
 import com.simiacryptus.lang.TimedResult;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.util.CodeUtil;
+import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
 import com.simiacryptus.util.test.SysOutInterceptor;
 import com.vladsch.flexmark.Extension;
@@ -102,38 +103,21 @@ public class MarkdownNotebookOutput implements NotebookOutput {
    */
   int anchor = 0;
   private String name;
-  private boolean autobrowse;
   private int maxImageSize = 1600;
   private URI currentHome = null;
   private URI archiveHome = null;
-
-
-  /**
-   * Instantiates a new Markdown notebook output.
-   *
-   * @param reportFile the file name
-   * @param autobrowse the autobrowse
-   * @throws FileNotFoundException the file not found exception
-   */
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean autobrowse) throws FileNotFoundException {
-    this(
-        reportFile,
-        random.nextInt(2 * 1024) + 2 * 1024,
-        autobrowse
-    );
-  }
 
   /**
    * Instantiates a new Markdown notebook output.
    *
    * @param reportFile the report file
+   * @param browse
    * @throws FileNotFoundException the file not found exception
    */
-  public MarkdownNotebookOutput(@Nonnull final File reportFile) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
     this(
         reportFile,
-        random.nextInt(2 * 1024) + 2 * 1024,
-        true
+        random.nextInt(2 * 1024) + 2 * 1024, browse
     );
   }
 
@@ -142,13 +126,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
    *
    * @param reportFile the file name
    * @param httpPort   the http port
-   * @param autobrowse the autobrowse
+   * @param browse
    * @throws FileNotFoundException the file not found exception
    */
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
-      final int httpPort,
-      final boolean autobrowse
+      final int httpPort, boolean browse
   ) throws FileNotFoundException {
     this.setName(reportFile.getName());
     root = reportFile.getAbsoluteFile().getParentFile();
@@ -190,7 +173,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
       System.exit(0);
     });
-    this.setAutobrowse(autobrowse);
     log.info(String.format("Serving %s/%s at http://localhost:%d", root.getAbsoluteFile(), getName(), httpPort));
     if (null != httpd) {
       try {
@@ -201,18 +183,18 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
     }
     this.httpd = httpd;
-    if (!GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+    if (browse && !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
       if (null != httpd) new Thread(() -> {
         try {
           while (!this.httpd.isAlive()) Thread.sleep(100);
-          if (isAutobrowse()) Desktop.getDesktop().browse(new URI(String.format("http://localhost:%d", httpPort)));
+          if(ReportingUtil.AUTO_BROWSE_LIVE) ReportingUtil.browse(new URI(String.format("http://localhost:%d", httpPort)));
         } catch (InterruptedException | IOException | URISyntaxException e) {
           e.printStackTrace();
         }
       }).start();
       onComplete(() -> {
         try {
-          if (isAutobrowse()) Desktop.getDesktop().browse(new File(getRoot(), getName() + ".html").toURI());
+          ReportingUtil.browse(new File(getRoot(), getName() + ".html").toURI());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -249,15 +231,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
    * Get markdown notebook output.
    *
    * @param path       the path
-   * @param autobrowse the autobrowse
    * @return the markdown notebook output
    */
-  public static NotebookOutput get(File path, final boolean autobrowse) {
+  public static NotebookOutput get(File path) {
     try {
       StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[2];
       String methodName = callingFrame.getMethodName();
       path.getAbsoluteFile().getParentFile().mkdirs();
-      return new MarkdownNotebookOutput(new File(path, methodName), autobrowse);
+      return new MarkdownNotebookOutput(new File(path, methodName), true);
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
@@ -285,7 +266,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
    * @return the notebook output
    */
   public static NotebookOutput get(final String s) {
-    return get(new File(s), true);
+    return get(new File(s));
   }
 
   /**
@@ -865,15 +846,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   /**
-   * Is autobrowse boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isAutobrowse() {
-    return autobrowse;
-  }
-
-  /**
    * Gets max image size.
    *
    * @return the max image size
@@ -936,9 +908,5 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return new File(getRoot(), getName() + ".md");
   }
 
-  @Override
-  public NotebookOutput setAutobrowse(boolean autobrowse) {
-    this.autobrowse = autobrowse;
-    return this;
-  }
+
 }
