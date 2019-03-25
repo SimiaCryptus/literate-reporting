@@ -214,8 +214,6 @@ public class NullNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  @Override
-  public NotebookOutput setAutobrowse(boolean autobrowse) {
-    return this;
-  }
+
+
 }

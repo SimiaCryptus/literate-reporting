@@ -363,11 +363,4 @@ public interface NotebookOutput extends Closeable {
    */
   NotebookOutput setArchiveHome(URI archiveHome);
 
-  /**
-   * Sets autobrowse.
-   *
-   * @param autobrowse the autobrowse
-   * @return the autobrowse
-   */
-  NotebookOutput setAutobrowse(boolean autobrowse);
 }

@@ -32,10 +32,9 @@ import java.util.stream.Stream;
 
 public class ReportingUtil {
 
-  /**
-   * The constant AUTO_BROWSE.
-   */
-  public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(true)));
+  public static final boolean BROWSE_SUPPORTED = !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
+  public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
+  public static boolean AUTO_BROWSE_LIVE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false))) && BROWSE_SUPPORTED;
 
   /**
    * Browse.
@@ -44,7 +43,7 @@ public class ReportingUtil {
    * @throws IOException the io exception
    */
   public static void browse(final URI uri) throws IOException {
-    if (AUTO_BROWSE && !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+    if (AUTO_BROWSE)
       Desktop.getDesktop().browse(uri);
   }
 
@@ -83,8 +82,7 @@ public class ReportingUtil {
     fragments.forEach(out::println);
     out.println("</body></html>");
     out.close();
-    if (AUTO_BROWSE && !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
-      Desktop.getDesktop().browse(report.toURI());
+    ReportingUtil.browse(report.toURI());
   }
 
   /**
