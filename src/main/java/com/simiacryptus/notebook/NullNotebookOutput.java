@@ -59,6 +59,12 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
+  public File svgFile(@Nonnull String rawImage, File file) {
+    return null;
+  }
+
+  @Nonnull
+  @Override
   public File pngFile(@Nonnull final BufferedImage rawImage, final File file) {
     return null;
   }
@@ -132,6 +138,12 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public String png(BufferedImage rawImage, CharSequence caption) {
     return "";
+  }
+
+  @Nonnull
+  @Override
+  public String svg(String rawImage, CharSequence caption) {
+    return null;
   }
 
   @javax.annotation.Nonnull

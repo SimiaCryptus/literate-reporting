@@ -85,6 +85,9 @@ public interface NotebookOutput extends Closeable {
     return eval(fn, Integer.MAX_VALUE, 3);
   }
 
+  @Nonnull
+  File svgFile(@Nonnull String rawImage, File file);
+
   /**
    * Png file file.
    *
@@ -207,6 +210,9 @@ public interface NotebookOutput extends Closeable {
    */
   @Nonnull
   String png(BufferedImage rawImage, CharSequence caption);
+
+  @Nonnull
+  String svg(String rawImage, CharSequence caption);
 
   /**
    * Link string.
