@@ -187,7 +187,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       if (null != httpd) new Thread(() -> {
         try {
           while (!this.httpd.isAlive()) Thread.sleep(100);
-          if(ReportingUtil.AUTO_BROWSE_LIVE) ReportingUtil.browse(new URI(String.format("http://localhost:%d", httpPort)));
+          if (ReportingUtil.AUTO_BROWSE_LIVE) ReportingUtil.browse(new URI(String.format("http://localhost:%d", httpPort)));
         } catch (InterruptedException | IOException | URISyntaxException e) {
           e.printStackTrace();
         }
@@ -230,7 +230,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   /**
    * Get markdown notebook output.
    *
-   * @param path       the path
+   * @param path the path
    * @return the markdown notebook output
    */
   public static NotebookOutput get(File path) {
@@ -571,6 +571,25 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     if (null == rawImage) return "";
     @Nonnull final File file = pngFile(rawImage, new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".png"));
     return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
+  }
+
+  @javax.annotation.Nonnull
+  @Override
+  public String svg(@Nullable final String rawImage, final CharSequence caption) {
+    if (null == rawImage) return "";
+    @Nonnull final File file = svgFile(rawImage, new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".svg"));
+    return anchor(anchorId()) + "[" + caption + "](etc/" + file.getName() + ")";
+  }
+
+  @Override
+  @Nonnull
+  public File svgFile(@Nonnull final String rawImage, final File file) {
+    try {
+      FileUtils.write(file, rawImage, "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return file;
   }
 
   @Override
