@@ -82,7 +82,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   /**
    * The constant MAX_OUTPUT.
    */
-  public static int MAX_OUTPUT = 1024 * 16;
+  public static int MAX_OUTPUT = 1024 * 2;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
   @javax.annotation.Nonnull
@@ -798,7 +798,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   public <T> T subreport(String subreportName, Function<NotebookOutput, T> fn) {
-    if (null == subreportName) return subreport("", fn);
+    assert null != subreportName;
+    assert !subreportName.isEmpty();
     String reportName = getName() + subreportName;
     MarkdownNotebookOutput outer = this;
     try {
@@ -813,6 +814,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         @Override
         public File writeZip(final File root, final String baseName) {
           return root;
+        }
+
+        @Override
+        public <T> T subreport(String subreportName2, Function<NotebookOutput, T> fn) {
+          assert null != subreportName2;
+          assert !subreportName2.isEmpty();
+          return super.subreport(subreportName + "_" + subreportName2, fn);
         }
       };
       try {

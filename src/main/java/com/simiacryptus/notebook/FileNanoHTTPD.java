@@ -116,8 +116,8 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
    */
   @Override
   public Closeable addGET(final CharSequence path, final Function<IHTTPSession, Response> value) {
-    Function<IHTTPSession, Response> put = getHandlers.put(path, value);
-    return () -> getHandlers.remove(path, put);
+    getHandlers.put(path, value);
+    return () -> getHandlers.remove(path, value);
   }
 
   @Override

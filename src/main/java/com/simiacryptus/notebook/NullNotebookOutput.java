@@ -227,5 +227,4 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
 
-
 }
