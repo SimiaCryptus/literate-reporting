@@ -820,7 +820,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         public <T> T subreport(String subreportName2, Function<NotebookOutput, T> fn) {
           assert null != subreportName2;
           assert !subreportName2.isEmpty();
-          return super.subreport(subreportName + "_" + subreportName2, fn);
+          return outer.subreport(subreportName + "_" + subreportName2, fn);
         }
       };
       try {
