@@ -48,7 +48,7 @@ public class JsonQuery<T> extends StringQuery<T> {
   @Override
   protected T fromString(String text) throws IOException {
     try {
-      return (T) mapper.readValue(new ByteArrayInputStream(text.getBytes()), value.getClass());
+      return (T) mapper.readValue(new ByteArrayInputStream(text.getBytes()), getValue().getClass());
     } catch (Throwable e) {
       logger.warn("Error deserializing", e);
       return null;
@@ -56,7 +56,7 @@ public class JsonQuery<T> extends StringQuery<T> {
   }
 
   @Override
-  protected String getString(T value) throws JsonProcessingException {
+  protected String toString(T value) throws JsonProcessingException {
     return mapper.writeValueAsString(value);
   }
 

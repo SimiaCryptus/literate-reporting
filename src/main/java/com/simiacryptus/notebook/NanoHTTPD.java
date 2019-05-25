@@ -627,6 +627,7 @@ public abstract class NanoHTTPD {
     protected boolean keepAlive;
 
     protected Response(Response.IStatus status, String mimeType, InputStream data, long totalBytes) {
+      header.put("Access-Control-Allow-Origin","*");
       this.status = status;
       this.mimeType = mimeType;
       if (data == null) {

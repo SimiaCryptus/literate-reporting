@@ -823,6 +823,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           return outer.subreport(subreportName + "_" + subreportName2, fn);
         }
       };
+      subreport.setMaxImageSize(getMaxImageSize());
       try {
         try {
           outer.p("Subreport: %s %s %s %s", stripPrefixes(URLDecoder.decode(subreportName, "UTF-8"), "_", "/", "-", " ", "."),
