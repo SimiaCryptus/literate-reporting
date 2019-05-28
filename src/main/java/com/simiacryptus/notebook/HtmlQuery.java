@@ -25,7 +25,6 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -61,13 +60,13 @@ public abstract class HtmlQuery<T> {
    * The Log.
    */
   final MarkdownNotebookOutput log;
-  private T value = null;
+  protected String height1 = "200px";
+  protected String height2 = "240px";
   /**
    * The Width.
    */
   String width = "100%";
-  protected String height1 = "200px";
-  protected String height2 = "240px";
+  private T value = null;
 
   public HtmlQuery(MarkdownNotebookOutput log) {
     this.log = log;
