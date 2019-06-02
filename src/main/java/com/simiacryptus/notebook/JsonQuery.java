@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 /**
  * The type Json query.
@@ -46,7 +45,7 @@ public class JsonQuery<T> extends StringQuery<T> {
   }
 
   @Override
-  protected T fromString(String text) throws IOException {
+  protected T fromString(String text) {
     try {
       return (T) mapper.readValue(new ByteArrayInputStream(text.getBytes()), getValue().getClass());
     } catch (Throwable e) {
