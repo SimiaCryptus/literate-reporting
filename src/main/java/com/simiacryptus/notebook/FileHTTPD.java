@@ -25,35 +25,10 @@ import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * The interface File httpd.
- */
 public interface FileHTTPD {
-  /**
-   * Add get closeable.
-   *
-   * @param path  the path
-   * @param value the value
-   * @return the closeable
-   */
   Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
-  /**
-   * Add post closeable.
-   *
-   * @param path  the path
-   * @param value the value
-   * @return the closeable
-   */
   Closeable addPOST(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
-  /**
-   * Add get closeable.
-   *
-   * @param path     the path
-   * @param mimeType the mime type
-   * @param logic    the logic
-   * @return the closeable
-   */
   Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic);
 }

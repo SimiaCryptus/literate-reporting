@@ -30,24 +30,13 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-/**
- * The type Null notebook output.
- */
 public class NullNotebookOutput implements NotebookOutput {
   private final String name;
 
-  /**
-   * Instantiates a new Null notebook output.
-   *
-   * @param name the name
-   */
   public NullNotebookOutput(String name) {
     this.name = name;
   }
 
-  /**
-   * Instantiates a new Null notebook output.
-   */
   public NullNotebookOutput() {
     this("null");
   }

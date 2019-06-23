@@ -24,22 +24,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * The type String query.
- *
- * @param <T> the type parameter
- */
 public abstract class StringQuery<T> extends FormQuery<T> {
-  /**
-   * The Form var.
-   */
   String formVar = "data";
 
-  /**
-   * Instantiates a new String query.
-   *
-   * @param log the log
-   */
   public StringQuery(MarkdownNotebookOutput log) {
     super(log);
   }
@@ -53,34 +40,12 @@ public abstract class StringQuery<T> extends FormQuery<T> {
     return fromString(parms.get(formVar));
   }
 
-  /**
-   * Gets string.
-   *
-   * @param value the value
-   * @return the string
-   * @throws JsonProcessingException the json processing exception
-   */
   protected abstract String toString(T value) throws JsonProcessingException;
 
-  /**
-   * From string t.
-   *
-   * @param text the text
-   * @return the t
-   * @throws IOException the io exception
-   */
   protected abstract T fromString(String text) throws IOException;
 
-  /**
-   * The type Simple string query.
-   */
   public static class SimpleStringQuery extends StringQuery<String> {
 
-    /**
-     * Instantiates a new Simple string query.
-     *
-     * @param log the log
-     */
     public SimpleStringQuery(MarkdownNotebookOutput log) {
       super(log);
     }

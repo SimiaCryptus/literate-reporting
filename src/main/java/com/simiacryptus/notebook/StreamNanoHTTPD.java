@@ -32,18 +32,9 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * The type Stream nano httpd.
- */
 public class StreamNanoHTTPD extends FileNanoHTTPD {
-  /**
-   * The Data reciever.
-   */
   @javax.annotation.Nonnull
   public final TeeOutputStream dataReciever;
-  /**
-   * The Gateway uri.
-   */
   @javax.annotation.Nonnull
   protected final URI gatewayUri;
   @javax.annotation.Nonnull
@@ -52,14 +43,6 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
   private boolean autobrowse = true;
 
 
-  /**
-   * Instantiates a new Stream nano httpd.
-   *
-   * @param port        the port
-   * @param mimeType    the mime type
-   * @param primaryFile the file
-   * @throws IOException the io exception
-   */
   public StreamNanoHTTPD(final int port, final String mimeType, final File primaryFile) throws IOException {
     super(primaryFile.getParentFile(), port);
     try {
@@ -82,25 +65,10 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     };
   }
 
-  /**
-   * Instantiates a new Stream nano httpd.
-   *
-   * @param port the port
-   * @throws IOException the io exception
-   */
   public StreamNanoHTTPD(final int port) throws IOException {
     this(port, null, null);
   }
 
-  /**
-   * Async handler function.
-   *
-   * @param pool     the pool
-   * @param mimeType the mime type
-   * @param logic    the logic
-   * @param async    the async
-   * @return the function
-   */
   public static Function<IHTTPSession, Response> asyncHandler(@javax.annotation.Nonnull final ExecutorService pool, final String mimeType, @javax.annotation.Nonnull final Consumer<OutputStream> logic, final boolean async) {
     return session -> {
       @javax.annotation.Nonnull final PipedInputStream snk = new PipedInputStream();
@@ -143,15 +111,6 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     return this;
   }
 
-  /**
-   * Add async handler.
-   *
-   * @param path     the path
-   * @param mimeType the mime type
-   * @param logic    the logic
-   * @param async    the async
-   * @return the closeable
-   */
   public Closeable addAsyncHandler(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic, final boolean async) {
     return addGET(path, StreamNanoHTTPD.asyncHandler(pool, mimeType, logic, async));
   }
@@ -180,21 +139,10 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     return false;
   }
 
-  /**
-   * Is autobrowse boolean.
-   *
-   * @return the boolean
-   */
   public boolean isAutobrowse() {
     return autobrowse;
   }
 
-  /**
-   * Sets autobrowse.
-   *
-   * @param autobrowse the autobrowse
-   * @return the autobrowse
-   */
   public StreamNanoHTTPD setAutobrowse(boolean autobrowse) {
     this.autobrowse = autobrowse;
     return this;

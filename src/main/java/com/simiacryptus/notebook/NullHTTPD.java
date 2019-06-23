@@ -25,9 +25,6 @@ import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * The type Null httpd.
- */
 class NullHTTPD implements FileHTTPD {
   @Override
   public Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value) {

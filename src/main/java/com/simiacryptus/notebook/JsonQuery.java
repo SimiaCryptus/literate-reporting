@@ -25,21 +25,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.ByteArrayInputStream;
 
-/**
- * The type Json query.
- *
- * @param <T> the type parameter
- */
 public class JsonQuery<T> extends StringQuery<T> {
   private ObjectMapper mapper = new ObjectMapper()
       //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
       .enable(SerializationFeature.INDENT_OUTPUT);
 
-  /**
-   * Instantiates a new Json query.
-   *
-   * @param log the log
-   */
   public JsonQuery(MarkdownNotebookOutput log) {
     super(log);
   }
@@ -59,21 +49,10 @@ public class JsonQuery<T> extends StringQuery<T> {
     return mapper.writeValueAsString(value);
   }
 
-  /**
-   * Gets mapper.
-   *
-   * @return the mapper
-   */
   public ObjectMapper getMapper() {
     return mapper;
   }
 
-  /**
-   * Sets mapper.
-   *
-   * @param mapper the mapper
-   * @return the mapper
-   */
   public JsonQuery<T> setMapper(ObjectMapper mapper) {
     this.mapper = mapper;
     return this;

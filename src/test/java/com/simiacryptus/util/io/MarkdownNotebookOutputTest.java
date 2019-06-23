@@ -26,16 +26,8 @@ import org.junit.Test;
 import java.io.File;
 import java.util.stream.IntStream;
 
-/**
- * The type Markdown notebook output test.
- */
 public class MarkdownNotebookOutputTest {
 
-  /**
-   * Test.
-   *
-   * @throws Exception the exception
-   */
   @Test
   public void test() throws Exception {
     try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/test.md"))) {
@@ -50,11 +42,6 @@ public class MarkdownNotebookOutputTest {
     }
   }
 
-  /**
-   * Test subreport.
-   *
-   * @throws Exception the exception
-   */
   @Test
   public void testSubreport() throws Exception {
     try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/testSubreport.md"))) {
