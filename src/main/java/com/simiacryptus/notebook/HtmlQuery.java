@@ -36,35 +36,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public abstract class HtmlQuery<T> {
-  /**
-   * The constant logger.
-   */
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
-  /**
-   * The Id.
-   */
   protected final String id = "input_" + UUID.randomUUID().toString() + ".html";
-  /**
-   * The Handler get.
-   */
   protected final Closeable handler_get;
-  /**
-   * The Done.
-   */
   protected final Semaphore done = new Semaphore(0);
-  /**
-   * The Handler post.
-   */
   protected final Closeable handler_post;
-  /**
-   * The Log.
-   */
   final MarkdownNotebookOutput log;
   protected String height1 = "200px";
   protected String height2 = "240px";
-  /**
-   * The Width.
-   */
   String width = "100%";
   private T value = null;
 
@@ -124,11 +103,6 @@ public abstract class HtmlQuery<T> {
     }
   }
 
-  /**
-   * Get t.
-   *
-   * @return the t
-   */
   public T get() {
     try {
       done.acquire();
@@ -139,13 +113,6 @@ public abstract class HtmlQuery<T> {
     }
   }
 
-  /**
-   * Get t.
-   *
-   * @param t the t
-   * @param u the u
-   * @return the t
-   */
   public T get(long t, TimeUnit u) {
     try {
       if (done.tryAcquire(t, u)) {
@@ -166,9 +133,6 @@ public abstract class HtmlQuery<T> {
     super.finalize();
   }
 
-  /**
-   * The Value.
-   */
   public T getValue() {
     return value;
   }

@@ -36,36 +36,17 @@ public class ReportingUtil {
   public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
   public static boolean AUTO_BROWSE_LIVE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false))) && BROWSE_SUPPORTED;
 
-  /**
-   * Browse.
-   *
-   * @param uri the uri
-   * @throws IOException the io exception
-   */
   public static void browse(final URI uri) throws IOException {
     if (AUTO_BROWSE)
       Desktop.getDesktop().browse(uri);
   }
 
-  /**
-   * Gets last.
-   *
-   * @param <T>    the type parameter
-   * @param stream the stream
-   * @return the last
-   */
   public static <T> T getLast(@javax.annotation.Nonnull final Stream<T> stream) {
     final List<T> collect = stream.collect(Collectors.toList());
     final T last = collect.get(collect.size() - 1);
     return last;
   }
 
-  /**
-   * Report.
-   *
-   * @param fragments the fragments
-   * @throws IOException the io exception
-   */
   public static void report(@javax.annotation.Nonnull final Stream<CharSequence> fragments) throws IOException {
     @javax.annotation.Nonnull final File outDir;
     if (new File("target").exists()) {
@@ -85,12 +66,6 @@ public class ReportingUtil {
     ReportingUtil.browse(report.toURI());
   }
 
-  /**
-   * Report.
-   *
-   * @param fragments the fragments
-   * @throws IOException the io exception
-   */
   public static void report(final CharSequence... fragments) throws IOException {
     report(Stream.of(fragments));
   }

@@ -65,23 +65,11 @@ import java.util.zip.ZipOutputStream;
 import static com.simiacryptus.util.Util.pathToFile;
 import static com.simiacryptus.util.Util.stripPrefix;
 
-/**
- * The type Markdown notebook output.
- */
 public class MarkdownNotebookOutput implements NotebookOutput {
 
-  /**
-   * The constant random.
-   */
   public static final Random random = new Random();
-  /**
-   * The Logger.
-   */
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
-  /**
-   * The constant MAX_OUTPUT.
-   */
   public static int MAX_OUTPUT = 1024 * 2;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
@@ -93,27 +81,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final List<Runnable> onComplete = new ArrayList<>();
   private final Map<CharSequence, CharSequence> frontMatter = new HashMap<>();
   private final FileNanoHTTPD httpd;
-  /**
-   * The Toc.
-   */
   @javax.annotation.Nonnull
   public List<CharSequence> toc = new ArrayList<>();
-  /**
-   * The Anchor.
-   */
   int anchor = 0;
   private String name;
   private int maxImageSize = 1600;
   private URI currentHome = null;
   private URI archiveHome = null;
 
-  /**
-   * Instantiates a new Markdown notebook output.
-   *
-   * @param reportFile the report file
-   * @param browse
-   * @throws FileNotFoundException the file not found exception
-   */
   public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
     this(
         reportFile,
@@ -121,14 +96,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     );
   }
 
-  /**
-   * Instantiates a new Markdown notebook output.
-   *
-   * @param reportFile the file name
-   * @param httpPort   the http port
-   * @param browse
-   * @throws FileNotFoundException the file not found exception
-   */
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
       final int httpPort, boolean browse
@@ -206,12 +173,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
 
-  /**
-   * Wrap frontmatter consumer.
-   *
-   * @param fn the fn
-   * @return the consumer
-   */
   public static Consumer<NotebookOutput> wrapFrontmatter(@Nonnull final Consumer<NotebookOutput> fn) {
     return log -> {
       @Nonnull TimedResult<Void> time = TimedResult.time(() -> {
@@ -227,12 +188,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     };
   }
 
-  /**
-   * Get markdown notebook output.
-   *
-   * @param path the path
-   * @return the markdown notebook output
-   */
   public static NotebookOutput get(File path) {
     try {
       StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[2];
@@ -244,12 +199,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  /**
-   * Gets exception string.
-   *
-   * @param e the e
-   * @return the exception string
-   */
   @Nonnull
   public static CharSequence getExceptionString(Throwable e) {
     if (e instanceof RuntimeException && e.getCause() != null && e.getCause() != e)
@@ -259,23 +208,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return e.getClass().getSimpleName();
   }
 
-  /**
-   * Get notebook output.
-   *
-   * @param s the s
-   * @return the notebook output
-   */
   public static NotebookOutput get(final String s) {
     return get(new File(s));
   }
 
-  /**
-   * Strip prefixes string.
-   *
-   * @param str      the str
-   * @param prefixes the prefixes
-   * @return the string
-   */
   public static String stripPrefixes(String str, String... prefixes) {
     AtomicReference<String> reference = new AtomicReference<>(str);
     while (Stream.of(prefixes).filter(reference.get()::startsWith).findFirst().isPresent()) {
@@ -304,25 +240,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     });
   }
 
-  /**
-   * Gets root.
-   *
-   * @return the root
-   */
   @Override
   @Nonnull
   public File getRoot() {
     return root;
   }
 
-  /**
-   * Write zip.
-   *
-   * @param root     the root
-   * @param baseName the base name
-   * @return the file
-   * @throws IOException the io exception
-   */
   public File writeZip(final File root, final String baseName) throws IOException {
     File zipFile = new File(root, baseName + ".zip");
     logger.info(String.format("Archiving %s to %s", root.getAbsolutePath(), zipFile.getAbsolutePath()));
@@ -332,12 +255,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return zipFile;
   }
 
-  /**
-   * On complete markdown notebook output.
-   *
-   * @param tasks the tasks
-   * @return the markdown notebook output
-   */
   @Override
   @Nonnull
   public NotebookOutput onComplete(Runnable... tasks) {
@@ -345,12 +262,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  /**
-   * To string string.
-   *
-   * @param list the list
-   * @return the string
-   */
   @Nonnull
   public String toString(final List<CharSequence> list) {
     if (list.size() > 0 && list.stream().allMatch(x -> {
@@ -363,14 +274,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     else return list.stream().reduce((a, b) -> a + "\n" + b).orElse("").toString();
   }
 
-  /**
-   * Write archive.
-   *
-   * @param root   the root
-   * @param dir    the dir
-   * @param out    the out
-   * @param filter the filter
-   */
   public void zipArchive(final File root, final File dir, final ZipOutputStream out, final Predicate<? super File> filter) {
     Arrays.stream(dir.listFiles()).filter(filter).forEach(file ->
     {
@@ -391,11 +294,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     });
   }
 
-  /**
-   * Write markdown with frontmatter.
-   *
-   * @param out the out
-   */
   public void write(final PrintWriter out) {
     if (!frontMatter.isEmpty()) {
       out.println("---");
@@ -428,21 +326,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return name;
   }
 
-  /**
-   * Anchor string.
-   *
-   * @param anchorId the anchor id
-   * @return the string
-   */
   public CharSequence anchor(CharSequence anchorId) {
     return String.format("<a id=\"%s\"></a>", anchorId);
   }
 
-  /**
-   * Anchor id string.
-   *
-   * @return the string
-   */
   public CharSequence anchorId() {
     return String.format("p-%d", anchor++);
   }
@@ -493,12 +380,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  /**
-   * Resolve resource file.
-   *
-   * @param name the name
-   * @return the file
-   */
   @Nonnull
   public File resolveResource(@Nonnull final CharSequence name) {
     return new File(getResourceDir(), Util.stripPrefix(name.toString(), "etc/"));
@@ -529,11 +410,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return "[" + caption + "](etc/" + fileName + ")";
   }
 
-  /**
-   * Gets resource dir.
-   *
-   * @return the resource dir
-   */
   @javax.annotation.Nonnull
   public File getResourceDir() {
     @javax.annotation.Nonnull final File etc = new File(getReportFile().getParentFile(), "etc").getAbsoluteFile();
@@ -734,12 +610,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  /**
-   * Code file string.
-   *
-   * @param file the file
-   * @return the string
-   */
   public CharSequence pathTo(@javax.annotation.Nonnull File file) {
     return stripPrefix(Util.toString(pathToFile(getReportFile(), file)), "/");
   }
@@ -752,13 +622,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     log.info(msg);
   }
 
-  /**
-   * Format string.
-   *
-   * @param fmt  the fmt
-   * @param args the args
-   * @return the string
-   */
   @javax.annotation.Nonnull
   public String format(@javax.annotation.Nonnull CharSequence fmt, @javax.annotation.Nonnull Object... args) {
     return 0 == args.length ? fmt.toString() : String.format(fmt.toString(), args);
@@ -769,13 +632,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     out(anchor(anchorId()).toString() + fmt + "\n", args);
   }
 
-  /**
-   * Summarize string.
-   *
-   * @param logSrc the log src
-   * @param maxLog the max log
-   * @return the string
-   */
   @javax.annotation.Nonnull
   public String summarize(@javax.annotation.Nonnull String logSrc, final int maxLog) {
     if (logSrc.length() > maxLog * 2) {
@@ -873,21 +729,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  /**
-   * Gets max image size.
-   *
-   * @return the max image size
-   */
   public int getMaxImageSize() {
     return maxImageSize;
   }
 
-  /**
-   * Sets max image size.
-   *
-   * @param maxImageSize the max image size
-   * @return the max image size
-   */
   public NotebookOutput setMaxImageSize(int maxImageSize) {
     this.maxImageSize = maxImageSize;
     return this;
@@ -926,11 +771,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  /**
-   * Gets report file.
-   *
-   * @return the report file
-   */
   @Nonnull
   public File getReportFile() {
     return new File(getRoot(), getName() + ".md");

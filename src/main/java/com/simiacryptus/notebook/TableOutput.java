@@ -29,29 +29,11 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-/**
- * The type Table output.
- */
 public class TableOutput {
-  /**
-   * The constant logger.
-   */
   public static final Logger logger = LoggerFactory.getLogger(TableOutput.class);
-  /**
-   * The Rows.
-   */
   public final List<Map<CharSequence, Object>> rows = new ArrayList<>();
-  /**
-   * The Schema.
-   */
   public final Map<CharSequence, Class<?>> schema = new LinkedHashMap<>();
 
-  /**
-   * Create table output.
-   *
-   * @param rows the rows
-   * @return the table output
-   */
   @javax.annotation.Nonnull
   public static TableOutput create(@javax.annotation.Nonnull final Map<CharSequence, Object>... rows) {
     @javax.annotation.Nonnull final TableOutput table = new TableOutput();
@@ -60,11 +42,6 @@ public class TableOutput {
 
   }
 
-  /**
-   * Calc number stats table output.
-   *
-   * @return the table output
-   */
   @javax.annotation.Nonnull
   public TableOutput calcNumberStats() {
     @javax.annotation.Nonnull final TableOutput tableOutput = new TableOutput();
@@ -83,19 +60,11 @@ public class TableOutput {
     return tableOutput;
   }
 
-  /**
-   * Clear.
-   */
   public void clear() {
     schema.clear();
     rows.clear();
   }
 
-  /**
-   * Put row.
-   *
-   * @param properties the properties
-   */
   public void putRow(@javax.annotation.Nonnull final Map<CharSequence, Object> properties) {
     for (@javax.annotation.Nonnull final Entry<CharSequence, Object> prop : properties.entrySet()) {
       final CharSequence propKey = prop.getKey();
@@ -114,12 +83,6 @@ public class TableOutput {
     rows.add(new HashMap<>(properties));
   }
 
-  /**
-   * To csv string.
-   *
-   * @param sortCols the sort cols
-   * @return the string
-   */
   public CharSequence toCSV(final boolean sortCols) {
     try (@javax.annotation.Nonnull ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
       try (@javax.annotation.Nonnull PrintStream printStream = new PrintStream(buffer)) {
@@ -148,21 +111,10 @@ public class TableOutput {
     }
   }
 
-  /**
-   * To html table string.
-   *
-   * @return the string
-   */
   public String toHtmlTable() {
     return toHtmlTable(false);
   }
 
-  /**
-   * To html table string.
-   *
-   * @param sortCols the sort cols
-   * @return the string
-   */
   public String toHtmlTable(final boolean sortCols) {
     try (@javax.annotation.Nonnull ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
       try (@javax.annotation.Nonnull PrintStream printStream = new PrintStream(buffer)) {
@@ -197,11 +149,6 @@ public class TableOutput {
     }
   }
 
-  /**
-   * To text table string.
-   *
-   * @return the string
-   */
   public String toMarkdownTable() {
     try (@javax.annotation.Nonnull ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
       try (@javax.annotation.Nonnull PrintStream printStream = new PrintStream(buffer)) {
@@ -237,13 +184,6 @@ public class TableOutput {
     }
   }
 
-  /**
-   * Write projector data.
-   *
-   * @param path    the path
-   * @param baseUrl the base url
-   * @throws IOException the io exception
-   */
   public void writeProjectorData(@javax.annotation.Nonnull final File path, final URL baseUrl) throws IOException {
     path.mkdirs();
     try (@javax.annotation.Nonnull FileOutputStream file = new FileOutputStream(new File(path, "data.tsv"))) {

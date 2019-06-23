@@ -51,23 +51,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-/**
- * The type Code util.
- */
 public class CodeUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
 
   private static final List<CharSequence> sourceFolders = Arrays.asList("src/main/java", "src/test/java", "src/main/scala", "src/test/scala");
-  /**
-   * The constant projectRoot.
-   */
   @javax.annotation.Nonnull
   public static File projectRoot = new File(System.getProperty("codeRoot", getDefaultProjectRoot()));
   private static final List<File> codeRoots = CodeUtil.scanLocalCodeRoots();
-  /**
-   * The Class source info.
-   */
   public static HashMap<String, String> classSourceInfo = getDefaultClassInfo();
 
   private static String getDefaultProjectRoot() {
@@ -75,12 +66,6 @@ public class CodeUtil {
     else return ".";
   }
 
-  /**
-   * Find file file.
-   *
-   * @param clazz the clazz
-   * @return the file
-   */
   @Nullable
   public static URI findFile(@Nullable final Class<?> clazz) {
     if (null == clazz) return null;
@@ -90,12 +75,6 @@ public class CodeUtil {
     return CodeUtil.findFile(path + ".java");
   }
 
-  /**
-   * Find file file.
-   *
-   * @param callingFrame the calling frame
-   * @return the file
-   */
   @javax.annotation.Nonnull
   public static URI findFile(@Nonnull final StackTraceElement callingFrame) {
     @javax.annotation.Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
@@ -105,12 +84,6 @@ public class CodeUtil {
     return CodeUtil.findFile(path);
   }
 
-  /**
-   * Find file file.
-   *
-   * @param path the path
-   * @return the file
-   */
   @javax.annotation.Nonnull
   public static URI findFile(@Nonnull final String path) {
     URL classpathEntry = ClassLoader.getSystemResource(path);
@@ -132,24 +105,12 @@ public class CodeUtil {
     throw new RuntimeException(String.format("Not Found: %s; Project Roots = %s", path, CodeUtil.codeRoots));
   }
 
-  /**
-   * Gets indent.
-   *
-   * @param txt the txt
-   * @return the indent
-   */
   @javax.annotation.Nonnull
   public static CharSequence getIndent(@javax.annotation.Nonnull final CharSequence txt) {
     @javax.annotation.Nonnull final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
     return matcher.find() ? matcher.group(0) : "";
   }
 
-  /**
-   * Gets heapCopy text.
-   *
-   * @param callingFrame the calling frame
-   * @return the heapCopy text
-   */
   public static String getInnerText(@javax.annotation.Nonnull final StackTraceElement callingFrame) {
 
     String[] split = callingFrame.getClassName().split("\\.");
@@ -189,12 +150,6 @@ public class CodeUtil {
     }
   }
 
-  /**
-   * Gets javadoc.
-   *
-   * @param clazz the clazz
-   * @return the javadoc
-   */
   public static String getJavadoc(@Nullable final Class<?> clazz) {
     try {
       if (null == clazz) return null;
@@ -231,11 +186,6 @@ public class CodeUtil {
         .collect(Collectors.toList());
   }
 
-  /**
-   * Gets default class info.
-   *
-   * @return the default class info
-   */
   public static HashMap<String, String> getDefaultClassInfo() {
     InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("META-INF/CodeUtil/classSourceInfo.json");
     if (null != resourceAsStream) {
@@ -272,13 +222,6 @@ public class CodeUtil {
   }
 
 
-  /**
-   * Gets git base.
-   *
-   * @param absoluteFile the absolute file
-   * @param def          the def
-   * @return the git base
-   */
   protected static String getGitBase(File absoluteFile, String def) {
     try {
       Repository repository = new RepositoryBuilder().setWorkTree(absoluteFile).build();
@@ -296,12 +239,6 @@ public class CodeUtil {
     return def;
   }
 
-  /**
-   * Code url char sequence.
-   *
-   * @param callingFrame the calling frame
-   * @return the char sequence
-   */
   public static CharSequence codeUrl(StackTraceElement callingFrame) {
     String[] split = callingFrame.getClassName().split("\\.");
     String packagePath = Arrays.asList(split).subList(0, split.length - 1).stream().reduce((a, b) -> a + "/" + b).orElse("");

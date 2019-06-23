@@ -35,61 +35,24 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * The type File nano httpd.
- */
 public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
-  /**
-   * The Log.
-   */
   static final Logger log = LoggerFactory.getLogger(FileNanoHTTPD.class);
 
-  /**
-   * The Custom getHandlers.
-   */
   public final Map<CharSequence, Function<IHTTPSession, Response>> getHandlers = new HashMap<>();
-  /**
-   * The Post handlers.
-   */
   public final Map<CharSequence, Function<IHTTPSession, Response>> postHandlers = new HashMap<>();
-  /**
-   * The Pool.
-   */
   protected final ExecutorService pool = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).build());
   private final File root;
 
-  /**
-   * Instantiates a new File nano httpd.
-   *
-   * @param root the root
-   * @param port the port
-   */
   public FileNanoHTTPD(File root, final int port) {
     super(port);
     this.root = root;
   }
 
-  /**
-   * Create output stream.
-   *
-   * @param port     the port
-   * @param path     the path
-   * @param mimeType the mime type
-   * @return the output stream
-   * @throws IOException the io exception
-   */
   @javax.annotation.Nonnull
   public static FileNanoHTTPD create(final int port, @Nonnull final File path, final String mimeType) throws IOException {
     return new FileNanoHTTPD(path, port).init();
   }
 
-  /**
-   * Sync handler function.
-   *
-   * @param mimeType the mime type
-   * @param logic    the logic
-   * @return the function
-   */
   public static Function<IHTTPSession, Response> handler(
       final String mimeType,
       @Nonnull final Consumer<OutputStream> logic
@@ -107,13 +70,6 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     };
   }
 
-  /**
-   * Add session handler function.
-   *
-   * @param path  the path
-   * @param value the value
-   * @return the function
-   */
   @Override
   public Closeable addGET(final CharSequence path, final Function<IHTTPSession, Response> value) {
     getHandlers.put(path, value);
@@ -126,23 +82,10 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     return () -> postHandlers.remove(path, put);
   }
 
-  /**
-   * Add sync handler.
-   *
-   * @param path     the path
-   * @param mimeType the mime type
-   * @param logic    the logic
-   */
   public Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic) {
     return addGET(path, FileNanoHTTPD.handler(mimeType, logic));
   }
 
-  /**
-   * Init stream nano httpd.
-   *
-   * @return the stream nano httpd
-   * @throws IOException the io exception
-   */
   @javax.annotation.Nonnull
   public FileNanoHTTPD init() throws IOException {
     start(30000);
