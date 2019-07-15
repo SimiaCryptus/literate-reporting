@@ -679,6 +679,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           return outer.subreport(subreportName + "_" + subreportName2, fn);
         }
       };
+      subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
         try {
