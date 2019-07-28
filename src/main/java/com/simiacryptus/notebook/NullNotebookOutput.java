@@ -81,6 +81,10 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
+  public void onWrite(Runnable fn) {
+  }
+
+  @Override
   public void write() {
   }
 

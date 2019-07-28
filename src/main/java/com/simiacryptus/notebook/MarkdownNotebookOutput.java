@@ -81,6 +81,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final List<Runnable> onComplete = new ArrayList<>();
   private final Map<CharSequence, CharSequence> frontMatter = new HashMap<>();
   private final FileNanoHTTPD httpd;
+  private final ArrayList<Runnable> onWriteHandlers = new ArrayList<>();
   @javax.annotation.Nonnull
   public List<CharSequence> toc = new ArrayList<>();
   int anchor = 0;
@@ -95,6 +96,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         random.nextInt(2 * 1024) + 2 * 1024, browse
     );
   }
+
 
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
@@ -171,7 +173,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       this.httpd.stop();
     });
   }
-
 
   public static Consumer<NotebookOutput> wrapFrontmatter(@Nonnull final Consumer<NotebookOutput> fn) {
     return log -> {
@@ -335,10 +336,20 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
+  public void onWrite(Runnable fn) {
+    onWriteHandlers.add(fn);
+  }
+
+  @Override
   public void write() throws IOException {
     MutableDataSet options = new MutableDataSet();
+    onWriteHandlers.stream().forEach(Runnable::run);
     File htmlFile = writeHtml(options);
-    writePdf(options, htmlFile);
+    try {
+      writePdf(options, htmlFile);
+    } catch (Throwable e) {
+      logger.info("Error writing pdf", e);
+    }
   }
 
   private synchronized File writePdf(MutableDataSet options, File htmlFile) throws IOException {
@@ -374,7 +385,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Override
   public OutputStream file(@javax.annotation.Nonnull final CharSequence name) {
     try {
-      return new FileOutputStream(resolveResource(name), true);
+      return new FileOutputStream(resolveResource(name), false);
     } catch (@javax.annotation.Nonnull final FileNotFoundException e) {
       throw new RuntimeException(e);
     }
@@ -656,37 +667,22 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public <T> T subreport(String subreportName, Function<NotebookOutput, T> fn) {
     assert null != subreportName;
     assert !subreportName.isEmpty();
-    String reportName = getName() + subreportName;
-    MarkdownNotebookOutput outer = this;
+    return subreport(getName() + subreportName, fn, this);
+  }
+
+  protected <T> T subreport(String reportName, Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
       File subreportFile = new File(root, reportName);
-      MarkdownNotebookOutput subreport = new MarkdownNotebookOutput(subreportFile, -1, false) {
-        @Override
-        public FileHTTPD getHttpd() {
-          return outer.getHttpd();
-        }
-
-        @Override
-        public File writeZip(final File root, final String baseName) {
-          return root;
-        }
-
-        @Override
-        public <T> T subreport(String subreportName2, Function<NotebookOutput, T> fn) {
-          assert null != subreportName2;
-          assert !subreportName2.isEmpty();
-          return outer.subreport(subreportName + "_" + subreportName2, fn);
-        }
-      };
+      MarkdownNotebookOutput subreport = new Subreport(subreportFile, parent, reportName);
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
         try {
-          outer.p("Subreport: %s %s %s %s", stripPrefixes(URLDecoder.decode(subreportName, "UTF-8"), "_", "/", "-", " ", "."),
-              outer.link(subreportFile, "markdown"),
-              outer.link(new File(root, reportName + ".html"), "html"),
-              outer.link(new File(root, reportName + ".pdf"), "pdf")
+          this.p("Subreport: %s %s %s %s", stripPrefixes(URLDecoder.decode(reportName, "UTF-8"), "_", "/", "-", " ", "."),
+              this.link(subreportFile, "markdown"),
+              this.link(new File(root, reportName + ".html"), "html"),
+              this.link(new File(root, reportName + ".pdf"), "pdf")
           );
         } catch (UnsupportedEncodingException e) {
           throw new RuntimeException(e);
@@ -778,4 +774,44 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
 
+  private static class Subreport extends MarkdownNotebookOutput {
+    private final MarkdownNotebookOutput parent;
+    private final String reportName;
+
+    public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
+      super(subreportFile, -1, false);
+      this.parent = parent;
+      this.reportName = reportName;
+    }
+
+    @Override
+    public FileHTTPD getHttpd() {
+      return parent.getHttpd();
+    }
+
+    @Override
+    public File writeZip(final File root, final String baseName) {
+      return root;
+    }
+
+    @Override
+    public <T> T subreport(String subreportName, Function<NotebookOutput, T> fn) {
+      assert null != subreportName;
+      assert !subreportName.isEmpty();
+      assert null != reportName + "_" + subreportName;
+      assert !(reportName + "_" + subreportName).isEmpty();
+      return subreport(reportName + "_" + subreportName, fn, parent);
+    }
+
+    @Override
+    public void onWrite(Runnable fn) {
+      parent.onWrite(fn);
+    }
+
+    @Override
+    public void write() throws IOException {
+      super.write();
+      parent.write();
+    }
+  }
 }

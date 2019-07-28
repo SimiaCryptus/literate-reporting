@@ -70,6 +70,8 @@ public interface NotebookOutput extends Closeable {
 
   <T> T eval(UncheckedSupplier<T> fn, int maxLog, int framesNo);
 
+  void onWrite(Runnable fn);
+
   void write() throws IOException;
 
   @Nonnull
