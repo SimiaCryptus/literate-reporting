@@ -78,6 +78,13 @@ public abstract class HtmlQuery<T> {
       byte[] bytes = responseHtml.getBytes();
       return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "text/html", new ByteArrayInputStream(bytes), bytes.length);
     });
+    log.onWrite(() -> {
+      try {
+        FileUtils.write(new File(log.getRoot(), id), getDisplayHtml(), "UTF-8");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
   }
 
   public abstract T valueFromParams(Map<String, String> parms) throws IOException;
