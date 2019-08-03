@@ -127,7 +127,7 @@ public interface NotebookOutput extends Closeable {
   @Nullable
   CharSequence getFrontMatterProperty(CharSequence key);
 
-  CharSequence getName();
+  String getName();
 
   NotebookOutput setName(String name);
 
@@ -138,7 +138,11 @@ public interface NotebookOutput extends Closeable {
 
   FileHTTPD getHttpd();
 
-  <T> T subreport(String reportName, Function<NotebookOutput, T> fn);
+  <T> T subreport(Function<NotebookOutput, T> fn, String name);
+
+  default <T> T subreport(String name, Function<NotebookOutput, T> fn) {
+    return subreport(fn, name);
+  }
 
   URI getCurrentHome();
 

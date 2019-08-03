@@ -46,7 +46,7 @@ public class MarkdownNotebookOutputTest {
   public void testSubreport() throws Exception {
     try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/testSubreport.md"))) {
       IntStream.range(0, 10).forEach(i -> {
-        notebookOutput.subreport("Iteration_" + i, subreport -> {
+        notebookOutput.subreport(subreport -> {
           IntStream.range(0, 10).forEach(j -> {
             try {
               Thread.sleep(100);
@@ -56,7 +56,7 @@ public class MarkdownNotebookOutputTest {
             }
           });
           return null;
-        });
+        }, notebookOutput.getName() + "_" + "Iteration_" + i);
       });
     }
   }

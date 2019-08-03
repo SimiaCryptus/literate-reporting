@@ -91,23 +91,21 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private URI archiveHome = null;
 
   public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
-    this(
-        reportFile,
-        random.nextInt(2 * 1024) + 2 * 1024, browse
+    this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName()
     );
   }
 
 
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
-      final int httpPort, boolean browse
+      final int httpPort, boolean browse, String name
   ) throws FileNotFoundException {
-    this.setName(reportFile.getName());
-    root = reportFile.getAbsoluteFile().getParentFile();
+    this.setName(name);
+    root = reportFile.getAbsoluteFile();
     root.mkdirs();
     setCurrentHome(root.toURI());
-    setArchiveHome(root.toURI());
-    primaryOut = new PrintStream(new FileOutputStream(new File(root, getName().toString())));
+    setArchiveHome(null);
+    primaryOut = new PrintStream(new FileOutputStream(new File(root, getName() + ".md")));
     FileNanoHTTPD httpd = httpPort <= 0 ? null : new FileNanoHTTPD(root, httpPort);
     if (null != httpd) httpd.addGET("", "text/html", out -> {
       try {
@@ -323,7 +321,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public CharSequence getName() {
+  public String getName() {
     return name;
   }
 
@@ -664,23 +662,20 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(String subreportName, Function<NotebookOutput, T> fn) {
-    assert null != subreportName;
-    assert !subreportName.isEmpty();
-    return subreport(getName() + subreportName, fn, this);
+  public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+    return subreport(name, fn, this);
   }
 
   protected <T> T subreport(String reportName, Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
-      File subreportFile = new File(root, reportName);
-      MarkdownNotebookOutput subreport = new Subreport(subreportFile, parent, reportName);
+      MarkdownNotebookOutput subreport = new Subreport(root, parent, reportName);
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
         try {
           this.p("Subreport: %s %s %s %s", stripPrefixes(URLDecoder.decode(reportName, "UTF-8"), "_", "/", "-", " ", "."),
-              this.link(subreportFile, "markdown"),
+              this.link(new File(root, reportName + ".md"), "markdown"),
               this.link(new File(root, reportName + ".html"), "html"),
               this.link(new File(root, reportName + ".pdf"), "pdf")
           );
@@ -779,7 +774,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     private final String reportName;
 
     public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
-      super(subreportFile, -1, false);
+      super(subreportFile, -1, false, reportName);
       this.parent = parent;
       this.reportName = reportName;
     }
@@ -795,12 +790,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
 
     @Override
-    public <T> T subreport(String subreportName, Function<NotebookOutput, T> fn) {
-      assert null != subreportName;
-      assert !subreportName.isEmpty();
-      assert null != reportName + "_" + subreportName;
-      assert !(reportName + "_" + subreportName).isEmpty();
-      return subreport(reportName + "_" + subreportName, fn, parent);
+    public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+      String newName = name;
+      assert null != newName;
+      assert !newName.isEmpty();
+      return subreport(newName, fn, parent);
     }
 
     @Override

@@ -252,7 +252,7 @@ public class CodeUtil {
 
   public static LogInterception intercept(NotebookOutput log, String loggerName) {
     AtomicLong counter = new AtomicLong(0);
-    return log.subreport("log_" + loggerName, sublog -> {
+    return log.subreport(sublog -> {
       ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
       logger.setLevel(Level.ALL);
       logger.setAdditive(false);
@@ -309,7 +309,7 @@ public class CodeUtil {
           appender.stop();
         }
       };
-    });
+    }, log.getName() + "_" + "log_" + loggerName);
   }
 
   public abstract static class LogInterception implements AutoCloseable {
