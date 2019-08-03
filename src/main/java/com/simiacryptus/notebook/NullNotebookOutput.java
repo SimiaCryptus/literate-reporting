@@ -169,7 +169,7 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public CharSequence getName() {
+  public String getName() {
     return name;
   }
 
@@ -190,8 +190,8 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(String reportName, Function<NotebookOutput, T> fn) {
-    return fn.apply(new NullNotebookOutput(reportName));
+  public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+    return fn.apply(new NullNotebookOutput(name));
   }
 
   @Override
