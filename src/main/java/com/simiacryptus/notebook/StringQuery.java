@@ -36,7 +36,7 @@ public abstract class StringQuery<T> extends FormQuery<T> {
     return "<textarea name=\"" + formVar + "\" style=\"margin: 0px; width: " + width + "; height: " + height1 + ";\">" + toString(getValue()) + "</textarea>";
   }
 
-  public T valueFromParams(Map<String, String> parms) throws IOException {
+  public T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
     return fromString(parms.get(formVar));
   }
 

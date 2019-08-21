@@ -41,13 +41,13 @@ public abstract class HtmlQuery<T> {
   protected final Closeable handler_get;
   protected final Semaphore done = new Semaphore(0);
   protected final Closeable handler_post;
-  final MarkdownNotebookOutput log;
+  final NotebookOutput log;
   protected String height1 = "200px";
   protected String height2 = "240px";
   String width = "100%";
   private T value = null;
 
-  public HtmlQuery(MarkdownNotebookOutput log) {
+  public HtmlQuery(NotebookOutput log) {
     this.log = log;
     FileHTTPD httpd = this.log.getHttpd();
     this.handler_get = httpd.addGET(id, "text/html", out -> {
@@ -68,7 +68,7 @@ public abstract class HtmlQuery<T> {
         Map<String, String> parms = request.getParms();
         HashMap<String, String> files = new HashMap<>();
         request.parseBody(files);
-        setValue(valueFromParams(parms));
+        setValue(valueFromParams(parms, files));
         done.release();
         responseHtml = getDisplayHtml();
         FileUtils.write(new File(log.getRoot(), id), responseHtml, "UTF-8");
@@ -87,7 +87,7 @@ public abstract class HtmlQuery<T> {
     });
   }
 
-  public abstract T valueFromParams(Map<String, String> parms) throws IOException;
+  public abstract T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException;
 
   protected abstract String getActiveHtml() throws JsonProcessingException;
 

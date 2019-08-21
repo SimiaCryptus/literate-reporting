@@ -22,14 +22,14 @@ package com.simiacryptus.notebook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public abstract class FormQuery<T> extends HtmlQuery<T> {
-  public FormQuery(MarkdownNotebookOutput log) {
+  public FormQuery(NotebookOutput log) {
     super(log);
   }
 
   @Override
   protected String getActiveHtml() throws JsonProcessingException {
     return "<html><body style=\"margin: 0;\">" +
-        "<form action=\"" + id + "\" method=\"POST\">" +
+        "<form action=\"" + id + "\" method=\"POST\" enctype=\"multipart/form-data\">" +
         getFormInnerHtml() +
         "<br/><input type=\"submit\">" +
         "</form></body></html>";
