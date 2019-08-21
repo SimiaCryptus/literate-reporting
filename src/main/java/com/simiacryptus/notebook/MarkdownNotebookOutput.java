@@ -66,7 +66,7 @@ import static com.simiacryptus.util.Util.pathToFile;
 import static com.simiacryptus.util.Util.stripPrefix;
 
 public class MarkdownNotebookOutput implements NotebookOutput {
-
+  public static Map<String, Object> uploadCache = new HashMap<>();
   public static final Random random = new Random();
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
@@ -130,12 +130,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     if (null != httpd) httpd.addGET("shutdown", "text/plain", out -> {
       try (PrintStream printStream = new PrintStream(out)) {
         printStream.print("Closing...");
-        try {
-          close();
-          printStream.print("Done");
-        } catch (IOException e) {
-          e.printStackTrace(printStream);
-        }
+        close();
+        printStream.print("Done");
       }
       logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
       System.exit(0);
@@ -220,23 +216,27 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void close() throws IOException {
-    if (null != primaryOut) {
-      primaryOut.close();
-    }
-    try (@javax.annotation.Nonnull PrintWriter out = new PrintWriter(new FileOutputStream(getReportFile()))) {
-      write(out);
-    }
-    File root = getRoot();
-    write();
-    writeZip(root, getName().toString());
-    onComplete.stream().forEach(fn -> {
-      try {
-        fn.run();
-      } catch (Throwable e) {
-        log.info("Error closing log", e);
+  public void close() {
+    try {
+      if (null != primaryOut) {
+        primaryOut.close();
       }
-    });
+      try (@javax.annotation.Nonnull PrintWriter out = new PrintWriter(new FileOutputStream(getReportFile()))) {
+        write(out);
+      }
+      File root = getRoot();
+      write();
+      writeZip(root, getName().toString());
+      onComplete.stream().forEach(fn -> {
+        try {
+          fn.run();
+        } catch (Throwable e) {
+          log.info("Error closing log", e);
+        }
+      });
+    } catch (Throwable e) {
+      log.info("Error closing log", e);
+    }
   }
 
   @Override
@@ -710,11 +710,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           });
         }
       } finally {
-        try {
-          subreport.close();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+        subreport.close();
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
@@ -728,11 +724,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public NotebookOutput setMaxImageSize(int maxImageSize) {
     this.maxImageSize = maxImageSize;
     return this;
-  }
-
-  @Override
-  public URI getCurrentHome() {
-    return currentHome;
   }
 
   @Override
@@ -769,43 +760,4 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
 
-  private static class Subreport extends MarkdownNotebookOutput {
-    private final MarkdownNotebookOutput parent;
-    private final String reportName;
-
-    public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
-      super(subreportFile, -1, false, reportName);
-      this.parent = parent;
-      this.reportName = reportName;
-    }
-
-    @Override
-    public FileHTTPD getHttpd() {
-      return parent.getHttpd();
-    }
-
-    @Override
-    public File writeZip(final File root, final String baseName) {
-      return root;
-    }
-
-    @Override
-    public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
-      String newName = name;
-      assert null != newName;
-      assert !newName.isEmpty();
-      return subreport(newName, fn, parent);
-    }
-
-    @Override
-    public void onWrite(Runnable fn) {
-      parent.onWrite(fn);
-    }
-
-    @Override
-    public void write() throws IOException {
-      super.write();
-      parent.write();
-    }
-  }
 }

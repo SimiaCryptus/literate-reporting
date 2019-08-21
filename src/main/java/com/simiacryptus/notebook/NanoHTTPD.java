@@ -416,7 +416,7 @@ public abstract class NanoHTTPD {
 
     void delete() throws Exception;
 
-    String getName();
+    File getFile();
 
     OutputStream open() throws Exception;
   }
@@ -528,8 +528,8 @@ public abstract class NanoHTTPD {
     }
 
     @Override
-    public String getName() {
-      return this.file.getAbsolutePath();
+    public File getFile() {
+      return this.file;
     }
 
     @Override
@@ -1349,7 +1349,7 @@ public abstract class NanoHTTPD {
         safeClose(this.outputStream);
       } finally {
         safeClose(r);
-        this.tempFileManager.clear();
+        //this.tempFileManager.clear();
       }
     }
 
@@ -1445,7 +1445,7 @@ public abstract class NanoHTTPD {
     protected RandomAccessFile getTmpBucket() {
       try {
         TempFile tempFile = this.tempFileManager.createTempFile(null);
-        return new RandomAccessFile(tempFile.getName(), "rw");
+        return new RandomAccessFile(tempFile.getFile(), "rw");
       } catch (Exception e) {
         throw new Error(e); // we won't recover, so throw an error
       }
@@ -1556,11 +1556,11 @@ public abstract class NanoHTTPD {
         try {
           TempFile tempFile = this.tempFileManager.createTempFile(filename_hint);
           ByteBuffer src = b.duplicate();
-          fileOutputStream = new FileOutputStream(tempFile.getName());
+          fileOutputStream = new FileOutputStream(tempFile.getFile());
           FileChannel dest = fileOutputStream.getChannel();
           src.position(offset).limit(offset + len);
           dest.write(src.slice());
-          path = tempFile.getName();
+          path = tempFile.getFile().getAbsolutePath();
         } catch (Exception e) { // Catch exception if any
           throw new Error(e); // we won't recover, so throw an error
         } finally {

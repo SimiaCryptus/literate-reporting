@@ -195,11 +195,6 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public URI getCurrentHome() {
-    return new File(".").toURI();
-  }
-
-  @Override
   public NotebookOutput setCurrentHome(URI currentHome) {
     return this;
   }

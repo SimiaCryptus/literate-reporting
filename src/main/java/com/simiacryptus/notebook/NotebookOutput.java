@@ -144,8 +144,6 @@ public interface NotebookOutput extends Closeable {
     return subreport(fn, name);
   }
 
-  URI getCurrentHome();
-
   NotebookOutput setCurrentHome(URI currentHome);
 
   URI getArchiveHome();
