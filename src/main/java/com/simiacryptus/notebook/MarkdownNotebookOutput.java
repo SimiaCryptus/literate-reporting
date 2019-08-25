@@ -89,12 +89,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private URI currentHome = null;
   private URI archiveHome = null;
   UUID id;
+  private boolean enableZip = false;
+  private boolean enablePdf = false;
 
   public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
     this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName(), UUID.randomUUID()
     );
   }
-
 
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
@@ -227,7 +228,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
       File root = getRoot();
       write();
-      writeZip(root, getName().toString());
+      if(isEnableZip()) writeZip(root, getName().toString());
       onComplete.stream().forEach(fn -> {
         try {
           fn.run();
@@ -345,7 +346,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     onWriteHandlers.stream().forEach(Runnable::run);
     File htmlFile = writeHtml(options);
     try {
-      writePdf(options, htmlFile);
+      if(isEnablePdf()) writePdf(options, htmlFile);
     } catch (Throwable e) {
       logger.info("Error writing pdf", e);
     }
@@ -754,4 +755,21 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
 
+  public boolean isEnableZip() {
+    return enableZip;
+  }
+
+  public MarkdownNotebookOutput setEnableZip(boolean enableZip) {
+    this.enableZip = enableZip;
+    return this;
+  }
+
+  public boolean isEnablePdf() {
+    return enablePdf;
+  }
+
+  public MarkdownNotebookOutput setEnablePdf(boolean enablePdf) {
+    this.enablePdf = enablePdf;
+    return this;
+  }
 }
