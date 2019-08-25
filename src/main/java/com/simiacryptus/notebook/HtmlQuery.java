@@ -97,7 +97,7 @@ public abstract class HtmlQuery<T> {
     int lines = height();
     height1 = String.format("%dpx", lines);
     height2 = String.format("%dpx", lines + 40);
-    log.p("<iframe src=" + id + " style=\"margin: 0px; width: 100%; height: " + height2 + ";\"></iframe>");
+    log.p("<iframe src=" + id + " style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\"></iframe>");
     return this;
   }
 

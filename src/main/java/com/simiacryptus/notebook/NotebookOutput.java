@@ -41,6 +41,8 @@ public interface NotebookOutput extends Closeable {
     };
   }
 
+  String getId();
+
   default void run(@Nonnull final Runnable fn) {
     this.eval(() -> {
       fn.run();

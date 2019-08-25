@@ -46,6 +46,11 @@ public class NullNotebookOutput implements NotebookOutput {
 
   }
 
+  @Override
+  public String getId() {
+    return "";
+  }
+
   @Nonnull
   @Override
   public File svgFile(@Nonnull String rawImage, File file) {
