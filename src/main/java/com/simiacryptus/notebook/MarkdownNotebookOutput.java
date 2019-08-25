@@ -48,7 +48,6 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -66,10 +65,10 @@ import static com.simiacryptus.util.Util.pathToFile;
 import static com.simiacryptus.util.Util.stripPrefix;
 
 public class MarkdownNotebookOutput implements NotebookOutput {
-  public static Map<String, Object> uploadCache = new HashMap<>();
   public static final Random random = new Random();
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
+  public static Map<String, Object> uploadCache = new HashMap<>();
   public static int MAX_OUTPUT = 1024 * 2;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
@@ -89,28 +88,30 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private int maxImageSize = 1600;
   private URI currentHome = null;
   private URI archiveHome = null;
+  UUID id;
 
   public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
-    this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName()
+    this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName(), UUID.randomUUID()
     );
   }
 
 
   public MarkdownNotebookOutput(
       @Nonnull final File reportFile,
-      final int httpPort, boolean browse, String name
+      final int httpPort, boolean browse, String name, UUID id
   ) throws FileNotFoundException {
     this.setName(name);
     root = reportFile.getAbsoluteFile();
     root.mkdirs();
     setCurrentHome(root.toURI());
     setArchiveHome(null);
-    primaryOut = new PrintStream(new FileOutputStream(new File(root, getName() + ".md")));
+    this.id = id;
+    primaryOut = new PrintStream(new FileOutputStream(new File(root, this.id + ".md")));
     FileNanoHTTPD httpd = httpPort <= 0 ? null : new FileNanoHTTPD(root, httpPort);
     if (null != httpd) httpd.addGET("", "text/html", out -> {
       try {
         write();
-        try (FileInputStream input = new FileInputStream(new File(getRoot(), getName() + ".html"))) {
+        try (FileInputStream input = new FileInputStream(new File(getRoot(), this.id + ".html"))) {
           IOUtils.copy(input, out);
         }
       } catch (IOException e) {
@@ -120,7 +121,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     if (null != httpd) httpd.addGET("pdf", "application/pdf", out -> {
       try {
         write();
-        try (FileInputStream input = new FileInputStream(new File(getRoot(), getName() + ".pdf"))) {
+        try (FileInputStream input = new FileInputStream(new File(getRoot(), this.id + ".pdf"))) {
           IOUtils.copy(input, out);
         }
       } catch (IOException e) {
@@ -368,8 +369,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     Parser parser = Parser.builder(options).extensions(extensions).build();
     HtmlRenderer renderer = HtmlRenderer.builder(options).extensions(extensions).escapeHtml(false).indentSize(2).softBreak("\n").build();
     String txt = toString(toc) + "\n\n" + toString(markdownData);
-    FileUtils.write(new File(getRoot(), getName() + ".md"), txt, "UTF-8");
-    File htmlFile = new File(getRoot(), getName() + ".html");
+    FileUtils.write(new File(getRoot(), id + ".md"), txt, "UTF-8");
+    File htmlFile = new File(getRoot(), id + ".html");
     String html = renderer.render(parser.parse(txt));
     html = "<html><body>" + html + "</body></html>";
     try (FileOutputStream out = new FileOutputStream(htmlFile)) {
@@ -467,6 +468,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
+  public String getId() {
+    return id.toString();
+  }
+
+  @Override
   @Nonnull
   public File svgFile(@Nonnull final String rawImage, final File file) {
     try {
@@ -497,7 +503,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Override
   public String jpg(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage) return "";
-    @Nonnull final File file = jpgFile(rawImage, new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".jpg"));
+    @Nonnull final File file = jpgFile(rawImage, new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg"));
     return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
   }
 
@@ -673,29 +679,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
-        try {
-          this.p("Subreport: %s %s %s %s", stripPrefixes(URLDecoder.decode(reportName, "UTF-8"), "_", "/", "-", " ", "."),
-              this.link(new File(root, reportName + ".md"), "markdown"),
-              this.link(new File(root, reportName + ".html"), "html"),
-              this.link(new File(root, reportName + ".pdf"), "pdf")
-          );
-        } catch (UnsupportedEncodingException e) {
-          throw new RuntimeException(e);
-        }
-        getHttpd().addGET(reportName + ".html", "text/html", out -> {
+        this.p(this.link(new File(root, subreport.id + ".html"), "Subreport: " + reportName));
+        getHttpd().addGET(subreport.id + ".html", "text/html", out -> {
           try {
             subreport.write();
-            try (FileInputStream input = new FileInputStream(new File(root, subreport.getName() + ".html"))) {
-              IOUtils.copy(input, out);
-            }
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-        getHttpd().addGET(reportName + ".pdf", "application/pdf", out -> {
-          try {
-            subreport.write();
-            try (FileInputStream input = new FileInputStream(new File(root, subreport.getName() + ".pdf"))) {
+            try (FileInputStream input = new FileInputStream(new File(root, subreport.id + ".html"))) {
               IOUtils.copy(input, out);
             }
           } catch (IOException e) {
@@ -748,9 +736,15 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public NotebookOutput setName(String name) {
     this.name = name.replaceAll("\\.md$", "").replaceAll("\\$$", "").replaceAll("[:%\\{\\}\\(\\)\\+\\*]", "_").replaceAll("_{2,}", "_");
     int maxLength = 128;
+    try {
+      this.name = stripPrefixes(URLEncoder.encode(this.name, "UTF-8"), "_", "/", "-", " ", ".");
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
     if (this.name.length() > maxLength) {
       this.name = this.name.substring(this.name.length() - maxLength);
     }
+
     return this;
   }
 

@@ -22,16 +22,15 @@ package com.simiacryptus.notebook;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.function.Function;
 
 class Subreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
-  private final String reportName;
 
   public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
-    super(subreportFile, -1, false, reportName);
+    super(subreportFile, -1, false, reportName, UUID.randomUUID());
     this.parent = parent;
-    this.reportName = reportName;
     this.uploadCache = parent.uploadCache;
   }
 
