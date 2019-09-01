@@ -93,7 +93,7 @@ public abstract class HtmlQuery<T> {
 
   protected abstract String getDisplayHtml() throws JsonProcessingException;
 
-  public HtmlQuery<T> print() {
+  public final HtmlQuery<T> print() {
     int lines = height();
     height1 = String.format("%dpx", lines);
     height2 = String.format("%dpx", lines + 40);
