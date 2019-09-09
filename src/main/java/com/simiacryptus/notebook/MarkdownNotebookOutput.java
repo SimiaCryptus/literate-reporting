@@ -84,11 +84,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @javax.annotation.Nonnull
   public List<CharSequence> toc = new ArrayList<>();
   int anchor = 0;
+  UUID id;
   private String name;
   private int maxImageSize = 1600;
   private URI currentHome = null;
   private URI archiveHome = null;
-  UUID id;
   private boolean enableZip = false;
   private boolean enablePdf = false;
 
@@ -159,7 +159,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }).start();
       onComplete(() -> {
         try {
-          ReportingUtil.browse(new File(getRoot(), getName() + ".html").toURI());
+          ReportingUtil.browse(new File(getRoot(), getId() + ".html").toURI());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -228,7 +228,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
       File root = getRoot();
       write();
-      if(isEnableZip()) writeZip(root, getName().toString());
+      if (isEnableZip()) writeZip(root, getName().toString());
       onComplete.stream().forEach(fn -> {
         try {
           fn.run();
@@ -346,7 +346,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     onWriteHandlers.stream().forEach(Runnable::run);
     File htmlFile = writeHtml(options);
     try {
-      if(isEnablePdf()) writePdf(options, htmlFile);
+      if (isEnablePdf()) writePdf(options, htmlFile);
     } catch (Throwable e) {
       logger.info("Error writing pdf", e);
     }
@@ -772,4 +772,5 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     this.enablePdf = enablePdf;
     return this;
   }
+
 }
