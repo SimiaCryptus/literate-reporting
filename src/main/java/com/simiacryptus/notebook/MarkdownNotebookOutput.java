@@ -457,7 +457,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String png(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage) return "";
     @Nonnull final File file = pngFile(rawImage, new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".png"));
-    return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
+    return imageMarkdown(caption, file);
   }
 
   @javax.annotation.Nonnull
@@ -505,6 +505,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String jpg(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage) return "";
     @Nonnull final File file = jpgFile(rawImage, new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg"));
+    return imageMarkdown(caption, file);
+  }
+
+  public String imageMarkdown(CharSequence caption, File file) {
     return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
   }
 

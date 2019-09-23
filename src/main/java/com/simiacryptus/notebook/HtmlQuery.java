@@ -37,7 +37,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class HtmlQuery<T> {
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
-  protected final String id = "input_" + UUID.randomUUID().toString() + ".html";
+  protected final String rawId = UUID.randomUUID().toString();
+  protected final String id = "input_" + rawId + ".html";
   protected final Closeable handler_get;
   protected final Semaphore done = new Semaphore(0);
   protected final Closeable handler_post;
@@ -49,8 +50,7 @@ public abstract class HtmlQuery<T> {
 
   public HtmlQuery(NotebookOutput log) {
     this.log = log;
-    FileHTTPD httpd = this.log.getHttpd();
-    this.handler_get = httpd.addGET(id, "text/html", out -> {
+    this.handler_get = log.getHttpd().addGET(id, "text/html", out -> {
       try {
         if (done.tryAcquire()) {
           done.release();
@@ -62,16 +62,21 @@ public abstract class HtmlQuery<T> {
         throw new RuntimeException(e);
       }
     });
-    this.handler_post = httpd.addPOST(id, request -> {
+    this.handler_post = log.getHttpd().addPOST(id, request -> {
       String responseHtml;
       try {
         Map<String, String> parms = request.getParms();
         HashMap<String, String> files = new HashMap<>();
         request.parseBody(files);
-        setValue(valueFromParams(parms, files));
-        done.release();
-        responseHtml = getDisplayHtml();
-        FileUtils.write(new File(log.getRoot(), id), responseHtml, "UTF-8");
+        final T value = valueFromParams(parms, files);
+        if (value != null) {
+          setValue(value);
+          done.release();
+          responseHtml = getDisplayHtml();
+          FileUtils.write(new File(log.getRoot(), id), responseHtml, "UTF-8");
+        } else {
+          throw new RuntimeException("Submit var not found");
+        }
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -97,7 +102,10 @@ public abstract class HtmlQuery<T> {
     int lines = height();
     height1 = String.format("%dpx", lines);
     height2 = String.format("%dpx", lines + 40);
-    log.p("<iframe src=" + id + " style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\"></iframe>");
+    log.p("<iframe src=\"" + id + "\" id=\"" + rawId + "\" style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\"" +
+        " sandbox=\"allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts\"" +
+        " allow=\"geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media\"" +
+        " scrolling=\"auto\" allowtransparency=\"true\" allowpaymentrequest=\"true\" allowfullscreen=\"true\"></iframe>");
     return this;
   }
 
@@ -145,7 +153,7 @@ public abstract class HtmlQuery<T> {
   }
 
   public HtmlQuery<T> setValue(T value) {
-    this.value = value;
+    if (null != value) this.value = value;
     return this;
   }
 }

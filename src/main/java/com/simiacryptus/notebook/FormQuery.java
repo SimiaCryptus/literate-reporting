@@ -28,17 +28,21 @@ public abstract class FormQuery<T> extends HtmlQuery<T> {
 
   @Override
   protected String getActiveHtml() throws JsonProcessingException {
-    return "<html><body style=\"margin: 0;\">" +
+    return "<html>" + getHeader() + "<body style=\"margin: 0;\">" +
         "<form action=\"" + id + "\" method=\"POST\" enctype=\"multipart/form-data\">" +
         getFormInnerHtml() +
         "<br/><input type=\"submit\">" +
         "</form></body></html>";
   }
 
+  protected String getHeader() {
+    return "";
+  }
+
   protected abstract String getFormInnerHtml() throws JsonProcessingException;
 
   @Override
   protected String getDisplayHtml() throws JsonProcessingException {
-    return "<html><body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
+    return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
   }
 }
