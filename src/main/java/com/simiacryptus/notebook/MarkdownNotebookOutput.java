@@ -594,6 +594,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         } else if (eval instanceof TableOutput) {
           str = ((TableOutput) eval).toMarkdownTable();
           escape = false;
+        } else if (eval instanceof double[]) {
+          str = Arrays.toString(((double[]) eval));
+          escape = false;
+        } else if (eval instanceof int[]) {
+          str = Arrays.toString(((int[]) eval));
+          escape = false;
         } else {
           str = eval.toString();
           escape = true;
