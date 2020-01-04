@@ -24,7 +24,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.util.Map;
 
-public abstract class StringQuery<T> extends FormQuery<T> {
+public abstract @com.simiacryptus.ref.lang.RefAware
+class StringQuery<T> extends FormQuery<T> {
   String formVar = "data";
 
   public StringQuery(MarkdownNotebookOutput log) {
@@ -33,10 +34,12 @@ public abstract class StringQuery<T> extends FormQuery<T> {
 
   @Override
   protected String getFormInnerHtml() throws JsonProcessingException {
-    return "<textarea name=\"" + formVar + "\" style=\"margin: 0px; width: " + width + "; height: " + height1 + ";\">" + toString(getValue()) + "</textarea>";
+    return "<textarea name=\"" + formVar + "\" style=\"margin: 0px; width: " + width + "; height: " + height1 + ";\">"
+        + toString(getValue()) + "</textarea>";
   }
 
-  public T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
+  public T valueFromParams(Map<String, String> parms,
+                           Map<String, String> files) throws IOException {
     return fromString(parms.get(formVar));
   }
 
@@ -44,7 +47,8 @@ public abstract class StringQuery<T> extends FormQuery<T> {
 
   protected abstract T fromString(String text) throws IOException;
 
-  public static class SimpleStringQuery extends StringQuery<String> {
+  public static @com.simiacryptus.ref.lang.RefAware
+  class SimpleStringQuery extends StringQuery<String> {
 
     public SimpleStringQuery(MarkdownNotebookOutput log) {
       super(log);

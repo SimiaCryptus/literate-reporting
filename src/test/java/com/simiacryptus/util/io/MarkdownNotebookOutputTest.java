@@ -24,14 +24,14 @@ import com.simiacryptus.notebook.NotebookOutput;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.stream.IntStream;
 
-public class MarkdownNotebookOutputTest {
+public @com.simiacryptus.ref.lang.RefAware
+class MarkdownNotebookOutputTest {
 
   @Test
   public void test() throws Exception {
     try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/test.md"))) {
-      IntStream.range(0, 10).forEach(i -> {
+      com.simiacryptus.ref.wrappers.RefIntStream.range(0, 10).forEach(i -> {
         try {
           Thread.sleep(1000);
           notebookOutput.p("Iteration: " + i);
@@ -45,9 +45,9 @@ public class MarkdownNotebookOutputTest {
   @Test
   public void testSubreport() throws Exception {
     try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/testSubreport.md"))) {
-      IntStream.range(0, 10).forEach(i -> {
+      com.simiacryptus.ref.wrappers.RefIntStream.range(0, 10).forEach(i -> {
         notebookOutput.subreport(subreport -> {
-          IntStream.range(0, 10).forEach(j -> {
+          com.simiacryptus.ref.wrappers.RefIntStream.range(0, 10).forEach(j -> {
             try {
               Thread.sleep(100);
               subreport.p(String.format("Iteration: %d / %d", i, j));

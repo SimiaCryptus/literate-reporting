@@ -25,7 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class UploadImageQuery extends FormQuery<File> {
+public @com.simiacryptus.ref.lang.RefAware
+class UploadImageQuery extends FormQuery<File> {
 
   private final String key;
   String formVar = "data";
@@ -36,14 +37,6 @@ public class UploadImageQuery extends FormQuery<File> {
   }
 
   @Override
-  public File valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
-    File tmpFile = new File(files.get(formVar));
-    File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
-    FileUtils.copyFile(tmpFile, logFile);
-    return logFile;
-  }
-
-  @Override
   protected String getFormInnerHtml() {
     File currentValue = getValue();
     if (null != currentValue) {
@@ -51,6 +44,15 @@ public class UploadImageQuery extends FormQuery<File> {
     } else {
       return "<b>" + key + "</b><br/><input type=\"file\" name=\"" + formVar + "\" accept=\"image/*\">";
     }
+  }
+
+  @Override
+  public File valueFromParams(Map<String, String> parms,
+                              Map<String, String> files) throws IOException {
+    File tmpFile = new File(files.get(formVar));
+    File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
+    FileUtils.copyFile(tmpFile, logFile);
+    return logFile;
   }
 
 }

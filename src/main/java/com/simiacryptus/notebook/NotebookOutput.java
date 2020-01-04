@@ -29,19 +29,41 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-public interface NotebookOutput extends Closeable {
+public @com.simiacryptus.ref.lang.RefAware
+interface NotebookOutput extends Closeable {
 
-  static Consumer<NotebookOutput> concat(@Nonnull final Consumer<NotebookOutput> fn, @Nonnull final Consumer<NotebookOutput> header) {
+  URI getArchiveHome();
+
+  NotebookOutput setArchiveHome(URI archiveHome);
+
+  FileHTTPD getHttpd();
+
+  String getId();
+
+  int getMaxOutSize();
+
+  String getName();
+
+  NotebookOutput setName(String name);
+
+  @Nonnull
+  File getResourceDir();
+
+  @Nonnull
+  File getRoot();
+
+  NotebookOutput setCurrentHome(URI currentHome);
+
+  static com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> concat(
+      @Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> fn,
+      @Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> header) {
     return log -> {
       header.accept(log);
       fn.accept(log);
     };
   }
-
-  String getId();
 
   default void run(@Nonnull final Runnable fn) {
     this.eval(() -> {
@@ -109,9 +131,6 @@ public interface NotebookOutput extends Closeable {
   void p(CharSequence fmt, Object... args);
 
   @Nonnull
-  File getRoot();
-
-  @Nonnull
   NotebookOutput onComplete(Runnable... tasks);
 
   @Override
@@ -121,35 +140,21 @@ public interface NotebookOutput extends Closeable {
   }
 
   default void appendFrontMatterProperty(CharSequence key, CharSequence value, CharSequence delimiter) {
-    @Nullable CharSequence prior = getFrontMatterProperty(key);
-    if (null == prior) setFrontMatterProperty(key, value);
-    else setFrontMatterProperty(key, prior.toString() + delimiter + value);
+    @Nullable
+    CharSequence prior = getFrontMatterProperty(key);
+    if (null == prior)
+      setFrontMatterProperty(key, value);
+    else
+      setFrontMatterProperty(key, prior.toString() + delimiter + value);
   }
 
   @Nullable
   CharSequence getFrontMatterProperty(CharSequence key);
-
-  String getName();
-
-  NotebookOutput setName(String name);
-
-  @Nonnull
-  File getResourceDir();
-
-  int getMaxOutSize();
-
-  FileHTTPD getHttpd();
 
   <T> T subreport(Function<NotebookOutput, T> fn, String name);
 
   default <T> T subreport(String name, Function<NotebookOutput, T> fn) {
     return subreport(fn, name);
   }
-
-  NotebookOutput setCurrentHome(URI currentHome);
-
-  URI getArchiveHome();
-
-  NotebookOutput setArchiveHome(URI archiveHome);
 
 }

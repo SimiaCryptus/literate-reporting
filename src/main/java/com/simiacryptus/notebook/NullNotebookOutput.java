@@ -30,7 +30,8 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-public class NullNotebookOutput implements NotebookOutput {
+public @com.simiacryptus.ref.lang.RefAware
+class NullNotebookOutput implements NotebookOutput {
   private final String name;
 
   public NullNotebookOutput(String name) {
@@ -42,13 +43,45 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void close() {
+  public URI getArchiveHome() {
+    return new File(".").toURI();
+  }
 
+  @Override
+  public FileHTTPD getHttpd() {
+    return new NullHTTPD();
   }
 
   @Override
   public String getId() {
     return "";
+  }
+
+  @Override
+  public int getMaxOutSize() {
+    return 0;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @javax.annotation.Nonnull
+  @Override
+  public File getResourceDir() {
+    return new File(".");
+  }
+
+  @Nonnull
+  @Override
+  public File getRoot() {
+    return new File(".");
+  }
+
+  @Override
+  public void close() {
+
   }
 
   @Nonnull
@@ -107,13 +140,15 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @javax.annotation.Nonnull
   @Override
-  public CharSequence file(@javax.annotation.Nonnull byte[] data, @javax.annotation.Nonnull CharSequence filename, CharSequence caption) {
+  public CharSequence file(@javax.annotation.Nonnull byte[] data, @javax.annotation.Nonnull CharSequence filename,
+                           CharSequence caption) {
     return "";
   }
 
   @javax.annotation.Nonnull
   @Override
-  public String file(@javax.annotation.Nonnull CharSequence data, @javax.annotation.Nonnull CharSequence fileName, CharSequence caption) {
+  public String file(@javax.annotation.Nonnull CharSequence data, @javax.annotation.Nonnull CharSequence fileName,
+                     CharSequence caption) {
     return "";
   }
 
@@ -157,12 +192,6 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public File getRoot() {
-    return new File(".");
-  }
-
-  @Nonnull
-  @Override
   public NotebookOutput onComplete(final Runnable... tasks) {
     return this;
   }
@@ -171,27 +200,6 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public CharSequence getFrontMatterProperty(CharSequence key) {
     return null;
-  }
-
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  @javax.annotation.Nonnull
-  @Override
-  public File getResourceDir() {
-    return new File(".");
-  }
-
-  @Override
-  public int getMaxOutSize() {
-    return 0;
-  }
-
-  @Override
-  public FileHTTPD getHttpd() {
-    return new NullHTTPD();
   }
 
   @Override
@@ -205,11 +213,6 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public URI getArchiveHome() {
-    return new File(".").toURI();
-  }
-
-  @Override
   public NotebookOutput setArchiveHome(URI archiveHome) {
     return this;
   }
@@ -218,6 +221,5 @@ public class NullNotebookOutput implements NotebookOutput {
   public NotebookOutput setName(String name) {
     return this;
   }
-
 
 }

@@ -31,7 +31,8 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
-public class EditImageQuery extends HtmlQuery<BufferedImage> {
+public @com.simiacryptus.ref.lang.RefAware
+class EditImageQuery extends HtmlQuery<BufferedImage> {
 
   private final int heightPx;
   private final int widthPx;
@@ -48,37 +49,9 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
     save(log, image);
   }
 
-  public BufferedImage save(NotebookOutput log, BufferedImage image) {
-    try {
-      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-      ImageIO.write(image, "PNG", buffer);
-      FileUtils.writeByteArrayToFile(
-          new File(log.getRoot(), initUrl),
-          buffer.toByteArray());
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return image;
-  }
-
   @Override
-  public BufferedImage valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
-    String postData = files.get("postData");
-    String prefix = "data:image/png;base64,";
-    assert (postData.startsWith(prefix));
-    postData = postData.substring(prefix.length());
-    return save(log, ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(postData))));
-  }
-
-  protected String getHeader() {
-    try {
-      final String jsInject = String.format("init('%s', '%s', %s, %s)", rawId, initUrl, widthPx, heightPx);
-      return "<style>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.css"), "UTF-8") + "\n</style>" +
-          "<script>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.js"), "UTF-8") + "\n" + jsInject + "\n</script>";
-    } catch (IOException e) {
-      logger.warn("Error loading javascript", e);
-      return "";
-    }
+  protected String getActiveHtml() {
+    return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
   }
 
   @Override
@@ -86,13 +59,41 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
     return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
   }
 
-  @Override
-  protected String getActiveHtml() {
-    return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
-  }
-
   protected String getFormInnerHtml() {
     return "<div id=\"paint-app\"></div>";
+  }
+
+  protected String getHeader() {
+    try {
+      final String jsInject = String.format("init('%s', '%s', %s, %s)", rawId, initUrl, widthPx, heightPx);
+      return "<style>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.css"), "UTF-8")
+          + "\n</style>" + "<script>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.js"), "UTF-8")
+          + "\n" + jsInject + "\n</script>";
+    } catch (IOException e) {
+      logger.warn("Error loading javascript", e);
+      return "";
+    }
+  }
+
+  public BufferedImage save(NotebookOutput log, BufferedImage image) {
+    try {
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      ImageIO.write(image, "PNG", buffer);
+      FileUtils.writeByteArrayToFile(new File(log.getRoot(), initUrl), buffer.toByteArray());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return image;
+  }
+
+  @Override
+  public BufferedImage valueFromParams(Map<String, String> parms,
+                                       Map<String, String> files) throws IOException {
+    String postData = files.get("postData");
+    String prefix = "data:image/png;base64,";
+    assert (postData.startsWith(prefix));
+    postData = postData.substring(prefix.length());
+    return save(log, ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(postData))));
   }
 
 }

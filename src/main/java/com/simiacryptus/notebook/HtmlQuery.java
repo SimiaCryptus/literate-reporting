@@ -29,13 +29,13 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-public abstract class HtmlQuery<T> {
+public abstract @com.simiacryptus.ref.lang.RefAware
+class HtmlQuery<T> {
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
   protected final String rawId = UUID.randomUUID().toString();
   protected final String id = "input_" + rawId + ".html";
@@ -66,7 +66,7 @@ public abstract class HtmlQuery<T> {
       String responseHtml;
       try {
         Map<String, String> parms = request.getParms();
-        HashMap<String, String> files = new HashMap<>();
+        com.simiacryptus.ref.wrappers.RefHashMap<String, String> files = new com.simiacryptus.ref.wrappers.RefHashMap<>();
         request.parseBody(files);
         final T value = valueFromParams(parms, files);
         if (value != null) {
@@ -81,7 +81,8 @@ public abstract class HtmlQuery<T> {
         throw new RuntimeException(e);
       }
       byte[] bytes = responseHtml.getBytes();
-      return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "text/html", new ByteArrayInputStream(bytes), bytes.length);
+      return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "text/html",
+          new ByteArrayInputStream(bytes), bytes.length);
     });
     log.onWrite(() -> {
       try {
@@ -92,20 +93,32 @@ public abstract class HtmlQuery<T> {
     });
   }
 
-  public abstract T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException;
-
   protected abstract String getActiveHtml() throws JsonProcessingException;
 
   protected abstract String getDisplayHtml() throws JsonProcessingException;
+
+  public T getValue() {
+    return value;
+  }
+
+  public HtmlQuery<T> setValue(T value) {
+    if (null != value)
+      this.value = value;
+    return this;
+  }
+
+  public abstract T valueFromParams(Map<String, String> parms,
+                                    Map<String, String> files) throws IOException;
 
   public final HtmlQuery<T> print() {
     int lines = height();
     height1 = String.format("%dpx", lines);
     height2 = String.format("%dpx", lines + 40);
-    log.p("<iframe src=\"" + id + "\" id=\"" + rawId + "\" style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\"" +
-        " sandbox=\"allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts\"" +
-        " allow=\"geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media\"" +
-        " scrolling=\"auto\" allowtransparency=\"true\" allowpaymentrequest=\"true\" allowfullscreen=\"true\"></iframe>");
+    log.p("<iframe src=\"" + id + "\" id=\"" + rawId
+        + "\" style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\""
+        + " sandbox=\"allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts\""
+        + " allow=\"geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media\""
+        + " scrolling=\"auto\" allowtransparency=\"true\" allowpaymentrequest=\"true\" allowfullscreen=\"true\"></iframe>");
     return this;
   }
 
@@ -143,17 +156,10 @@ public abstract class HtmlQuery<T> {
 
   @Override
   protected void finalize() throws Throwable {
-    if (null != handler_get) handler_get.close();
-    if (null != handler_post) handler_post.close();
+    if (null != handler_get)
+      handler_get.close();
+    if (null != handler_post)
+      handler_post.close();
     super.finalize();
-  }
-
-  public T getValue() {
-    return value;
-  }
-
-  public HtmlQuery<T> setValue(T value) {
-    if (null != value) this.value = value;
-    return this;
   }
 }

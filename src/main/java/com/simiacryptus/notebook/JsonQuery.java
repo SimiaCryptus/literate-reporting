@@ -25,13 +25,23 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.ByteArrayInputStream;
 
-public class JsonQuery<T> extends StringQuery<T> {
+public @com.simiacryptus.ref.lang.RefAware
+class JsonQuery<T> extends StringQuery<T> {
   private ObjectMapper mapper = new ObjectMapper()
       //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
       .enable(SerializationFeature.INDENT_OUTPUT);
 
   public JsonQuery(MarkdownNotebookOutput log) {
     super(log);
+  }
+
+  public ObjectMapper getMapper() {
+    return mapper;
+  }
+
+  public JsonQuery<T> setMapper(ObjectMapper mapper) {
+    this.mapper = mapper;
+    return this;
   }
 
   @Override
@@ -47,14 +57,5 @@ public class JsonQuery<T> extends StringQuery<T> {
   @Override
   protected String toString(T value) throws JsonProcessingException {
     return mapper.writeValueAsString(value);
-  }
-
-  public ObjectMapper getMapper() {
-    return mapper;
-  }
-
-  public JsonQuery<T> setMapper(ObjectMapper mapper) {
-    this.mapper = mapper;
-    return this;
   }
 }
