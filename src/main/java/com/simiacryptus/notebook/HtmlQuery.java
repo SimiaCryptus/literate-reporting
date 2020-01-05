@@ -21,6 +21,7 @@ package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefHashMap;
 import com.simiacryptus.util.IOUtil;
 import org.apache.commons.io.FileUtils;
@@ -69,8 +70,8 @@ class HtmlQuery<T> {
       try {
         Map<String, String> parms = request.getParms();
         RefHashMap<String, String> files = new RefHashMap<>();
-        request.parseBody(com.simiacryptus.ref.lang.RefUtil.addRef(files));
-        final T value = valueFromParams(parms, com.simiacryptus.ref.lang.RefUtil.addRef(files));
+        request.parseBody(RefUtil.addRef(files));
+        final T value = valueFromParams(parms, RefUtil.addRef(files));
         if (null != files)
           files.freeRef();
         if (value != null) {

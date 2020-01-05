@@ -34,7 +34,7 @@ class Subreport extends MarkdownNotebookOutput {
   public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
     super(subreportFile, -1, false, reportName, UUID.randomUUID());
     this.parent = parent;
-    this.uploadCache = parent.uploadCache;
+    uploadCache = uploadCache;
   }
 
   @Override

@@ -339,9 +339,9 @@ class MarkdownNotebookOutput implements NotebookOutput {
       }
       return false;
     })) {
-      com.simiacryptus.ref.wrappers.RefCollectors.RefCollector<java.lang.CharSequence, ?, com.simiacryptus.ref.wrappers.RefList<java.lang.CharSequence>> temp_03_0002 = RefCollectors
+      RefCollectors.RefCollector<CharSequence, ?, RefList<CharSequence>> temp_03_0002 = RefCollectors
           .toList();
-      java.lang.String temp_03_0001 = toString(
+      String temp_03_0001 = toString(
           list.stream().map(x -> x.subSequence(1, x.length()).toString()).collect(temp_03_0002));
       if (null != temp_03_0002)
         temp_03_0002.freeRef();
