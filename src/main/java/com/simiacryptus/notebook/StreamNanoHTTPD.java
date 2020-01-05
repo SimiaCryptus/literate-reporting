@@ -19,6 +19,8 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefConsumer;
 import com.simiacryptus.util.io.AsyncOutputStream;
 import com.simiacryptus.util.io.TeeOutputStream;
 
@@ -31,13 +33,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class StreamNanoHTTPD extends FileNanoHTTPD {
-  @javax.annotation.Nonnull
+  @Nonnull
   public final TeeOutputStream dataReciever;
-  @javax.annotation.Nonnull
+  @Nonnull
   protected final URI gatewayUri;
-  @javax.annotation.Nonnull
+  @Nonnull
   private final File primaryFile;
   private final String mimeType;
   private boolean autobrowse = true;
@@ -47,7 +49,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
     try {
       gatewayUri = null == primaryFile ? null
           : new URI(String.format("http://localhost:%s/%s", port, primaryFile.getName()));
-    } catch (@javax.annotation.Nonnull final URISyntaxException e) {
+    } catch (@Nonnull final URISyntaxException e) {
       throw new RuntimeException(e);
     }
     this.primaryFile = primaryFile;
@@ -58,7 +60,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
         try {
           Thread.sleep(100);
           StreamNanoHTTPD.this.stop();
-        } catch (@javax.annotation.Nonnull final Exception e) {
+        } catch (@Nonnull final Exception e) {
           e.printStackTrace();
         }
       }
@@ -78,29 +80,29 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
     return this;
   }
 
-  public static Function<IHTTPSession, Response> asyncHandler(@javax.annotation.Nonnull final ExecutorService pool,
+  public static Function<IHTTPSession, Response> asyncHandler(@Nonnull final ExecutorService pool,
                                                               final String mimeType,
-                                                              @javax.annotation.Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<OutputStream> logic,
+                                                              @Nonnull final RefConsumer<OutputStream> logic,
                                                               final boolean async) {
     return session -> {
-      @javax.annotation.Nonnull final PipedInputStream snk = new PipedInputStream();
-      @javax.annotation.Nonnull final Semaphore onComplete = new Semaphore(0);
+      @Nonnull final PipedInputStream snk = new PipedInputStream();
+      @Nonnull final Semaphore onComplete = new Semaphore(0);
       pool.submit(() -> {
-        try (@javax.annotation.Nonnull
+        try (@Nonnull
              OutputStream out = new BufferedOutputStream(new AsyncOutputStream(new PipedOutputStream(snk)))) {
           try {
             logic.accept(out);
           } finally {
             onComplete.release();
           }
-        } catch (@javax.annotation.Nonnull final IOException e) {
+        } catch (@Nonnull final IOException e) {
           throw new RuntimeException(e);
         }
       });
       if (!async) {
         try {
           onComplete.acquire();
-        } catch (@javax.annotation.Nonnull final InterruptedException e) {
+        } catch (@Nonnull final InterruptedException e) {
           throw new RuntimeException(e);
         }
       }
@@ -109,7 +111,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
   }
 
   @Override
-  @javax.annotation.Nonnull
+  @Nonnull
   public StreamNanoHTTPD init() throws IOException {
     super.init();
     if (!GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
@@ -119,7 +121,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
           Thread.sleep(100);
           if (null != gatewayUri && isAutobrowse())
             Desktop.getDesktop().browse(gatewayUri);
-        } catch (@javax.annotation.Nonnull final Exception e) {
+        } catch (@Nonnull final Exception e) {
           e.printStackTrace();
         }
       }).start();
@@ -127,7 +129,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
   }
 
   public Closeable addAsyncHandler(final CharSequence path, final String mimeType,
-                                   @Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<OutputStream> logic, final boolean async) {
+                                   @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
     return addGET(path, StreamNanoHTTPD.asyncHandler(pool, mimeType, logic, async));
   }
 
@@ -139,11 +141,11 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
     }
     if (null != primaryFile && requestPath.equals(primaryFile.getName())) {
       try {
-        @javax.annotation.Nonnull final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
+        @Nonnull final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
             new BufferedInputStream(dataReciever.newInputStream()));
         response.setGzipEncoding(false);
         return response;
-      } catch (@javax.annotation.Nonnull final IOException e) {
+      } catch (@Nonnull final IOException e) {
         throw new RuntimeException(e);
       }
     } else {

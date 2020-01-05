@@ -19,6 +19,7 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -31,7 +32,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class EditImageQuery extends HtmlQuery<BufferedImage> {
 
   private final int heightPx;

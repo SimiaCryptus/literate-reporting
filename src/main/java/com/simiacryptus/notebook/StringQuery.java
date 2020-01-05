@@ -20,11 +20,12 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.simiacryptus.ref.lang.RefAware;
 
 import java.io.IOException;
 import java.util.Map;
 
-public abstract @com.simiacryptus.ref.lang.RefAware
+public abstract @RefAware
 class StringQuery<T> extends FormQuery<T> {
   String formVar = "data";
 
@@ -47,7 +48,7 @@ class StringQuery<T> extends FormQuery<T> {
 
   protected abstract T fromString(String text) throws IOException;
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class SimpleStringQuery extends StringQuery<String> {
 
     public SimpleStringQuery(MarkdownNotebookOutput log) {

@@ -20,6 +20,8 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefHashMap;
 import com.simiacryptus.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -34,7 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-public abstract @com.simiacryptus.ref.lang.RefAware
+public abstract @RefAware
 class HtmlQuery<T> {
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
   protected final String rawId = UUID.randomUUID().toString();
@@ -66,7 +68,7 @@ class HtmlQuery<T> {
       String responseHtml;
       try {
         Map<String, String> parms = request.getParms();
-        com.simiacryptus.ref.wrappers.RefHashMap<String, String> files = new com.simiacryptus.ref.wrappers.RefHashMap<>();
+        RefHashMap<String, String> files = new RefHashMap<>();
         request.parseBody(files);
         final T value = valueFromParams(parms, files);
         if (value != null) {

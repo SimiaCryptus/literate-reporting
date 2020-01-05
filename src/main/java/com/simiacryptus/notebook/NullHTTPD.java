@@ -19,13 +19,15 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
+
 import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@com.simiacryptus.ref.lang.RefAware
+@RefAware
 class NullHTTPD implements FileHTTPD {
   @Override
   public Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value) {

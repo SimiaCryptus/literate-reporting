@@ -20,6 +20,8 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefConsumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,7 +33,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 interface NotebookOutput extends Closeable {
 
   URI getArchiveHome();
@@ -56,9 +58,9 @@ interface NotebookOutput extends Closeable {
 
   NotebookOutput setCurrentHome(URI currentHome);
 
-  static com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> concat(
-      @Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> fn,
-      @Nonnull final com.simiacryptus.ref.wrappers.RefConsumer<NotebookOutput> header) {
+  static RefConsumer<NotebookOutput> concat(
+      @Nonnull final RefConsumer<NotebookOutput> fn,
+      @Nonnull final RefConsumer<NotebookOutput> header) {
     return log -> {
       header.accept(log);
       fn.accept(log);

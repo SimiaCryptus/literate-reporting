@@ -20,8 +20,9 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.simiacryptus.ref.lang.RefAware;
 
-public abstract @com.simiacryptus.ref.lang.RefAware
+public abstract @RefAware
 class FormQuery<T> extends HtmlQuery<T> {
   public FormQuery(NotebookOutput log) {
     super(log);

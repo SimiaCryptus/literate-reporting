@@ -22,10 +22,11 @@ package com.simiacryptus.notebook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.simiacryptus.ref.lang.RefAware;
 
 import java.io.ByteArrayInputStream;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class JsonQuery<T> extends StringQuery<T> {
   private ObjectMapper mapper = new ObjectMapper()
       //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)

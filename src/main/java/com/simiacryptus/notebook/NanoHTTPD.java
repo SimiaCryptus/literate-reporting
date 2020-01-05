@@ -19,6 +19,8 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
+
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.*;
@@ -34,7 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
-public abstract @com.simiacryptus.ref.lang.RefAware
+public abstract @RefAware
 class NanoHTTPD {
 
   public static final int SOCKET_READ_TIMEOUT = 5000;
@@ -388,7 +390,7 @@ class NanoHTTPD {
     }
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface AsyncRunner {
 
     void closeAll();
@@ -398,7 +400,7 @@ class NanoHTTPD {
     void exec(ClientHandler code);
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface IHTTPSession {
 
     CookieHandler getCookies();
@@ -420,7 +422,7 @@ class NanoHTTPD {
     void parseBody(Map<String, String> files) throws IOException, ResponseException;
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface TempFile {
 
     File getFile();
@@ -430,7 +432,7 @@ class NanoHTTPD {
     OutputStream open() throws Exception;
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface TempFileManager {
 
     void clear();
@@ -438,20 +440,20 @@ class NanoHTTPD {
     TempFile createTempFile(String filename_hint) throws Exception;
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface TempFileManagerFactory {
 
     TempFileManager create();
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   interface ServerSocketFactory {
 
     ServerSocket create() throws IOException;
 
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class Cookie {
 
     protected final String n, v, e;
@@ -486,7 +488,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class DefaultAsyncRunner implements AsyncRunner {
 
     protected final List<ClientHandler> running = Collections
@@ -521,7 +523,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class DefaultTempFile implements TempFile {
 
     protected final File file;
@@ -552,7 +554,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class DefaultTempFileManager implements TempFileManager {
 
     protected final File tmpdir;
@@ -587,7 +589,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class DefaultServerSocketFactory implements ServerSocketFactory {
 
     @Override
@@ -597,7 +599,7 @@ class NanoHTTPD {
 
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class SecureServerSocketFactory implements ServerSocketFactory {
 
     protected SSLServerSocketFactory sslServerSocketFactory;
@@ -626,7 +628,7 @@ class NanoHTTPD {
 
   }
 
-  public static @com.simiacryptus.ref.lang.RefAware
+  public static @RefAware
   class Response implements Closeable {
 
     protected final Map<String, String> header = new HashMap<String, String>();
@@ -866,7 +868,7 @@ class NanoHTTPD {
 
     }
 
-    public @com.simiacryptus.ref.lang.RefAware
+    public @RefAware
     interface IStatus {
 
       String getDescription();
@@ -874,7 +876,7 @@ class NanoHTTPD {
       int getRequestStatus();
     }
 
-    protected static @com.simiacryptus.ref.lang.RefAware
+    protected static @RefAware
     class ChunkedOutputStream extends FilterOutputStream {
 
       public ChunkedOutputStream(OutputStream out) {
@@ -908,7 +910,7 @@ class NanoHTTPD {
     }
   }
 
-  public static final @com.simiacryptus.ref.lang.RefAware
+  public static final @RefAware
   class ResponseException extends RuntimeException {
 
     protected static final long serialVersionUID = 6569838532917408380L;
@@ -930,7 +932,7 @@ class NanoHTTPD {
     }
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   class ClientHandler implements Runnable {
 
     protected final InputStream inputStream;
@@ -979,7 +981,7 @@ class NanoHTTPD {
     }
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   class CookieHandler implements Iterable<String> {
 
     protected final HashMap<String, String> cookies = new HashMap<String, String>();
@@ -1027,7 +1029,7 @@ class NanoHTTPD {
     }
   }
 
-  public @com.simiacryptus.ref.lang.RefAware
+  public @RefAware
   class ServerRunnable implements Runnable {
 
     protected final int timeout;
@@ -1064,7 +1066,7 @@ class NanoHTTPD {
     }
   }
 
-  protected @com.simiacryptus.ref.lang.RefAware
+  protected @RefAware
   class DefaultTempFileManagerFactory implements TempFileManagerFactory {
 
     @Override
@@ -1073,7 +1075,7 @@ class NanoHTTPD {
     }
   }
 
-  protected @com.simiacryptus.ref.lang.RefAware
+  protected @RefAware
   class HTTPSession implements IHTTPSession {
 
     public static final int BUFSIZE = 8192;

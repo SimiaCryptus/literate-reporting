@@ -23,6 +23,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.notebook.NotebookOutput;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Repository;
@@ -50,24 +52,24 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class CodeUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
 
-  private static final com.simiacryptus.ref.wrappers.RefList<CharSequence> sourceFolders = com.simiacryptus.ref.wrappers.RefArrays
+  private static final RefList<CharSequence> sourceFolders = RefArrays
       .asList("src/main/java", "src/test/java", "src/main/scala", "src/test/scala");
-  @javax.annotation.Nonnull
+  @Nonnull
   public static File projectRoot = new File(System.getProperty("codeRoot", getDefaultProjectRoot()));
-  private static final com.simiacryptus.ref.wrappers.RefList<File> codeRoots = CodeUtil.scanLocalCodeRoots();
-  public static com.simiacryptus.ref.wrappers.RefHashMap<String, String> classSourceInfo = getDefaultClassInfo();
+  private static final RefList<File> codeRoots = CodeUtil.scanLocalCodeRoots();
+  public static RefHashMap<String, String> classSourceInfo = getDefaultClassInfo();
 
-  public static com.simiacryptus.ref.wrappers.RefHashMap<String, String> getDefaultClassInfo() {
+  public static RefHashMap<String, String> getDefaultClassInfo() {
     InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("META-INF/CodeUtil/classSourceInfo.json");
     if (null != resourceAsStream) {
       try {
-        com.simiacryptus.ref.wrappers.RefHashMap<String, String> map = JsonUtil.getMapper()
-            .readValue(IOUtils.toString(resourceAsStream, "UTF-8"), com.simiacryptus.ref.wrappers.RefHashMap.class);
+        RefHashMap<String, String> map = JsonUtil.getMapper()
+            .readValue(IOUtils.toString(resourceAsStream, "UTF-8"), RefHashMap.class);
         logger.debug("Class Info: " + JsonUtil.toJson(map));
         return map;
       } catch (Throwable e) {
@@ -80,7 +82,7 @@ class CodeUtil {
         }
       }
     }
-    com.simiacryptus.ref.wrappers.RefHashMap<String, String> map = new com.simiacryptus.ref.wrappers.RefHashMap<>();
+    RefHashMap<String, String> map = new RefHashMap<>();
     scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile())
         .distinct().forEach(root -> {
       String base = getGitBase(root, "");
@@ -118,18 +120,18 @@ class CodeUtil {
     return CodeUtil.findFile(path + ".java");
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   public static URI findFile(@Nonnull final StackTraceElement callingFrame) {
-    @javax.annotation.Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
-    String pkg = com.simiacryptus.ref.wrappers.RefArrays.stream(packagePath).limit(packagePath.length - 1)
-        .collect(com.simiacryptus.ref.wrappers.RefCollectors.joining(File.separator));
+    @Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
+    String pkg = RefArrays.stream(packagePath).limit(packagePath.length - 1)
+        .collect(RefCollectors.joining(File.separator));
     if (!pkg.isEmpty())
       pkg += File.separator;
-    @javax.annotation.Nonnull final String path = pkg + callingFrame.getFileName();
+    @Nonnull final String path = pkg + callingFrame.getFileName();
     return CodeUtil.findFile(path);
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   public static URI findFile(@Nonnull final String path) {
     URL classpathEntry = ClassLoader.getSystemResource(path);
     if (classpathEntry != null) {
@@ -141,7 +143,7 @@ class CodeUtil {
       }
     }
     for (final File root : CodeUtil.codeRoots) {
-      @javax.annotation.Nonnull final File file = new File(root, path);
+      @Nonnull final File file = new File(root, path);
       if (file.exists()) {
         logger.debug(String.format("Resolved %s to %s", path, file));
         return file.toURI();
@@ -150,16 +152,16 @@ class CodeUtil {
     throw new RuntimeException(String.format("Not Found: %s; Project Roots = %s", path, CodeUtil.codeRoots));
   }
 
-  @javax.annotation.Nonnull
-  public static CharSequence getIndent(@javax.annotation.Nonnull final CharSequence txt) {
-    @javax.annotation.Nonnull final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
+  @Nonnull
+  public static CharSequence getIndent(@Nonnull final CharSequence txt) {
+    @Nonnull final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
     return matcher.find() ? matcher.group(0) : "";
   }
 
-  public static String getInnerText(@javax.annotation.Nonnull final StackTraceElement callingFrame) {
+  public static String getInnerText(@Nonnull final StackTraceElement callingFrame) {
 
     String[] split = callingFrame.getClassName().split("\\.");
-    String fileResource = com.simiacryptus.ref.wrappers.RefArrays.stream(split).limit(split.length - 1)
+    String fileResource = RefArrays.stream(split).limit(split.length - 1)
         .reduce((a, b) -> a + "/" + b).orElse("") + "/" + callingFrame.getFileName();
     URL resource = ClassLoader.getSystemResource(fileResource);
 
@@ -181,8 +183,8 @@ class CodeUtil {
 
       final int start = callingFrame.getLineNumber() - 1;
       final CharSequence txt = allLines.get(start);
-      @javax.annotation.Nonnull final CharSequence indent = CodeUtil.getIndent(txt);
-      @javax.annotation.Nonnull final com.simiacryptus.ref.wrappers.RefArrayList<CharSequence> lines = new com.simiacryptus.ref.wrappers.RefArrayList<>();
+      @Nonnull final CharSequence indent = CodeUtil.getIndent(txt);
+      @Nonnull final RefArrayList<CharSequence> lines = new RefArrayList<>();
       int lineNum = start + 1;
       for (; lineNum < allLines.size() && (CodeUtil.getIndent(allLines.get(lineNum)).length() > indent.length()
           || String.valueOf(allLines.get(lineNum)).trim().isEmpty()); lineNum++) {
@@ -190,8 +192,8 @@ class CodeUtil {
         lines.add(line.substring(Math.min(indent.length(), line.length())));
       }
       logger.debug(String.format("Selected %s lines (%s to %s) for %s", lines.size(), start, lineNum, callingFrame));
-      return lines.stream().collect(com.simiacryptus.ref.wrappers.RefCollectors.joining("\n"));
-    } catch (@javax.annotation.Nonnull final Throwable e) {
+      return lines.stream().collect(RefCollectors.joining("\n"));
+    } catch (@Nonnull final Throwable e) {
       logger.warn("Error assembling lines", e);
       return "";
     }
@@ -206,16 +208,16 @@ class CodeUtil {
         return clazz.getName() + " not found";
       final List<String> lines = IOUtils.readLines(source.toURL().openStream(),
           Charset.forName("UTF-8"));
-      final int classDeclarationLine = com.simiacryptus.ref.wrappers.RefIntStream.range(0, lines.size())
+      final int classDeclarationLine = RefIntStream.range(0, lines.size())
           .filter(i -> lines.get(i).contains("class " + clazz.getSimpleName())).findFirst().getAsInt();
-      final int firstLine = com.simiacryptus.ref.wrappers.RefIntStream.rangeClosed(1, classDeclarationLine)
+      final int firstLine = RefIntStream.rangeClosed(1, classDeclarationLine)
           .map(i -> classDeclarationLine - i).filter(i -> !lines.get(i).matches("\\s*[/\\*@].*")).findFirst().orElse(-1)
           + 1;
       final String javadoc = lines.subList(firstLine, classDeclarationLine).stream()
           .filter(s -> s.matches("\\s*[/\\*].*")).map(s -> s.replaceFirst("^[ \t]*[/\\*]+", "").trim())
           .filter(x -> !x.isEmpty()).reduce((a, b) -> a + "\n" + b).orElse("");
       return javadoc.replaceAll("<p>", "\n");
-    } catch (@javax.annotation.Nonnull final Throwable e) {
+    } catch (@Nonnull final Throwable e) {
       e.printStackTrace();
       return "";
     }
@@ -223,7 +225,7 @@ class CodeUtil {
 
   public static CharSequence codeUrl(StackTraceElement callingFrame) {
     String[] split = callingFrame.getClassName().split("\\.");
-    String packagePath = com.simiacryptus.ref.wrappers.RefArrays.asList(split).subList(0, split.length - 1).stream()
+    String packagePath = RefArrays.asList(split).subList(0, split.length - 1).stream()
         .reduce((a, b) -> a + "/" + b).orElse("");
     String[] fileSplit = callingFrame.getFileName().split("\\.");
     String language = fileSplit[fileSplit.length - 1];
@@ -314,21 +316,21 @@ class CodeUtil {
     return def;
   }
 
-  private static com.simiacryptus.ref.wrappers.RefList<File> scanLocalCodeRoots() {
-    return com.simiacryptus.ref.wrappers.RefStream
-        .concat(com.simiacryptus.ref.wrappers.RefStream.of(CodeUtil.projectRoot),
-            com.simiacryptus.ref.wrappers.RefArrays.stream(CodeUtil.projectRoot.listFiles())
+  private static RefList<File> scanLocalCodeRoots() {
+    return RefStream
+        .concat(RefStream.of(CodeUtil.projectRoot),
+            RefArrays.stream(CodeUtil.projectRoot.listFiles())
                 .filter(file -> file.exists() && file.isDirectory())
-                .collect(com.simiacryptus.ref.wrappers.RefCollectors.toList()).stream())
-        .flatMap(x -> scanProject(x).stream()).distinct().collect(com.simiacryptus.ref.wrappers.RefCollectors.toList());
+                .collect(RefCollectors.toList()).stream())
+        .flatMap(x -> scanProject(x).stream()).distinct().collect(RefCollectors.toList());
   }
 
-  private static com.simiacryptus.ref.wrappers.RefList<File> scanProject(File file) {
+  private static RefList<File> scanProject(File file) {
     return sourceFolders.stream().map(name -> new File(file, name.toString()))
-        .filter(f -> f.exists() && f.isDirectory()).collect(com.simiacryptus.ref.wrappers.RefCollectors.toList());
+        .filter(f -> f.exists() && f.isDirectory()).collect(RefCollectors.toList());
   }
 
-  public abstract static @com.simiacryptus.ref.lang.RefAware
+  public abstract static @RefAware
   class LogInterception implements AutoCloseable {
     public final AtomicLong counter;
 

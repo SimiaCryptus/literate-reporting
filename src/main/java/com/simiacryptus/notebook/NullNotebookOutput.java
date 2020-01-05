@@ -20,6 +20,7 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
+import com.simiacryptus.ref.lang.RefAware;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,7 +31,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class NullNotebookOutput implements NotebookOutput {
   private final String name;
 
@@ -67,7 +68,7 @@ class NullNotebookOutput implements NotebookOutput {
     return name;
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
   public File getResourceDir() {
     return new File(".");
@@ -109,7 +110,7 @@ class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T eval(@javax.annotation.Nonnull UncheckedSupplier<T> fn, int maxLog, int framesNo) {
+  public <T> T eval(@Nonnull UncheckedSupplier<T> fn, int maxLog, int framesNo) {
     try {
       return fn.get();
     } catch (Exception e) {
@@ -126,28 +127,28 @@ class NullNotebookOutput implements NotebookOutput {
   public void write() {
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
-  public OutputStream file(@javax.annotation.Nonnull CharSequence name) {
+  public OutputStream file(@Nonnull CharSequence name) {
     return new ByteArrayOutputStream();
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
-  public String file(@javax.annotation.Nonnull CharSequence data, CharSequence caption) {
+  public String file(@Nonnull CharSequence data, CharSequence caption) {
     return "";
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
-  public CharSequence file(@javax.annotation.Nonnull byte[] data, @javax.annotation.Nonnull CharSequence filename,
+  public CharSequence file(@Nonnull byte[] data, @Nonnull CharSequence filename,
                            CharSequence caption) {
     return "";
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
-  public String file(@javax.annotation.Nonnull CharSequence data, @javax.annotation.Nonnull CharSequence fileName,
+  public String file(@Nonnull CharSequence data, @Nonnull CharSequence fileName,
                      CharSequence caption) {
     return "";
   }
@@ -167,7 +168,7 @@ class NullNotebookOutput implements NotebookOutput {
 
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
   public String png(BufferedImage rawImage, CharSequence caption) {
     return "";
@@ -179,7 +180,7 @@ class NullNotebookOutput implements NotebookOutput {
     return null;
   }
 
-  @javax.annotation.Nonnull
+  @Nonnull
   @Override
   public CharSequence link(File file, CharSequence text) {
     return "";

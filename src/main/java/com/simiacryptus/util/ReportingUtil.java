@@ -19,6 +19,13 @@
 
 package com.simiacryptus.util;
 
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefArrays;
+import com.simiacryptus.ref.wrappers.RefCollectors;
+import com.simiacryptus.ref.wrappers.RefList;
+import com.simiacryptus.ref.wrappers.RefStream;
+
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,7 +33,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class ReportingUtil {
 
   public static final boolean BROWSE_SUPPORTED = !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
@@ -41,17 +48,17 @@ class ReportingUtil {
       Desktop.getDesktop().browse(uri);
   }
 
-  public static <T> T getLast(@javax.annotation.Nonnull final com.simiacryptus.ref.wrappers.RefStream<T> stream) {
-    final com.simiacryptus.ref.wrappers.RefList<T> collect = stream
-        .collect(com.simiacryptus.ref.wrappers.RefCollectors.toList());
+  public static <T> T getLast(@Nonnull final RefStream<T> stream) {
+    final RefList<T> collect = stream
+        .collect(RefCollectors.toList());
     final T last = collect.get(collect.size() - 1);
     return last;
   }
 
   public static void report(
-      @javax.annotation.Nonnull final com.simiacryptus.ref.wrappers.RefStream<CharSequence> fragments)
+      @Nonnull final RefStream<CharSequence> fragments)
       throws IOException {
-    @javax.annotation.Nonnull final File outDir;
+    @Nonnull final File outDir;
     if (new File("target").exists()) {
       outDir = new File("target/reports");
     } else {
@@ -59,10 +66,10 @@ class ReportingUtil {
     }
     outDir.mkdirs();
     final StackTraceElement caller = getLast(
-        com.simiacryptus.ref.wrappers.RefArrays.stream(Thread.currentThread().getStackTrace())//
+        RefArrays.stream(Thread.currentThread().getStackTrace())//
             .filter(x -> x.getClassName().contains("simiacryptus")));
-    @javax.annotation.Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
-    @javax.annotation.Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
+    @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
+    @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
     out.println("<html><head></head><body>");
     fragments.forEach(out::println);
     out.println("</body></html>");
@@ -71,6 +78,6 @@ class ReportingUtil {
   }
 
   public static void report(final CharSequence... fragments) throws IOException {
-    report(com.simiacryptus.ref.wrappers.RefStream.of(fragments));
+    report(RefStream.of(fragments));
   }
 }

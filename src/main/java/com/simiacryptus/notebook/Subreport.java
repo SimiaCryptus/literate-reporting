@@ -19,13 +19,15 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
-@com.simiacryptus.ref.lang.RefAware
+@RefAware
 class Subreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 

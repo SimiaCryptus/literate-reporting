@@ -19,13 +19,14 @@
 
 package com.simiacryptus.notebook;
 
+import com.simiacryptus.ref.lang.RefAware;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public @com.simiacryptus.ref.lang.RefAware
+public @RefAware
 class UploadImageQuery extends FormQuery<File> {
 
   private final String key;
