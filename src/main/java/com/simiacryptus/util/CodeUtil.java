@@ -57,8 +57,8 @@ class CodeUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
 
-  private static final RefList<CharSequence> sourceFolders = RefArrays
-      .asList("src/main/java", "src/test/java", "src/main/scala", "src/test/scala");
+  private static final RefList<CharSequence> sourceFolders = RefArrays.asList("src/main/java", "src/test/java",
+      "src/main/scala", "src/test/scala");
   @Nonnull
   public static File projectRoot = new File(System.getProperty("codeRoot", getDefaultProjectRoot()));
   private static final RefList<File> codeRoots = CodeUtil.scanLocalCodeRoots();
@@ -68,9 +68,9 @@ class CodeUtil {
     InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("META-INF/CodeUtil/classSourceInfo.json");
     if (null != resourceAsStream) {
       try {
-        RefHashMap<String, String> map = JsonUtil.getMapper()
-            .readValue(IOUtils.toString(resourceAsStream, "UTF-8"), RefHashMap.class);
-        logger.debug("Class Info: " + JsonUtil.toJson(map));
+        RefHashMap<String, String> map = JsonUtil.getMapper().readValue(IOUtils.toString(resourceAsStream, "UTF-8"),
+            RefHashMap.class);
+        logger.debug("Class Info: " + JsonUtil.toJson(com.simiacryptus.ref.lang.RefUtil.addRef(map)));
         return map;
       } catch (Throwable e) {
         logger.warn("Error loading", e);
@@ -83,22 +83,27 @@ class CodeUtil {
       }
     }
     RefHashMap<String, String> map = new RefHashMap<>();
-    scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile())
-        .distinct().forEach(root -> {
-      String base = getGitBase(root, "");
-      if (!base.isEmpty()) {
-        File src = new File(root, "src");
-        FileUtils.listFiles(src, null, true).forEach(file -> {
-          try {
-            map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
-                .replace('\\', '/'), base);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
-      }
-    });
-    logger.debug("Class Info: " + JsonUtil.toJson(map));
+    com.simiacryptus.ref.wrappers.RefList<java.io.File> temp_00_0002 = scanLocalCodeRoots();
+    temp_00_0002.stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile()).distinct()
+        .forEach(com.simiacryptus.ref.lang.RefUtil
+            .wrapInterface((java.util.function.Consumer<? super java.io.File>) root -> {
+              String base = getGitBase(root, "");
+              if (!base.isEmpty()) {
+                File src = new File(root, "src");
+                FileUtils.listFiles(src, null, true).forEach(com.simiacryptus.ref.lang.RefUtil
+                    .wrapInterface((java.util.function.Consumer<? super java.io.File>) file -> {
+                      try {
+                        map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
+                            .replace('\\', '/'), base);
+                      } catch (IOException e) {
+                        throw new RuntimeException(e);
+                      }
+                    }, com.simiacryptus.ref.lang.RefUtil.addRef(map)));
+              }
+            }, com.simiacryptus.ref.lang.RefUtil.addRef(map)));
+    if (null != temp_00_0002)
+      temp_00_0002.freeRef();
+    logger.debug("Class Info: " + JsonUtil.toJson(com.simiacryptus.ref.lang.RefUtil.addRef(map)));
     return map;
   }
 
@@ -161,8 +166,8 @@ class CodeUtil {
   public static String getInnerText(@Nonnull final StackTraceElement callingFrame) {
 
     String[] split = callingFrame.getClassName().split("\\.");
-    String fileResource = RefArrays.stream(split).limit(split.length - 1)
-        .reduce((a, b) -> a + "/" + b).orElse("") + "/" + callingFrame.getFileName();
+    String fileResource = RefArrays.stream(split).limit(split.length - 1).reduce((a, b) -> a + "/" + b).orElse("") + "/"
+        + callingFrame.getFileName();
     URL resource = ClassLoader.getSystemResource(fileResource);
 
     try {
@@ -192,7 +197,9 @@ class CodeUtil {
         lines.add(line.substring(Math.min(indent.length(), line.length())));
       }
       logger.debug(String.format("Selected %s lines (%s to %s) for %s", lines.size(), start, lineNum, callingFrame));
-      return lines.stream().collect(RefCollectors.joining("\n"));
+      java.lang.String temp_00_0001 = lines.stream().collect(RefCollectors.joining("\n"));
+      lines.freeRef();
+      return temp_00_0001;
     } catch (@Nonnull final Throwable e) {
       logger.warn("Error assembling lines", e);
       return "";
@@ -206,13 +213,11 @@ class CodeUtil {
       @Nullable final URI source = CodeUtil.findFile(clazz);
       if (null == source)
         return clazz.getName() + " not found";
-      final List<String> lines = IOUtils.readLines(source.toURL().openStream(),
-          Charset.forName("UTF-8"));
+      final List<String> lines = IOUtils.readLines(source.toURL().openStream(), Charset.forName("UTF-8"));
       final int classDeclarationLine = RefIntStream.range(0, lines.size())
           .filter(i -> lines.get(i).contains("class " + clazz.getSimpleName())).findFirst().getAsInt();
-      final int firstLine = RefIntStream.rangeClosed(1, classDeclarationLine)
-          .map(i -> classDeclarationLine - i).filter(i -> !lines.get(i).matches("\\s*[/\\*@].*")).findFirst().orElse(-1)
-          + 1;
+      final int firstLine = RefIntStream.rangeClosed(1, classDeclarationLine).map(i -> classDeclarationLine - i)
+          .filter(i -> !lines.get(i).matches("\\s*[/\\*@].*")).findFirst().orElse(-1) + 1;
       final String javadoc = lines.subList(firstLine, classDeclarationLine).stream()
           .filter(s -> s.matches("\\s*[/\\*].*")).map(s -> s.replaceFirst("^[ \t]*[/\\*]+", "").trim())
           .filter(x -> !x.isEmpty()).reduce((a, b) -> a + "\n" + b).orElse("");
@@ -225,8 +230,13 @@ class CodeUtil {
 
   public static CharSequence codeUrl(StackTraceElement callingFrame) {
     String[] split = callingFrame.getClassName().split("\\.");
-    String packagePath = RefArrays.asList(split).subList(0, split.length - 1).stream()
-        .reduce((a, b) -> a + "/" + b).orElse("");
+    com.simiacryptus.ref.wrappers.RefList<java.lang.String> temp_00_0003 = RefArrays.asList(split);
+    com.simiacryptus.ref.wrappers.RefList<java.lang.String> temp_00_0004 = temp_00_0003.subList(0, split.length - 1);
+    String packagePath = temp_00_0004.stream().reduce((a, b) -> a + "/" + b).orElse("");
+    if (null != temp_00_0004)
+      temp_00_0004.freeRef();
+    if (null != temp_00_0003)
+      temp_00_0003.freeRef();
     String[] fileSplit = callingFrame.getFileName().split("\\.");
     String language = fileSplit[fileSplit.length - 1];
     String codePath = (language + "/" + packagePath + "/" + callingFrame.getFileName()).replaceAll("//", "/");
@@ -317,12 +327,15 @@ class CodeUtil {
   }
 
   private static RefList<File> scanLocalCodeRoots() {
-    return RefStream
-        .concat(RefStream.of(CodeUtil.projectRoot),
-            RefArrays.stream(CodeUtil.projectRoot.listFiles())
-                .filter(file -> file.exists() && file.isDirectory())
-                .collect(RefCollectors.toList()).stream())
-        .flatMap(x -> scanProject(x).stream()).distinct().collect(RefCollectors.toList());
+    com.simiacryptus.ref.wrappers.RefList<java.io.File> temp_00_0006 = RefArrays
+        .stream(CodeUtil.projectRoot.listFiles()).filter(file -> file.exists() && file.isDirectory())
+        .collect(RefCollectors.toList());
+    com.simiacryptus.ref.wrappers.RefList<java.io.File> temp_00_0005 = RefStream
+        .concat(RefStream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
+        .distinct().collect(RefCollectors.toList());
+    if (null != temp_00_0006)
+      temp_00_0006.freeRef();
+    return temp_00_0005;
   }
 
   private static RefList<File> scanProject(File file) {

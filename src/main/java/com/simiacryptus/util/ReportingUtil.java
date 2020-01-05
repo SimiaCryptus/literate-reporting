@@ -49,15 +49,14 @@ class ReportingUtil {
   }
 
   public static <T> T getLast(@Nonnull final RefStream<T> stream) {
-    final RefList<T> collect = stream
-        .collect(RefCollectors.toList());
-    final T last = collect.get(collect.size() - 1);
-    return last;
+    final RefList<T> collect = stream.collect(RefCollectors.toList());
+    T temp_01_0001 = collect.get(collect.size() - 1);
+    if (null != collect)
+      collect.freeRef();
+    return temp_01_0001;
   }
 
-  public static void report(
-      @Nonnull final RefStream<CharSequence> fragments)
-      throws IOException {
+  public static void report(@Nonnull final RefStream<CharSequence> fragments) throws IOException {
     @Nonnull final File outDir;
     if (new File("target").exists()) {
       outDir = new File("target/reports");
@@ -65,9 +64,8 @@ class ReportingUtil {
       outDir = new File("reports");
     }
     outDir.mkdirs();
-    final StackTraceElement caller = getLast(
-        RefArrays.stream(Thread.currentThread().getStackTrace())//
-            .filter(x -> x.getClassName().contains("simiacryptus")));
+    final StackTraceElement caller = getLast(RefArrays.stream(Thread.currentThread().getStackTrace())//
+        .filter(x -> x.getClassName().contains("simiacryptus")));
     @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
     @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
     out.println("<html><head></head><body>");

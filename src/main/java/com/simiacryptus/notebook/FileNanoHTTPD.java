@@ -86,8 +86,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     return () -> postHandlers.remove(path, put);
   }
 
-  public Closeable addGET(final CharSequence path, final String mimeType,
-                          @Nonnull final Consumer<OutputStream> logic) {
+  public Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic) {
     return addGET(path, FileNanoHTTPD.handler(mimeType, logic));
   }
 
@@ -103,15 +102,32 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     @Nonnull final File file = new File(root, requestPath);
     if (session.getMethod() == Method.GET) {
       Comparator<Map.Entry<CharSequence, Function<IHTTPSession, Response>>> objectComparator = Comparator
-          .comparingInt(x -> x.getKey().length());
-      Optional<Function<IHTTPSession, Response>> handler = getHandlers.entrySet().stream().filter(e -> {
-        String prefix = e.getKey().toString();
-        if (prefix.isEmpty() && requestPath.isEmpty())
-          return true;
-        if (prefix.isEmpty() || requestPath.isEmpty())
-          return false;
-        return requestPath.startsWith(prefix);
-      }).sorted(objectComparator.reversed()).findFirst().map(e -> e.getValue());
+          .comparingInt(x -> {
+            int temp_02_0001 = x.getKey().length();
+            if (null != x)
+              com.simiacryptus.ref.lang.RefUtil.freeRef(x);
+            return temp_02_0001;
+          });
+      java.util.Optional<java.util.Map.Entry<java.lang.CharSequence, java.util.function.Function<com.simiacryptus.notebook.NanoHTTPD.IHTTPSession, com.simiacryptus.notebook.NanoHTTPD.Response>>> temp_02_0005 = getHandlers
+          .entrySet().stream().filter(e -> {
+            String prefix = e.getKey().toString();
+            if (null != e)
+              com.simiacryptus.ref.lang.RefUtil.freeRef(e);
+            if (prefix.isEmpty() && requestPath.isEmpty())
+              return true;
+            if (prefix.isEmpty() || requestPath.isEmpty())
+              return false;
+            return requestPath.startsWith(prefix);
+          }).sorted(objectComparator.reversed()).findFirst();
+      Optional<Function<IHTTPSession, Response>> handler = temp_02_0005.map(e -> {
+        java.util.function.Function<com.simiacryptus.notebook.NanoHTTPD.IHTTPSession, com.simiacryptus.notebook.NanoHTTPD.Response> temp_02_0002 = e
+            .getValue();
+        if (null != e)
+          com.simiacryptus.ref.lang.RefUtil.freeRef(e);
+        return temp_02_0002;
+      });
+      if (null != temp_02_0005)
+        com.simiacryptus.ref.lang.RefUtil.freeRef(temp_02_0005);
       handler.orElse(null);
       if (handler.isPresent()) {
         try {
@@ -133,8 +149,22 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
         return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
       }
     } else if (session.getMethod() == Method.POST) {
-      Optional<Function<IHTTPSession, Response>> handler = this.postHandlers.entrySet().stream()
-          .filter(e -> requestPath.startsWith(e.getKey().toString())).findAny().map(e -> e.getValue());
+      java.util.Optional<java.util.Map.Entry<java.lang.CharSequence, java.util.function.Function<com.simiacryptus.notebook.NanoHTTPD.IHTTPSession, com.simiacryptus.notebook.NanoHTTPD.Response>>> temp_02_0006 = this.postHandlers
+          .entrySet().stream().filter(e -> {
+            boolean temp_02_0003 = requestPath.startsWith(e.getKey().toString());
+            if (null != e)
+              com.simiacryptus.ref.lang.RefUtil.freeRef(e);
+            return temp_02_0003;
+          }).findAny();
+      Optional<Function<IHTTPSession, Response>> handler = temp_02_0006.map(e -> {
+        java.util.function.Function<com.simiacryptus.notebook.NanoHTTPD.IHTTPSession, com.simiacryptus.notebook.NanoHTTPD.Response> temp_02_0004 = e
+            .getValue();
+        if (null != e)
+          com.simiacryptus.ref.lang.RefUtil.freeRef(e);
+        return temp_02_0004;
+      });
+      if (null != temp_02_0006)
+        com.simiacryptus.ref.lang.RefUtil.freeRef(temp_02_0006);
       handler.orElse(null);
       if (handler.isPresent()) {
         try {

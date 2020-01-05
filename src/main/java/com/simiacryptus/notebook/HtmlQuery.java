@@ -69,8 +69,10 @@ class HtmlQuery<T> {
       try {
         Map<String, String> parms = request.getParms();
         RefHashMap<String, String> files = new RefHashMap<>();
-        request.parseBody(files);
-        final T value = valueFromParams(parms, files);
+        request.parseBody(com.simiacryptus.ref.lang.RefUtil.addRef(files));
+        final T value = valueFromParams(parms, com.simiacryptus.ref.lang.RefUtil.addRef(files));
+        if (null != files)
+          files.freeRef();
         if (value != null) {
           setValue(value);
           done.release();
@@ -109,8 +111,7 @@ class HtmlQuery<T> {
     return this;
   }
 
-  public abstract T valueFromParams(Map<String, String> parms,
-                                    Map<String, String> files) throws IOException;
+  public abstract T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException;
 
   public final HtmlQuery<T> print() {
     int lines = height();

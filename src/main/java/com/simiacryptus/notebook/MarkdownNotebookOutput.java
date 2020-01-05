@@ -238,8 +238,7 @@ class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  public static RefConsumer<NotebookOutput> wrapFrontmatter(
-      @Nonnull final RefConsumer<NotebookOutput> fn) {
+  public static RefConsumer<NotebookOutput> wrapFrontmatter(@Nonnull final RefConsumer<NotebookOutput> fn) {
     return log -> {
       @Nonnull
       TimedResult<Void> time = TimedResult.time(() -> {
@@ -281,8 +280,7 @@ class MarkdownNotebookOutput implements NotebookOutput {
 
   public static String stripPrefixes(String str, String... prefixes) {
     AtomicReference<String> reference = new AtomicReference<>(str);
-    while (RefStream.of(prefixes).filter(reference.get()::startsWith).findFirst()
-        .isPresent()) {
+    while (RefStream.of(prefixes).filter(reference.get()::startsWith).findFirst().isPresent()) {
       reference.set(reference.get().substring(1));
     }
     return reference.get();
@@ -340,10 +338,15 @@ class MarkdownNotebookOutput implements NotebookOutput {
         return c == ' ' || c == '\t';
       }
       return false;
-    }))
-      return toString(list.stream().map(x -> x.subSequence(1, x.length()).toString())
-          .collect(RefCollectors.toList()));
-    else
+    })) {
+      com.simiacryptus.ref.wrappers.RefCollectors.RefCollector<java.lang.CharSequence, ?, com.simiacryptus.ref.wrappers.RefList<java.lang.CharSequence>> temp_03_0002 = RefCollectors
+          .toList();
+      java.lang.String temp_03_0001 = toString(
+          list.stream().map(x -> x.subSequence(1, x.length()).toString()).collect(temp_03_0002));
+      if (null != temp_03_0002)
+        temp_03_0002.freeRef();
+      return temp_03_0001;
+    } else
       return list.stream().reduce((a, b) -> a + "\n" + b).orElse("").toString();
   }
 
@@ -441,8 +444,7 @@ class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public CharSequence file(@Nonnull byte[] data, @Nonnull CharSequence filename,
-                           CharSequence caption) {
+  public CharSequence file(@Nonnull byte[] data, @Nonnull CharSequence filename, CharSequence caption) {
     return file(new String(data, Charset.forName("UTF-8")), filename, caption);
   }
 
@@ -793,11 +795,13 @@ class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   private synchronized File writeHtml(MutableDataSet options) throws IOException {
-    RefList<Extension> extensions = RefArrays
-        .asList(TablesExtension.create(), SubscriptExtension.create(), EscapedCharacterExtension.create());
+    RefList<Extension> extensions = RefArrays.asList(TablesExtension.create(), SubscriptExtension.create(),
+        EscapedCharacterExtension.create());
     Parser parser = Parser.builder(options).extensions(extensions).build();
     HtmlRenderer renderer = HtmlRenderer.builder(options).extensions(extensions).escapeHtml(false).indentSize(2)
         .softBreak("\n").build();
+    if (null != extensions)
+      extensions.freeRef();
     String txt = toString(toc) + "\n\n" + toString(markdownData);
     FileUtils.write(new File(getRoot(), id + ".md"), txt, "UTF-8");
     File htmlFile = new File(getRoot(), id + ".html");
