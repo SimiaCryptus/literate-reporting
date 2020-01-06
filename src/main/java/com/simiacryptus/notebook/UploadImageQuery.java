@@ -20,6 +20,7 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefString;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -41,7 +42,7 @@ class UploadImageQuery extends FormQuery<File> {
   protected String getFormInnerHtml() {
     File currentValue = getValue();
     if (null != currentValue) {
-      return String.format("<img src=\"etc/%s\" />", currentValue.getName());
+      return RefString.format("<img src=\"etc/%s\" />", currentValue.getName());
     } else {
       return "<b>" + key + "</b><br/><input type=\"file\" name=\"" + formVar + "\" accept=\"image/*\">";
     }

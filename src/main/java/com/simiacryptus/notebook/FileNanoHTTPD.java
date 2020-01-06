@@ -22,6 +22,7 @@ package com.simiacryptus.notebook;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +145,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           throw new RuntimeException(e);
         }
       } else {
-        log.warn(String.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
+        log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
             getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
                 .reduce((a, b) -> a + "\n\t" + b).get()));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
@@ -175,7 +176,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           throw new RuntimeException(e);
         }
       } else {
-        log.warn(String.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
+        log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
             this.getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
                 .reduce((a, b) -> a + "\n\t" + b).get()));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");

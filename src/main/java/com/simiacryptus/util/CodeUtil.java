@@ -45,34 +45,34 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public @RefAware
 class CodeUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
 
-  private static final RefList<CharSequence> sourceFolders = RefArrays.asList("src/main/java", "src/test/java",
+  private static final List<CharSequence> sourceFolders = Arrays.asList("src/main/java", "src/test/java",
       "src/main/scala", "src/test/scala");
   @Nonnull
-  public static File projectRoot = new File(System.getProperty("codeRoot", getDefaultProjectRoot()));
+  public static File projectRoot = new File(com.simiacryptus.ref.wrappers.RefSystem.getProperty("codeRoot", getDefaultProjectRoot()));
   private static final List<File> codeRoots = CodeUtil.scanLocalCodeRoots();
-  public static RefHashMap<String, String> classSourceInfo = getDefaultClassInfo();
+  public static Map<String, String> classSourceInfo = getDefaultClassInfo();
 
-  public static RefHashMap<String, String> getDefaultClassInfo() {
+  public static Map<String, String> getDefaultClassInfo() {
     InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream("META-INF/CodeUtil/classSourceInfo.json");
     if (null != resourceAsStream) {
       try {
-        RefHashMap<String, String> map = JsonUtil.getMapper().readValue(IOUtils.toString(resourceAsStream, "UTF-8"),
-            RefHashMap.class);
-        logger.debug("Class Info: " + JsonUtil.toJson(RefUtil.addRef(map)));
+        Map<String, String> map = JsonUtil.getMapper().readValue(IOUtils.toString(resourceAsStream, "UTF-8"),
+            HashMap.class);
+        logger.debug("Class Info: " + JsonUtil.toJson(map));
         return map;
       } catch (Throwable e) {
         logger.warn("Error loading", e);
@@ -84,24 +84,22 @@ class CodeUtil {
         }
       }
     }
-    RefHashMap<String, String> map = new RefHashMap<>();
+    Map<String, String> map = new HashMap<>();
     scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile()).distinct()
-        .forEach(RefUtil
-            .wrapInterface((Consumer<? super File>) root -> {
-              String base = getGitBase(root, "");
-              if (!base.isEmpty()) {
-                File src = new File(root, "src");
-                FileUtils.listFiles(src, null, true).forEach(RefUtil
-                    .wrapInterface((Consumer<? super File>) file -> {
-                      try {
-                        map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
-                            .replace('\\', '/'), base);
-                      } catch (IOException e) {
-                        throw new RuntimeException(e);
-                      }
-                    }, RefUtil.addRef(map)));
+        .forEach(root -> {
+          String base = getGitBase(root, "");
+          if (!base.isEmpty()) {
+            File src = new File(root, "src");
+            FileUtils.listFiles(src, null, true).forEach(file -> {
+              try {
+                map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
+                    .replace('\\', '/'), base);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
               }
-            }, RefUtil.addRef(map)));
+            });
+          }
+        });
     logger.debug("Class Info: " + JsonUtil.toJson(RefUtil.addRef(map)));
     return map;
   }
@@ -140,7 +138,7 @@ class CodeUtil {
     URL classpathEntry = ClassLoader.getSystemResource(path);
     if (classpathEntry != null) {
       try {
-        logger.debug(String.format("Resolved %s to %s", path, classpathEntry));
+        logger.debug(RefString.format("Resolved %s to %s", path, classpathEntry));
         return classpathEntry.toURI();
       } catch (URISyntaxException e) {
         throw new RuntimeException(e);
@@ -149,11 +147,11 @@ class CodeUtil {
     for (final File root : CodeUtil.codeRoots) {
       @Nonnull final File file = new File(root, path);
       if (file.exists()) {
-        logger.debug(String.format("Resolved %s to %s", path, file));
+        logger.debug(RefString.format("Resolved %s to %s", path, file));
         return file.toURI();
       }
     }
-    throw new RuntimeException(String.format("Not Found: %s; Project Roots = %s", path, CodeUtil.codeRoots));
+    throw new RuntimeException(RefString.format("Not Found: %s; Project Roots = %s", path, CodeUtil.codeRoots));
   }
 
   @Nonnull
@@ -174,7 +172,7 @@ class CodeUtil {
       if (null != resource) {
         try {
           allLines = IOUtils.readLines(resource.openStream(), "UTF-8");
-          logger.debug(String.format("Resolved %s to %s (%s lines)", callingFrame, resource, allLines.size()));
+          logger.debug(RefString.format("Resolved %s to %s (%s lines)", callingFrame, resource, allLines.size()));
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -182,7 +180,7 @@ class CodeUtil {
         @Nonnull final URI file = CodeUtil.findFile(callingFrame);
         assert null != file;
         allLines = IOUtils.readLines(file.toURL().openStream(), "UTF-8");
-        logger.debug(String.format("Resolved %s to %s (%s lines)", callingFrame, file, allLines.size()));
+        logger.debug(RefString.format("Resolved %s to %s (%s lines)", callingFrame, file, allLines.size()));
       }
 
       final int start = callingFrame.getLineNumber() - 1;
@@ -195,7 +193,7 @@ class CodeUtil {
         final String line = allLines.get(lineNum);
         lines.add(line.substring(Math.min(indent.length(), line.length())));
       }
-      logger.debug(String.format("Selected %s lines (%s to %s) for %s", lines.size(), start, lineNum, callingFrame));
+      logger.debug(RefString.format("Selected %s lines (%s to %s) for %s", lines.size(), start, lineNum, callingFrame));
       String temp_00_0001 = lines.stream().collect(RefCollectors.joining("\n"));
       lines.freeRef();
       return temp_00_0001;
@@ -272,15 +270,15 @@ class CodeUtil {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd_HH_mm_ss");
             String date = dateFormat.format(new Date());
             try {
-              String caption = String.format("Log at %s", date);
-              String filename = String.format("%s_%s.log", loggerName, date);
+              String caption = RefString.format("Log at %s", date);
+              String filename = RefString.format("%s_%s.log", loggerName, date);
               out = new PrintWriter(sublog.file(filename));
               sublog.p("[%s](etc/%s)", caption, filename);
               sublog.write();
             } catch (Throwable e) {
               throw new RuntimeException(e);
             }
-            killAt = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
+            killAt = com.simiacryptus.ref.wrappers.RefSystem.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
             remainingOut = 10L * 1024 * 1024;
           }
           String formattedMessage = iLoggingEvent.getFormattedMessage();
@@ -289,7 +287,7 @@ class CodeUtil {
           int length = formattedMessage.length();
           remainingOut -= length;
           counter.addAndGet(length);
-          if (remainingOut < 0 || killAt < System.currentTimeMillis()) {
+          if (remainingOut < 0 || killAt < com.simiacryptus.ref.wrappers.RefSystem.currentTimeMillis()) {
             out.close();
             out = null;
           }
@@ -326,17 +324,17 @@ class CodeUtil {
   }
 
   private static List<File> scanLocalCodeRoots() {
-    List<File> temp_00_0006 = RefArrays
+    List<File> temp_00_0006 = Arrays
         .stream(CodeUtil.projectRoot.listFiles()).filter(file -> file.exists() && file.isDirectory())
-        .collect(RefCollectors.toList());
-    return RefStream
-        .concat(RefStream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
-        .distinct().collect(RefCollectors.toList());
+        .collect(Collectors.toList());
+    return Stream
+        .concat(Stream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
+        .distinct().collect(Collectors.toList());
   }
 
   private static List<File> scanProject(File file) {
     return sourceFolders.stream().map(name -> new File(file, name.toString()))
-        .filter(f -> f.exists() && f.isDirectory()).collect(RefCollectors.toList());
+        .filter(f -> f.exists() && f.isDirectory()).collect(Collectors.toList());
   }
 
   public abstract static @RefAware

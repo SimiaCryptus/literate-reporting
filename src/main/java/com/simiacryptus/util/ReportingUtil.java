@@ -38,10 +38,10 @@ class ReportingUtil {
 
   public static final boolean BROWSE_SUPPORTED = !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
       && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
-  public static boolean AUTO_BROWSE = Boolean.parseBoolean(System.getProperty("AUTOBROWSE", Boolean.toString(true)))
+  public static boolean AUTO_BROWSE = Boolean.parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true)))
       && BROWSE_SUPPORTED;
   public static boolean AUTO_BROWSE_LIVE = Boolean
-      .parseBoolean(System.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false))) && BROWSE_SUPPORTED;
+      .parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false))) && BROWSE_SUPPORTED;
 
   public static void browse(final URI uri) throws IOException {
     if (AUTO_BROWSE)

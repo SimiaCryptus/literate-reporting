@@ -21,6 +21,7 @@ package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefConsumer;
+import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.io.AsyncOutputStream;
 import com.simiacryptus.util.io.TeeOutputStream;
 
@@ -48,7 +49,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
     super(primaryFile.getParentFile(), port);
     try {
       gatewayUri = null == primaryFile ? null
-          : new URI(String.format("http://localhost:%s/%s", port, primaryFile.getName()));
+          : new URI(RefString.format("http://localhost:%s/%s", port, primaryFile.getName()));
     } catch (@Nonnull final URISyntaxException e) {
       throw new RuntimeException(e);
     }

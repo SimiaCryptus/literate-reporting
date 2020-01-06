@@ -23,6 +23,7 @@ import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.notebook.NotebookOutput;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefIntStream;
+import com.simiacryptus.ref.wrappers.RefString;
 import org.junit.Test;
 
 import java.io.File;
@@ -52,7 +53,7 @@ class MarkdownNotebookOutputTest {
           RefIntStream.range(0, 10).forEach(j -> {
             try {
               Thread.sleep(100);
-              subreport.p(String.format("Iteration: %d / %d", i, j));
+              subreport.p(RefString.format("Iteration: %d / %d", i, j));
             } catch (InterruptedException e) {
               throw new RuntimeException(e);
             }

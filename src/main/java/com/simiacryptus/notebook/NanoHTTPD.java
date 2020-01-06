@@ -20,6 +20,7 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefString;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -36,8 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
-public abstract @RefAware
-class NanoHTTPD {
+public abstract @RefAware class NanoHTTPD {
 
   public static final int SOCKET_READ_TIMEOUT = 5000;
   public static final String MIME_PLAINTEXT = "text/plain";
@@ -173,7 +173,7 @@ class NanoHTTPD {
   }
 
   public static Response newFixedLengthResponse(Response.IStatus status, String mimeType, InputStream data,
-                                                long totalBytes) {
+      long totalBytes) {
     return new Response(status, mimeType, data, totalBytes);
   }
 
@@ -196,8 +196,7 @@ class NanoHTTPD {
     return newFixedLengthResponse(Response.Status.OK, NanoHTTPD.MIME_HTML, msg);
   }
 
-  protected static void loadMimeTypes(Map<String, String> result,
-                                      String resourceName) {
+  protected static void loadMimeTypes(Map<String, String> result, String resourceName) {
     try {
       Enumeration<URL> resources = NanoHTTPD.class.getClassLoader().getResources(resourceName);
       while (resources.hasMoreElements()) {
@@ -237,13 +236,11 @@ class NanoHTTPD {
     }
   }
 
-  protected static Map<String, List<String>> decodeParameters(
-      Map<String, String> parms) {
+  protected static Map<String, List<String>> decodeParameters(Map<String, String> parms) {
     return decodeParameters(parms.get(NanoHTTPD.QUERY_STRING_PARAMETER));
   }
 
-  protected static Map<String, List<String>> decodeParameters(
-      String queryString) {
+  protected static Map<String, List<String>> decodeParameters(String queryString) {
     Map<String, List<String>> parms = new HashMap<String, List<String>>();
     if (queryString != null) {
       StringTokenizer st = new StringTokenizer(queryString, "&");
@@ -301,9 +298,8 @@ class NanoHTTPD {
   }
 
   @Deprecated
-  public Response serve(String uri, Method method, Map<String, String> headers,
-                        Map<String, String> parms,
-                        Map<String, String> files) {
+  public Response serve(String uri, Method method, Map<String, String> headers, Map<String, String> parms,
+      Map<String, String> files) {
     return newFixedLengthResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Not Found");
   }
 
@@ -390,8 +386,7 @@ class NanoHTTPD {
     }
   }
 
-  public @RefAware
-  interface AsyncRunner {
+  public @RefAware interface AsyncRunner {
 
     void closeAll();
 
@@ -400,8 +395,7 @@ class NanoHTTPD {
     void exec(ClientHandler code);
   }
 
-  public @RefAware
-  interface IHTTPSession {
+  public @RefAware interface IHTTPSession {
 
     CookieHandler getCookies();
 
@@ -419,11 +413,10 @@ class NanoHTTPD {
 
     void execute() throws IOException;
 
-    void parseBody(Map<String, String> files) throws IOException, ResponseException;
+    void parseBody(@RefAware Map<String, String> files) throws IOException, ResponseException;
   }
 
-  public @RefAware
-  interface TempFile {
+  public @RefAware interface TempFile {
 
     File getFile();
 
@@ -432,29 +425,25 @@ class NanoHTTPD {
     OutputStream open() throws Exception;
   }
 
-  public @RefAware
-  interface TempFileManager {
+  public @RefAware interface TempFileManager {
 
     void clear();
 
     TempFile createTempFile(String filename_hint) throws Exception;
   }
 
-  public @RefAware
-  interface TempFileManagerFactory {
+  public @RefAware interface TempFileManagerFactory {
 
     TempFileManager create();
   }
 
-  public @RefAware
-  interface ServerSocketFactory {
+  public @RefAware interface ServerSocketFactory {
 
     ServerSocket create() throws IOException;
 
   }
 
-  public static @RefAware
-  class Cookie {
+  public static @RefAware class Cookie {
 
     protected final String n, v, e;
 
@@ -476,7 +465,7 @@ class NanoHTTPD {
 
     public String getHTTPHeader() {
       String fmt = "%s=%s; expires=%s";
-      return String.format(fmt, this.n, this.v, this.e);
+      return RefString.format(fmt, this.n, this.v, this.e);
     }
 
     public static String getHTTPTime(int days) {
@@ -488,8 +477,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @RefAware
-  class DefaultAsyncRunner implements AsyncRunner {
+  public static @RefAware class DefaultAsyncRunner implements AsyncRunner {
 
     protected final List<ClientHandler> running = Collections
         .synchronizedList(new ArrayList<NanoHTTPD.ClientHandler>());
@@ -523,8 +511,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @RefAware
-  class DefaultTempFile implements TempFile {
+  public static @RefAware class DefaultTempFile implements TempFile {
 
     protected final File file;
 
@@ -554,15 +541,14 @@ class NanoHTTPD {
     }
   }
 
-  public static @RefAware
-  class DefaultTempFileManager implements TempFileManager {
+  public static @RefAware class DefaultTempFileManager implements TempFileManager {
 
     protected final File tmpdir;
 
     protected final List<TempFile> tempFiles;
 
     public DefaultTempFileManager() {
-      this.tmpdir = new File(System.getProperty("java.io.tmpdir"));
+      this.tmpdir = new File(com.simiacryptus.ref.wrappers.RefSystem.getProperty("java.io.tmpdir"));
       if (!tmpdir.exists()) {
         tmpdir.mkdirs();
       }
@@ -589,8 +575,7 @@ class NanoHTTPD {
     }
   }
 
-  public static @RefAware
-  class DefaultServerSocketFactory implements ServerSocketFactory {
+  public static @RefAware class DefaultServerSocketFactory implements ServerSocketFactory {
 
     @Override
     public ServerSocket create() throws IOException {
@@ -599,8 +584,7 @@ class NanoHTTPD {
 
   }
 
-  public static @RefAware
-  class SecureServerSocketFactory implements ServerSocketFactory {
+  public static @RefAware class SecureServerSocketFactory implements ServerSocketFactory {
 
     protected SSLServerSocketFactory sslServerSocketFactory;
 
@@ -628,8 +612,7 @@ class NanoHTTPD {
 
   }
 
-  public static @RefAware
-  class Response implements Closeable {
+  public static @RefAware class Response implements Closeable {
 
     protected final Map<String, String> header = new HashMap<String, String>();
     protected Response.IStatus status;
@@ -700,8 +683,7 @@ class NanoHTTPD {
       this.keepAlive = useKeepAlive;
     }
 
-    protected static boolean headerAlreadySent(Map<String, String> header,
-                                               String name) {
+    protected static boolean headerAlreadySent(Map<String, String> header, String name) {
       boolean alreadySent = false;
       for (String headerName : header.keySet()) {
         alreadySent |= headerName.equalsIgnoreCase(name);
@@ -709,8 +691,8 @@ class NanoHTTPD {
       return alreadySent;
     }
 
-    protected static long sendContentLengthHeaderIfNotAlreadyPresent(PrintWriter pw,
-                                                                     Map<String, String> header, long size) {
+    protected static long sendContentLengthHeaderIfNotAlreadyPresent(PrintWriter pw, Map<String, String> header,
+        long size) {
       for (String headerName : header.keySet()) {
         if (headerName.equalsIgnoreCase("content-length")) {
           try {
@@ -868,16 +850,14 @@ class NanoHTTPD {
 
     }
 
-    public @RefAware
-    interface IStatus {
+    public @RefAware interface IStatus {
 
       String getDescription();
 
       int getRequestStatus();
     }
 
-    protected static @RefAware
-    class ChunkedOutputStream extends FilterOutputStream {
+    protected static @RefAware class ChunkedOutputStream extends FilterOutputStream {
 
       public ChunkedOutputStream(OutputStream out) {
         super(out);
@@ -885,7 +865,7 @@ class NanoHTTPD {
 
       @Override
       public void write(int b) throws IOException {
-        byte[] data = {(byte) b};
+        byte[] data = { (byte) b };
         write(data, 0, 1);
       }
 
@@ -898,7 +878,7 @@ class NanoHTTPD {
       public void write(byte[] b, int off, int len) throws IOException {
         if (len == 0)
           return;
-        out.write(String.format("%x\r\n", len).getBytes());
+        out.write(RefString.format("%x\r\n", len).getBytes());
         out.write(b, off, len);
         out.write("\r\n".getBytes());
       }
@@ -910,8 +890,7 @@ class NanoHTTPD {
     }
   }
 
-  public static final @RefAware
-  class ResponseException extends RuntimeException {
+  public static final @RefAware class ResponseException extends RuntimeException {
 
     protected static final long serialVersionUID = 6569838532917408380L;
 
@@ -932,8 +911,7 @@ class NanoHTTPD {
     }
   }
 
-  public @RefAware
-  class ClientHandler implements Runnable {
+  public @RefAware class ClientHandler implements Runnable {
 
     protected final InputStream inputStream;
 
@@ -981,8 +959,7 @@ class NanoHTTPD {
     }
   }
 
-  public @RefAware
-  class CookieHandler implements Iterable<String> {
+  public @RefAware class CookieHandler implements Iterable<String> {
 
     protected final HashMap<String, String> cookies = new HashMap<String, String>();
 
@@ -1029,8 +1006,7 @@ class NanoHTTPD {
     }
   }
 
-  public @RefAware
-  class ServerRunnable implements Runnable {
+  public @RefAware class ServerRunnable implements Runnable {
 
     protected final int timeout;
 
@@ -1066,8 +1042,7 @@ class NanoHTTPD {
     }
   }
 
-  protected @RefAware
-  class DefaultTempFileManagerFactory implements TempFileManagerFactory {
+  protected @RefAware class DefaultTempFileManagerFactory implements TempFileManagerFactory {
 
     @Override
     public TempFileManager create() {
@@ -1075,8 +1050,7 @@ class NanoHTTPD {
     }
   }
 
-  protected @RefAware
-  class HTTPSession implements IHTTPSession {
+  protected @RefAware class HTTPSession implements IHTTPSession {
 
     public static final int BUFSIZE = 8192;
     public static final int MAX_HEADER_SIZE = 1024;
@@ -1115,7 +1089,7 @@ class NanoHTTPD {
     }
 
     public HTTPSession(TempFileManager tempFileManager, InputStream inputStream, OutputStream outputStream,
-                       InetAddress inetAddress) {
+        InetAddress inetAddress) {
       this.tempFileManager = tempFileManager;
       this.inputStream = new BufferedInputStream(inputStream, HTTPSession.BUFSIZE);
       this.outputStream = outputStream;
@@ -1298,7 +1272,7 @@ class NanoHTTPD {
     }
 
     @Override
-    public void parseBody(Map<String, String> files)
+    public void parseBody(@com.simiacryptus.ref.lang.RefAware Map<String, String> files)
         throws IOException, ResponseException {
       RandomAccessFile randomAccessFile = null;
       try {
@@ -1377,9 +1351,8 @@ class NanoHTTPD {
       }
     }
 
-    protected void decodeHeader(BufferedReader in, Map<String, String> pre,
-                                Map<String, String> parms,
-                                Map<String, String> headers) throws ResponseException {
+    protected void decodeHeader(BufferedReader in, Map<String, String> pre, Map<String, String> parms,
+        Map<String, String> headers) throws ResponseException {
       try {
         // Read the request line
         String inLine = in.readLine();
@@ -1437,9 +1410,8 @@ class NanoHTTPD {
       }
     }
 
-    protected void decodeMultipartFormData(String boundary, String encoding, ByteBuffer fbuf,
-                                           Map<String, String> parms,
-                                           Map<String, String> files) throws ResponseException {
+    protected void decodeMultipartFormData(String boundary, String encoding, ByteBuffer fbuf, Map<String, String> parms,
+        Map<String, String> files) throws ResponseException {
       try {
         int[] boundary_idxs = getBoundaryPositions(fbuf, boundary.getBytes());
         if (boundary_idxs.length < 2) {
@@ -1597,7 +1569,7 @@ class NanoHTTPD {
             if (i == boundary.length - 1) {
               // Match found, add it to results
               int[] new_res = new int[res.length + 1];
-              System.arraycopy(res, 0, new_res, 0, res.length);
+              com.simiacryptus.ref.wrappers.RefSystem.arraycopy(res, 0, new_res, 0, res.length);
               new_res[res.length] = search_window_pos + j;
               res = new_res;
             }
@@ -1606,7 +1578,8 @@ class NanoHTTPD {
         search_window_pos += new_bytes;
 
         // Copy the end of the buffer to the start
-        System.arraycopy(search_window, search_window.length - boundary.length, search_window, 0, boundary.length);
+        com.simiacryptus.ref.wrappers.RefSystem.arraycopy(search_window, search_window.length - boundary.length,
+            search_window, 0, boundary.length);
 
         // Refill search_window
         new_bytes = search_window.length - boundary.length;

@@ -20,6 +20,7 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.wrappers.RefString;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -66,7 +67,7 @@ class EditImageQuery extends HtmlQuery<BufferedImage> {
 
   protected String getHeader() {
     try {
-      final String jsInject = String.format("init('%s', '%s', %s, %s)", rawId, initUrl, widthPx, heightPx);
+      final String jsInject = RefString.format("init('%s', '%s', %s, %s)", rawId, initUrl, widthPx, heightPx);
       return "<style>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.css"), "UTF-8")
           + "\n</style>" + "<script>\n" + IOUtils.toString(getClass().getClassLoader().getResource("paint.js"), "UTF-8")
           + "\n" + jsInject + "\n</script>";

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefHashMap;
+import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -69,11 +71,9 @@ class HtmlQuery<T> {
       String responseHtml;
       try {
         Map<String, String> parms = request.getParms();
-        RefHashMap<String, String> files = new RefHashMap<>();
-        request.parseBody(RefUtil.addRef(files));
-        final T value = valueFromParams(parms, RefUtil.addRef(files));
-        if (null != files)
-          files.freeRef();
+        HashMap<String, String> files = new HashMap<>();
+        request.parseBody(files);
+        final T value = valueFromParams(parms, files);
         if (value != null) {
           setValue(value);
           done.release();
@@ -116,8 +116,8 @@ class HtmlQuery<T> {
 
   public final HtmlQuery<T> print() {
     int lines = height();
-    height1 = String.format("%dpx", lines);
-    height2 = String.format("%dpx", lines + 40);
+    height1 = RefString.format("%dpx", lines);
+    height2 = RefString.format("%dpx", lines + 40);
     log.p("<iframe src=\"" + id + "\" id=\"" + rawId
         + "\" style=\"margin: 0px; resize: both; overflow: auto; width: 100%; height: " + height2 + ";\""
         + " sandbox=\"allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-same-origin allow-scripts\""
