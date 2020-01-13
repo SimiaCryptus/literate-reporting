@@ -27,12 +27,10 @@ import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public @RefAware
-interface FileHTTPD {
+public interface FileHTTPD {
   Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
   Closeable addPOST(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
-  Closeable addGET(final CharSequence path, final String mimeType,
-                   @Nonnull final Consumer<OutputStream> logic);
+  Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic);
 }

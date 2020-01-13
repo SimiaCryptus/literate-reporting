@@ -48,21 +48,20 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public @RefAware
-class CodeUtil {
+public class CodeUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
 
   private static final List<CharSequence> sourceFolders = Arrays.asList("src/main/java", "src/test/java",
       "src/main/scala", "src/test/scala");
   @Nonnull
-  public static File projectRoot = new File(com.simiacryptus.ref.wrappers.RefSystem.getProperty("codeRoot", getDefaultProjectRoot()));
+  public static File projectRoot = new File(
+      com.simiacryptus.ref.wrappers.RefSystem.getProperty("codeRoot", getDefaultProjectRoot()));
   private static final List<File> codeRoots = CodeUtil.scanLocalCodeRoots();
   public static Map<String, String> classSourceInfo = getDefaultClassInfo();
 
@@ -85,8 +84,8 @@ class CodeUtil {
       }
     }
     Map<String, String> map = new HashMap<>();
-    scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile()).distinct()
-        .forEach(root -> {
+    scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile())
+        .distinct().forEach(root -> {
           String base = getGitBase(root, "");
           if (!base.isEmpty()) {
             File src = new File(root, "src");
@@ -124,12 +123,14 @@ class CodeUtil {
 
   @Nonnull
   public static URI findFile(@Nonnull final StackTraceElement callingFrame) {
-    @Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
+    @Nonnull
+    final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
     String pkg = RefArrays.stream(packagePath).limit(packagePath.length - 1)
         .collect(RefCollectors.joining(File.separator));
     if (!pkg.isEmpty())
       pkg += File.separator;
-    @Nonnull final String path = pkg + callingFrame.getFileName();
+    @Nonnull
+    final String path = pkg + callingFrame.getFileName();
     return CodeUtil.findFile(path);
   }
 
@@ -145,7 +146,8 @@ class CodeUtil {
       }
     }
     for (final File root : CodeUtil.codeRoots) {
-      @Nonnull final File file = new File(root, path);
+      @Nonnull
+      final File file = new File(root, path);
       if (file.exists()) {
         logger.debug(RefString.format("Resolved %s to %s", path, file));
         return file.toURI();
@@ -156,7 +158,8 @@ class CodeUtil {
 
   @Nonnull
   public static CharSequence getIndent(@Nonnull final CharSequence txt) {
-    @Nonnull final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
+    @Nonnull
+    final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
     return matcher.find() ? matcher.group(0) : "";
   }
 
@@ -177,7 +180,8 @@ class CodeUtil {
           throw new RuntimeException(e);
         }
       } else {
-        @Nonnull final URI file = CodeUtil.findFile(callingFrame);
+        @Nonnull
+        final URI file = CodeUtil.findFile(callingFrame);
         assert null != file;
         allLines = IOUtils.readLines(file.toURL().openStream(), "UTF-8");
         logger.debug(RefString.format("Resolved %s to %s (%s lines)", callingFrame, file, allLines.size()));
@@ -185,8 +189,10 @@ class CodeUtil {
 
       final int start = callingFrame.getLineNumber() - 1;
       final CharSequence txt = allLines.get(start);
-      @Nonnull final CharSequence indent = CodeUtil.getIndent(txt);
-      @Nonnull final RefArrayList<CharSequence> lines = new RefArrayList<>();
+      @Nonnull
+      final CharSequence indent = CodeUtil.getIndent(txt);
+      @Nonnull
+      final RefArrayList<CharSequence> lines = new RefArrayList<>();
       int lineNum = start + 1;
       for (; lineNum < allLines.size() && (CodeUtil.getIndent(allLines.get(lineNum)).length() > indent.length()
           || String.valueOf(allLines.get(lineNum)).trim().isEmpty()); lineNum++) {
@@ -207,7 +213,8 @@ class CodeUtil {
     try {
       if (null == clazz)
         return null;
-      @Nullable final URI source = CodeUtil.findFile(clazz);
+      @Nullable
+      final URI source = CodeUtil.findFile(clazz);
       if (null == source)
         return clazz.getName() + " not found";
       final List<String> lines = IOUtils.readLines(source.toURL().openStream(), Charset.forName("UTF-8"));
@@ -324,11 +331,9 @@ class CodeUtil {
   }
 
   private static List<File> scanLocalCodeRoots() {
-    List<File> temp_00_0006 = Arrays
-        .stream(CodeUtil.projectRoot.listFiles()).filter(file -> file.exists() && file.isDirectory())
-        .collect(Collectors.toList());
-    return Stream
-        .concat(Stream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
+    List<File> temp_00_0006 = Arrays.stream(CodeUtil.projectRoot.listFiles())
+        .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
+    return Stream.concat(Stream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
         .distinct().collect(Collectors.toList());
   }
 
@@ -337,8 +342,7 @@ class CodeUtil {
         .filter(f -> f.exists() && f.isDirectory()).collect(Collectors.toList());
   }
 
-  public abstract static @RefAware
-  class LogInterception implements AutoCloseable {
+  public abstract static class LogInterception implements AutoCloseable {
     public final AtomicLong counter;
 
     public LogInterception(AtomicLong counter) {

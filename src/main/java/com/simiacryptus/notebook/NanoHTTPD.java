@@ -37,7 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
-public abstract @RefAware class NanoHTTPD {
+public abstract class NanoHTTPD {
 
   public static final int SOCKET_READ_TIMEOUT = 5000;
   public static final String MIME_PLAINTEXT = "text/plain";
@@ -386,7 +386,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public @RefAware interface AsyncRunner {
+  public interface AsyncRunner {
 
     void closeAll();
 
@@ -395,7 +395,7 @@ public abstract @RefAware class NanoHTTPD {
     void exec(ClientHandler code);
   }
 
-  public @RefAware interface IHTTPSession {
+  public interface IHTTPSession {
 
     CookieHandler getCookies();
 
@@ -413,10 +413,10 @@ public abstract @RefAware class NanoHTTPD {
 
     void execute() throws IOException;
 
-    void parseBody(@RefAware Map<String, String> files) throws IOException, ResponseException;
+    void parseBody(Map<String, String> files) throws IOException, ResponseException;
   }
 
-  public @RefAware interface TempFile {
+  public interface TempFile {
 
     File getFile();
 
@@ -425,25 +425,25 @@ public abstract @RefAware class NanoHTTPD {
     OutputStream open() throws Exception;
   }
 
-  public @RefAware interface TempFileManager {
+  public interface TempFileManager {
 
     void clear();
 
     TempFile createTempFile(String filename_hint) throws Exception;
   }
 
-  public @RefAware interface TempFileManagerFactory {
+  public interface TempFileManagerFactory {
 
     TempFileManager create();
   }
 
-  public @RefAware interface ServerSocketFactory {
+  public interface ServerSocketFactory {
 
     ServerSocket create() throws IOException;
 
   }
 
-  public static @RefAware class Cookie {
+  public static class Cookie {
 
     protected final String n, v, e;
 
@@ -477,7 +477,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public static @RefAware class DefaultAsyncRunner implements AsyncRunner {
+  public static class DefaultAsyncRunner implements AsyncRunner {
 
     protected final List<ClientHandler> running = Collections
         .synchronizedList(new ArrayList<NanoHTTPD.ClientHandler>());
@@ -511,7 +511,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public static @RefAware class DefaultTempFile implements TempFile {
+  public static class DefaultTempFile implements TempFile {
 
     protected final File file;
 
@@ -541,7 +541,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public static @RefAware class DefaultTempFileManager implements TempFileManager {
+  public static class DefaultTempFileManager implements TempFileManager {
 
     protected final File tmpdir;
 
@@ -575,7 +575,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public static @RefAware class DefaultServerSocketFactory implements ServerSocketFactory {
+  public static class DefaultServerSocketFactory implements ServerSocketFactory {
 
     @Override
     public ServerSocket create() throws IOException {
@@ -584,7 +584,7 @@ public abstract @RefAware class NanoHTTPD {
 
   }
 
-  public static @RefAware class SecureServerSocketFactory implements ServerSocketFactory {
+  public static class SecureServerSocketFactory implements ServerSocketFactory {
 
     protected SSLServerSocketFactory sslServerSocketFactory;
 
@@ -612,7 +612,7 @@ public abstract @RefAware class NanoHTTPD {
 
   }
 
-  public static @RefAware class Response implements Closeable {
+  public static class Response implements Closeable {
 
     protected final Map<String, String> header = new HashMap<String, String>();
     protected Response.IStatus status;
@@ -850,14 +850,14 @@ public abstract @RefAware class NanoHTTPD {
 
     }
 
-    public @RefAware interface IStatus {
+    public interface IStatus {
 
       String getDescription();
 
       int getRequestStatus();
     }
 
-    protected static @RefAware class ChunkedOutputStream extends FilterOutputStream {
+    protected static class ChunkedOutputStream extends FilterOutputStream {
 
       public ChunkedOutputStream(OutputStream out) {
         super(out);
@@ -890,7 +890,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public static final @RefAware class ResponseException extends RuntimeException {
+  public static final class ResponseException extends RuntimeException {
 
     protected static final long serialVersionUID = 6569838532917408380L;
 
@@ -911,7 +911,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public @RefAware class ClientHandler implements Runnable {
+  public class ClientHandler implements Runnable {
 
     protected final InputStream inputStream;
 
@@ -959,7 +959,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public @RefAware class CookieHandler implements Iterable<String> {
+  public class CookieHandler implements Iterable<String> {
 
     protected final HashMap<String, String> cookies = new HashMap<String, String>();
 
@@ -1006,7 +1006,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  public @RefAware class ServerRunnable implements Runnable {
+  public class ServerRunnable implements Runnable {
 
     protected final int timeout;
 
@@ -1042,7 +1042,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  protected @RefAware class DefaultTempFileManagerFactory implements TempFileManagerFactory {
+  protected class DefaultTempFileManagerFactory implements TempFileManagerFactory {
 
     @Override
     public TempFileManager create() {
@@ -1050,7 +1050,7 @@ public abstract @RefAware class NanoHTTPD {
     }
   }
 
-  protected @RefAware class HTTPSession implements IHTTPSession {
+  protected class HTTPSession implements IHTTPSession {
 
     public static final int BUFSIZE = 8192;
     public static final int MAX_HEADER_SIZE = 1024;
@@ -1272,8 +1272,7 @@ public abstract @RefAware class NanoHTTPD {
     }
 
     @Override
-    public void parseBody(@com.simiacryptus.ref.lang.RefAware Map<String, String> files)
-        throws IOException, ResponseException {
+    public void parseBody(Map<String, String> files) throws IOException, ResponseException {
       RandomAccessFile randomAccessFile = null;
       try {
         long size = getBodySize();

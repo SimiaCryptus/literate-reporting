@@ -33,8 +33,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-public @RefAware
-interface NotebookOutput extends Closeable {
+public interface NotebookOutput extends Closeable {
 
   URI getArchiveHome();
 
@@ -58,8 +57,7 @@ interface NotebookOutput extends Closeable {
 
   NotebookOutput setCurrentHome(URI currentHome);
 
-  static RefConsumer<NotebookOutput> concat(
-      @Nonnull final RefConsumer<NotebookOutput> fn,
+  static RefConsumer<NotebookOutput> concat(@Nonnull final RefConsumer<NotebookOutput> fn,
       @Nonnull final RefConsumer<NotebookOutput> header) {
     return log -> {
       header.accept(log);

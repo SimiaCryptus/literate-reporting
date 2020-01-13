@@ -31,8 +31,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.function.Function;
 
-public @RefAware
-class NullNotebookOutput implements NotebookOutput {
+public class NullNotebookOutput implements NotebookOutput {
   private final String name;
 
   public NullNotebookOutput(String name) {
@@ -141,15 +140,13 @@ class NullNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public CharSequence file(@Nonnull byte[] data, @Nonnull CharSequence filename,
-                           CharSequence caption) {
+  public CharSequence file(@Nonnull byte[] data, @Nonnull CharSequence filename, CharSequence caption) {
     return "";
   }
 
   @Nonnull
   @Override
-  public String file(@Nonnull CharSequence data, @Nonnull CharSequence fileName,
-                     CharSequence caption) {
+  public String file(@Nonnull CharSequence data, @Nonnull CharSequence fileName, CharSequence caption) {
     return "";
   }
 

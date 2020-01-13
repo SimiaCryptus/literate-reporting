@@ -25,8 +25,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import java.io.IOException;
 import java.util.Map;
 
-public abstract @RefAware
-class StringQuery<T> extends FormQuery<T> {
+public abstract class StringQuery<T> extends FormQuery<T> {
   String formVar = "data";
 
   public StringQuery(MarkdownNotebookOutput log) {
@@ -39,8 +38,7 @@ class StringQuery<T> extends FormQuery<T> {
         + toString(getValue()) + "</textarea>";
   }
 
-  public T valueFromParams(Map<String, String> parms,
-                           Map<String, String> files) throws IOException {
+  public T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
     return fromString(parms.get(formVar));
   }
 
@@ -48,8 +46,7 @@ class StringQuery<T> extends FormQuery<T> {
 
   protected abstract T fromString(String text) throws IOException;
 
-  public static @RefAware
-  class SimpleStringQuery extends StringQuery<String> {
+  public static class SimpleStringQuery extends StringQuery<String> {
 
     public SimpleStringQuery(MarkdownNotebookOutput log) {
       super(log);

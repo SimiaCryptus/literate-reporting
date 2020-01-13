@@ -33,15 +33,15 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 
-public @RefAware
-class ReportingUtil {
+public class ReportingUtil {
 
   public static final boolean BROWSE_SUPPORTED = !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
       && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
-  public static boolean AUTO_BROWSE = Boolean.parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true)))
-      && BROWSE_SUPPORTED;
+  public static boolean AUTO_BROWSE = Boolean.parseBoolean(
+      com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
   public static boolean AUTO_BROWSE_LIVE = Boolean
-      .parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false))) && BROWSE_SUPPORTED;
+      .parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false)))
+      && BROWSE_SUPPORTED;
 
   public static void browse(final URI uri) throws IOException {
     if (AUTO_BROWSE)
@@ -57,7 +57,8 @@ class ReportingUtil {
   }
 
   public static void report(@Nonnull final RefStream<CharSequence> fragments) throws IOException {
-    @Nonnull final File outDir;
+    @Nonnull
+    final File outDir;
     if (new File("target").exists()) {
       outDir = new File("target/reports");
     } else {
@@ -66,8 +67,10 @@ class ReportingUtil {
     outDir.mkdirs();
     final StackTraceElement caller = getLast(RefArrays.stream(Thread.currentThread().getStackTrace())//
         .filter(x -> x.getClassName().contains("simiacryptus")));
-    @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
-    @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
+    @Nonnull
+    final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
+    @Nonnull
+    final PrintStream out = new PrintStream(new FileOutputStream(report));
     out.println("<html><head></head><body>");
     fragments.forEach(out::println);
     out.println("</body></html>");

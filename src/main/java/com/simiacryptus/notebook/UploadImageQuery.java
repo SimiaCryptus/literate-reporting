@@ -27,8 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public @RefAware
-class UploadImageQuery extends FormQuery<File> {
+public class UploadImageQuery extends FormQuery<File> {
 
   private final String key;
   String formVar = "data";
@@ -49,8 +48,7 @@ class UploadImageQuery extends FormQuery<File> {
   }
 
   @Override
-  public File valueFromParams(Map<String, String> parms,
-                              Map<String, String> files) throws IOException {
+  public File valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
     File tmpFile = new File(files.get(formVar));
     File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
     FileUtils.copyFile(tmpFile, logFile);

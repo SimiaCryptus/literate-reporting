@@ -34,8 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
-public @RefAware
-class StreamNanoHTTPD extends FileNanoHTTPD {
+public class StreamNanoHTTPD extends FileNanoHTTPD {
   @Nonnull
   public final TeeOutputStream dataReciever;
   @Nonnull
@@ -82,15 +81,15 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
   }
 
   public static Function<IHTTPSession, Response> asyncHandler(@Nonnull final ExecutorService pool,
-                                                              final String mimeType,
-                                                              @Nonnull final RefConsumer<OutputStream> logic,
-                                                              final boolean async) {
+      final String mimeType, @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
     return session -> {
-      @Nonnull final PipedInputStream snk = new PipedInputStream();
-      @Nonnull final Semaphore onComplete = new Semaphore(0);
+      @Nonnull
+      final PipedInputStream snk = new PipedInputStream();
+      @Nonnull
+      final Semaphore onComplete = new Semaphore(0);
       pool.submit(() -> {
         try (@Nonnull
-             OutputStream out = new BufferedOutputStream(new AsyncOutputStream(new PipedOutputStream(snk)))) {
+        OutputStream out = new BufferedOutputStream(new AsyncOutputStream(new PipedOutputStream(snk)))) {
           try {
             logic.accept(out);
           } finally {
@@ -130,7 +129,7 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
   }
 
   public Closeable addAsyncHandler(final CharSequence path, final String mimeType,
-                                   @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
+      @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
     return addGET(path, StreamNanoHTTPD.asyncHandler(pool, mimeType, logic, async));
   }
 
@@ -142,7 +141,8 @@ class StreamNanoHTTPD extends FileNanoHTTPD {
     }
     if (null != primaryFile && requestPath.equals(primaryFile.getName())) {
       try {
-        @Nonnull final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
+        @Nonnull
+        final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
             new BufferedInputStream(dataReciever.newInputStream()));
         response.setGzipEncoding(false);
         return response;

@@ -21,8 +21,6 @@ package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.wrappers.RefHashMap;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.IOUtil;
 import org.apache.commons.io.FileUtils;
@@ -39,8 +37,7 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-public abstract @RefAware
-class HtmlQuery<T> {
+public abstract class HtmlQuery<T> {
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
   protected final String rawId = UUID.randomUUID().toString();
   protected final String id = "input_" + rawId + ".html";

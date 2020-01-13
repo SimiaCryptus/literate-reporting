@@ -26,8 +26,7 @@ import com.simiacryptus.ref.lang.RefAware;
 
 import java.io.ByteArrayInputStream;
 
-public @RefAware
-class JsonQuery<T> extends StringQuery<T> {
+public class JsonQuery<T> extends StringQuery<T> {
   private ObjectMapper mapper = new ObjectMapper()
       //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
       .enable(SerializationFeature.INDENT_OUTPUT);

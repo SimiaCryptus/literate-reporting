@@ -22,7 +22,10 @@ package com.simiacryptus.notebook;
 import com.simiacryptus.lang.TimedResult;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.wrappers.*;
+import com.simiacryptus.ref.wrappers.RefArrays;
+import com.simiacryptus.ref.wrappers.RefConsumer;
+import com.simiacryptus.ref.wrappers.RefStream;
+import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.CodeUtil;
 import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
@@ -57,7 +60,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -65,7 +67,7 @@ import java.util.zip.ZipOutputStream;
 import static com.simiacryptus.util.Util.pathToFile;
 import static com.simiacryptus.util.Util.stripPrefix;
 
-public @RefAware class MarkdownNotebookOutput implements NotebookOutput {
+public class MarkdownNotebookOutput implements NotebookOutput {
   public static final Random random = new Random();
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
@@ -333,7 +335,7 @@ public @RefAware class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Nonnull
-  public String toString(final @RefAware List<CharSequence> list) {
+  public String toString(final List<CharSequence> list) {
     if (list.size() > 0 && list.stream().allMatch(x -> {
       if (x.length() > 1) {
         char c = x.charAt(0);
@@ -571,7 +573,8 @@ public @RefAware class MarkdownNotebookOutput implements NotebookOutput {
     try {
       ImageIO.write(stdImage, "jpg", file);
     } catch (Throwable e) {
-      log.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()), e);
+      log.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()),
+          e);
     }
     return file;
   }

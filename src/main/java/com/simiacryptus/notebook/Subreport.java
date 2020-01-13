@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
-@RefAware
 class Subreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 

@@ -28,8 +28,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-public @RefAware
-class MarkdownNotebookOutputTest {
+public class MarkdownNotebookOutputTest {
 
   @Test
   public void test() throws Exception {

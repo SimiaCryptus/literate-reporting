@@ -38,8 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public @RefAware
-class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
+public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   static final Logger log = LoggerFactory.getLogger(FileNanoHTTPD.class);
 
   public final Map<CharSequence, Function<IHTTPSession, Response>> getHandlers = new HashMap<>();
@@ -60,10 +59,10 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   }
 
   public static Function<IHTTPSession, Response> handler(final String mimeType,
-                                                         @Nonnull final Consumer<OutputStream> logic) {
+      @Nonnull final Consumer<OutputStream> logic) {
     return session -> {
       try (@Nonnull
-           ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         logic.accept(out);
         out.flush();
         final byte[] bytes = out.toByteArray();
@@ -101,7 +100,8 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   @Override
   public Response serve(final IHTTPSession session) {
     String requestPath = Util.stripPrefix(session.getUri(), "/");
-    @Nonnull final File file = new File(root, requestPath);
+    @Nonnull
+    final File file = new File(root, requestPath);
     if (session.getMethod() == Method.GET) {
       Comparator<Map.Entry<CharSequence, Function<IHTTPSession, Response>>> objectComparator = Comparator
           .comparingInt(x -> {
@@ -122,8 +122,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
             return requestPath.startsWith(prefix);
           }).sorted(objectComparator.reversed()).findFirst();
       Optional<Function<IHTTPSession, Response>> handler = temp_02_0005.map(e -> {
-        Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0002 = e
-            .getValue();
+        Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0002 = e.getValue();
         if (null != e)
           RefUtil.freeRef(e);
         return temp_02_0002;
@@ -133,7 +132,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
       handler.orElse(null);
       if (handler.isPresent()) {
         try {
-          return handler.get().apply(session);
+          return RefUtil.get(handler).apply(session);
         } catch (Throwable e) {
           log.warn("Error requesting " + session.getUri(), e);
           throw new RuntimeException(e);
@@ -146,8 +145,8 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
         }
       } else {
         log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
-            getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
-                .reduce((a, b) -> a + "\n\t" + b).get()));
+            RefUtil.get(getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
+                .reduce((a, b) -> a + "\n\t" + b))));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
       }
     } else if (session.getMethod() == Method.POST) {
@@ -159,8 +158,7 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
             return temp_02_0003;
           }).findAny();
       Optional<Function<IHTTPSession, Response>> handler = temp_02_0006.map(e -> {
-        Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0004 = e
-            .getValue();
+        Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0004 = e.getValue();
         if (null != e)
           RefUtil.freeRef(e);
         return temp_02_0004;
@@ -170,15 +168,15 @@ class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
       handler.orElse(null);
       if (handler.isPresent()) {
         try {
-          return handler.get().apply(session);
+          return RefUtil.get(handler).apply(session);
         } catch (Throwable e) {
           log.warn("Error requesting " + session.getUri(), e);
           throw new RuntimeException(e);
         }
       } else {
         log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
-            this.getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
-                .reduce((a, b) -> a + "\n\t" + b).get()));
+            RefUtil.get(this.getHandlers.keySet().stream().map(handlerPath -> "Installed Handler: " + handlerPath)
+                .reduce((a, b) -> a + "\n\t" + b))));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
       }
     } else {

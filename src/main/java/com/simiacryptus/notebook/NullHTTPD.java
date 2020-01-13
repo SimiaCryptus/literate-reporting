@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@RefAware
 class NullHTTPD implements FileHTTPD {
   @Override
   public Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value) {
@@ -42,8 +41,7 @@ class NullHTTPD implements FileHTTPD {
   }
 
   @Override
-  public Closeable addGET(final CharSequence path, final String mimeType,
-                          @Nonnull final Consumer<OutputStream> logic) {
+  public Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic) {
     return () -> {
     };
   }

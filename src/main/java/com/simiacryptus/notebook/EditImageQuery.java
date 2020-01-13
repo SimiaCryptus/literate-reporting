@@ -33,8 +33,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
 
-public @RefAware
-class EditImageQuery extends HtmlQuery<BufferedImage> {
+public class EditImageQuery extends HtmlQuery<BufferedImage> {
 
   private final int heightPx;
   private final int widthPx;
@@ -89,8 +88,7 @@ class EditImageQuery extends HtmlQuery<BufferedImage> {
   }
 
   @Override
-  public BufferedImage valueFromParams(Map<String, String> parms,
-                                       Map<String, String> files) throws IOException {
+  public BufferedImage valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
     String postData = files.get("postData");
     String prefix = "data:image/png;base64,";
     assert (postData.startsWith(prefix));
