@@ -19,10 +19,10 @@
 
 package com.simiacryptus.notebook;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefString;
 import org.apache.commons.io.FileUtils;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -30,13 +30,15 @@ import java.util.Map;
 public class UploadImageQuery extends FormQuery<File> {
 
   private final String key;
+  @Nonnull
   String formVar = "data";
 
-  public UploadImageQuery(String key, NotebookOutput log) {
+  public UploadImageQuery(String key, @Nonnull NotebookOutput log) {
     super(log);
     this.key = key;
   }
 
+  @Nonnull
   @Override
   protected String getFormInnerHtml() {
     File currentValue = getValue();
@@ -47,8 +49,9 @@ public class UploadImageQuery extends FormQuery<File> {
     }
   }
 
+  @Nonnull
   @Override
-  public File valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
+  public File valueFromParams(@Nonnull Map<String, String> parms, @Nonnull Map<String, String> files) throws IOException {
     File tmpFile = new File(files.get(formVar));
     File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
     FileUtils.copyFile(tmpFile, logFile);

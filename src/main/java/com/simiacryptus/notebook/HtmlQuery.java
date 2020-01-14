@@ -20,13 +20,14 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -41,16 +42,23 @@ public abstract class HtmlQuery<T> {
   protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
   protected final String rawId = UUID.randomUUID().toString();
   protected final String id = "input_" + rawId + ".html";
+  @Nonnull
   protected final Closeable handler_get;
   protected final Semaphore done = new Semaphore(0);
+  @Nonnull
   protected final Closeable handler_post;
+  @Nonnull
   final NotebookOutput log;
+  @Nonnull
   protected String height1 = "200px";
+  @Nonnull
   protected String height2 = "240px";
+  @Nonnull
   String width = "100%";
+  @Nullable
   private T value = null;
 
-  public HtmlQuery(NotebookOutput log) {
+  public HtmlQuery(@Nonnull NotebookOutput log) {
     this.log = log;
     this.handler_get = log.getHttpd().addGET(id, "text/html", out -> {
       try {
@@ -95,22 +103,27 @@ public abstract class HtmlQuery<T> {
     });
   }
 
+  @Nonnull
   protected abstract String getActiveHtml() throws JsonProcessingException;
 
   protected abstract String getDisplayHtml() throws JsonProcessingException;
 
+  @Nullable
   public T getValue() {
     return value;
   }
 
-  public HtmlQuery<T> setValue(T value) {
+  @Nonnull
+  public HtmlQuery<T> setValue(@Nullable T value) {
     if (null != value)
       this.value = value;
     return this;
   }
 
+  @javax.annotation.Nullable
   public abstract T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException;
 
+  @Nonnull
   public final HtmlQuery<T> print() {
     int lines = height();
     height1 = RefString.format("%dpx", lines);
@@ -132,6 +145,7 @@ public abstract class HtmlQuery<T> {
     }
   }
 
+  @Nullable
   public T get() {
     try {
       done.acquire();
@@ -142,7 +156,8 @@ public abstract class HtmlQuery<T> {
     }
   }
 
-  public T get(long t, TimeUnit u) {
+  @Nullable
+  public T get(long t, @Nonnull TimeUnit u) {
     try {
       if (done.tryAcquire(t, u)) {
         done.release();
@@ -157,10 +172,8 @@ public abstract class HtmlQuery<T> {
 
   @Override
   protected void finalize() throws Throwable {
-    if (null != handler_get)
-      handler_get.close();
-    if (null != handler_post)
-      handler_post.close();
+    handler_get.close();
+    handler_post.close();
     super.finalize();
   }
 }

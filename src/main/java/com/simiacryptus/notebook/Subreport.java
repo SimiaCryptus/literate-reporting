@@ -19,8 +19,7 @@
 
 package com.simiacryptus.notebook;
 
-import com.simiacryptus.ref.lang.RefAware;
-
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,10 +29,9 @@ import java.util.function.Function;
 class Subreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 
-  public Subreport(File subreportFile, MarkdownNotebookOutput parent, String reportName) throws FileNotFoundException {
+  public Subreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String reportName) throws FileNotFoundException {
     super(subreportFile, -1, false, reportName, UUID.randomUUID());
     this.parent = parent;
-    uploadCache = uploadCache;
   }
 
   @Override
@@ -47,7 +45,7 @@ class Subreport extends MarkdownNotebookOutput {
   }
 
   @Override
-  public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+  public <T> T subreport(@Nonnull Function<NotebookOutput, T> fn, String name) {
     String newName = name;
     assert null != newName;
     assert !newName.isEmpty();

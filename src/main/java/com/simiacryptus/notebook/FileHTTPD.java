@@ -19,8 +19,6 @@
 
 package com.simiacryptus.notebook;
 
-import com.simiacryptus.ref.lang.RefAware;
-
 import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.io.OutputStream;
@@ -28,9 +26,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface FileHTTPD {
+  @Nonnull
   Closeable addGET(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
+  @Nonnull
   Closeable addPOST(CharSequence path, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> value);
 
+  @Nonnull
   Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic);
 }

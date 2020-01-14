@@ -19,11 +19,7 @@
 
 package com.simiacryptus.util;
 
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.wrappers.RefArrays;
-import com.simiacryptus.ref.wrappers.RefCollectors;
-import com.simiacryptus.ref.wrappers.RefList;
-import com.simiacryptus.ref.wrappers.RefStream;
+import com.simiacryptus.ref.wrappers.*;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -38,12 +34,12 @@ public class ReportingUtil {
   public static final boolean BROWSE_SUPPORTED = !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
       && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
   public static boolean AUTO_BROWSE = Boolean.parseBoolean(
-      com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
+      RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
   public static boolean AUTO_BROWSE_LIVE = Boolean
-      .parseBoolean(com.simiacryptus.ref.wrappers.RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false)))
+      .parseBoolean(RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false)))
       && BROWSE_SUPPORTED;
 
-  public static void browse(final URI uri) throws IOException {
+  public static void browse(@Nonnull final URI uri) throws IOException {
     if (AUTO_BROWSE)
       Desktop.getDesktop().browse(uri);
   }
@@ -51,14 +47,12 @@ public class ReportingUtil {
   public static <T> T getLast(@Nonnull final RefStream<T> stream) {
     final RefList<T> collect = stream.collect(RefCollectors.toList());
     T temp_01_0001 = collect.get(collect.size() - 1);
-    if (null != collect)
-      collect.freeRef();
+    collect.freeRef();
     return temp_01_0001;
   }
 
   public static void report(@Nonnull final RefStream<CharSequence> fragments) throws IOException {
-    @Nonnull
-    final File outDir;
+    @Nonnull final File outDir;
     if (new File("target").exists()) {
       outDir = new File("target/reports");
     } else {
@@ -67,10 +61,8 @@ public class ReportingUtil {
     outDir.mkdirs();
     final StackTraceElement caller = getLast(RefArrays.stream(Thread.currentThread().getStackTrace())//
         .filter(x -> x.getClassName().contains("simiacryptus")));
-    @Nonnull
-    final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
-    @Nonnull
-    final PrintStream out = new PrintStream(new FileOutputStream(report));
+    @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
+    @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
     out.println("<html><head></head><body>");
     fragments.forEach(out::println);
     out.println("</body></html>");

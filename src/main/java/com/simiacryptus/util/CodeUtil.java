@@ -23,7 +23,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.notebook.NotebookOutput;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.*;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +60,7 @@ public class CodeUtil {
       "src/main/scala", "src/test/scala");
   @Nonnull
   public static File projectRoot = new File(
-      com.simiacryptus.ref.wrappers.RefSystem.getProperty("codeRoot", getDefaultProjectRoot()));
+      RefSystem.getProperty("codeRoot", getDefaultProjectRoot()));
   private static final List<File> codeRoots = CodeUtil.scanLocalCodeRoots();
   public static Map<String, String> classSourceInfo = getDefaultClassInfo();
 
@@ -86,23 +85,24 @@ public class CodeUtil {
     Map<String, String> map = new HashMap<>();
     scanLocalCodeRoots().stream().map(f -> f.getParentFile().getParentFile().getParentFile().getAbsoluteFile())
         .distinct().forEach(root -> {
-          String base = getGitBase(root, "");
-          if (!base.isEmpty()) {
-            File src = new File(root, "src");
-            FileUtils.listFiles(src, null, true).forEach(file -> {
-              try {
-                map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
-                    .replace('\\', '/'), base);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+      String base = getGitBase(root, "");
+      if (!base.isEmpty()) {
+        File src = new File(root, "src");
+        FileUtils.listFiles(src, null, true).forEach(file -> {
+          try {
+            map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
+                .replace('\\', '/'), base);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
         });
+      }
+    });
     logger.debug("Class Info: " + JsonUtil.toJson(RefUtil.addRef(map)));
     return map;
   }
 
+  @Nonnull
   private static String getDefaultProjectRoot() {
     if (new File("src").exists())
       return "..";
@@ -123,14 +123,12 @@ public class CodeUtil {
 
   @Nonnull
   public static URI findFile(@Nonnull final StackTraceElement callingFrame) {
-    @Nonnull
-    final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
+    @Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
     String pkg = RefArrays.stream(packagePath).limit(packagePath.length - 1)
         .collect(RefCollectors.joining(File.separator));
     if (!pkg.isEmpty())
       pkg += File.separator;
-    @Nonnull
-    final String path = pkg + callingFrame.getFileName();
+    @Nonnull final String path = pkg + callingFrame.getFileName();
     return CodeUtil.findFile(path);
   }
 
@@ -146,8 +144,7 @@ public class CodeUtil {
       }
     }
     for (final File root : CodeUtil.codeRoots) {
-      @Nonnull
-      final File file = new File(root, path);
+      @Nonnull final File file = new File(root, path);
       if (file.exists()) {
         logger.debug(RefString.format("Resolved %s to %s", path, file));
         return file.toURI();
@@ -158,8 +155,7 @@ public class CodeUtil {
 
   @Nonnull
   public static CharSequence getIndent(@Nonnull final CharSequence txt) {
-    @Nonnull
-    final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
+    @Nonnull final Matcher matcher = Pattern.compile("^\\s+").matcher(txt);
     return matcher.find() ? matcher.group(0) : "";
   }
 
@@ -180,19 +176,15 @@ public class CodeUtil {
           throw new RuntimeException(e);
         }
       } else {
-        @Nonnull
-        final URI file = CodeUtil.findFile(callingFrame);
-        assert null != file;
+        @Nonnull final URI file = CodeUtil.findFile(callingFrame);
         allLines = IOUtils.readLines(file.toURL().openStream(), "UTF-8");
         logger.debug(RefString.format("Resolved %s to %s (%s lines)", callingFrame, file, allLines.size()));
       }
 
       final int start = callingFrame.getLineNumber() - 1;
       final CharSequence txt = allLines.get(start);
-      @Nonnull
-      final CharSequence indent = CodeUtil.getIndent(txt);
-      @Nonnull
-      final RefArrayList<CharSequence> lines = new RefArrayList<>();
+      @Nonnull final CharSequence indent = CodeUtil.getIndent(txt);
+      @Nonnull final RefArrayList<CharSequence> lines = new RefArrayList<>();
       int lineNum = start + 1;
       for (; lineNum < allLines.size() && (CodeUtil.getIndent(allLines.get(lineNum)).length() > indent.length()
           || String.valueOf(allLines.get(lineNum)).trim().isEmpty()); lineNum++) {
@@ -209,12 +201,12 @@ public class CodeUtil {
     }
   }
 
+  @Nullable
   public static String getJavadoc(@Nullable final Class<?> clazz) {
     try {
       if (null == clazz)
         return null;
-      @Nullable
-      final URI source = CodeUtil.findFile(clazz);
+      @Nullable final URI source = CodeUtil.findFile(clazz);
       if (null == source)
         return clazz.getName() + " not found";
       final List<String> lines = IOUtils.readLines(source.toURL().openStream(), Charset.forName("UTF-8"));
@@ -232,15 +224,15 @@ public class CodeUtil {
     }
   }
 
-  public static CharSequence codeUrl(StackTraceElement callingFrame) {
+  @Nonnull
+  public static CharSequence codeUrl(@Nonnull StackTraceElement callingFrame) {
     String[] split = callingFrame.getClassName().split("\\.");
     RefList<String> temp_00_0003 = RefArrays.asList(split);
     RefList<String> temp_00_0004 = temp_00_0003.subList(0, split.length - 1);
     String packagePath = temp_00_0004.stream().reduce((a, b) -> a + "/" + b).orElse("");
-    if (null != temp_00_0004)
-      temp_00_0004.freeRef();
-    if (null != temp_00_0003)
-      temp_00_0003.freeRef();
+    temp_00_0004.freeRef();
+    temp_00_0003.freeRef();
+    assert callingFrame.getFileName() != null;
     String[] fileSplit = callingFrame.getFileName().split("\\.");
     String language = fileSplit[fileSplit.length - 1];
     String codePath = (language + "/" + packagePath + "/" + callingFrame.getFileName()).replaceAll("//", "/");
@@ -251,13 +243,14 @@ public class CodeUtil {
     return codePath;
   }
 
-  public static LogInterception intercept(NotebookOutput log, String loggerName) {
+  public static LogInterception intercept(@Nonnull NotebookOutput log, String loggerName) {
     AtomicLong counter = new AtomicLong(0);
     return log.subreport(sublog -> {
       ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
       logger.setLevel(Level.ALL);
       logger.setAdditive(false);
       AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>() {
+        @Nullable
         PrintWriter out;
         long remainingOut = 0;
         long killAt = 0;
@@ -272,7 +265,7 @@ public class CodeUtil {
         }
 
         @Override
-        protected synchronized void append(ILoggingEvent iLoggingEvent) {
+        protected synchronized void append(@Nonnull ILoggingEvent iLoggingEvent) {
           if (null == out) {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd_HH_mm_ss");
             String date = dateFormat.format(new Date());
@@ -285,7 +278,7 @@ public class CodeUtil {
             } catch (Throwable e) {
               throw new RuntimeException(e);
             }
-            killAt = com.simiacryptus.ref.wrappers.RefSystem.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
+            killAt = RefSystem.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
             remainingOut = 10L * 1024 * 1024;
           }
           String formattedMessage = iLoggingEvent.getFormattedMessage();
@@ -294,7 +287,7 @@ public class CodeUtil {
           int length = formattedMessage.length();
           remainingOut -= length;
           counter.addAndGet(length);
-          if (remainingOut < 0 || killAt < com.simiacryptus.ref.wrappers.RefSystem.currentTimeMillis()) {
+          if (remainingOut < 0 || killAt < RefSystem.currentTimeMillis()) {
             out.close();
             out = null;
           }

@@ -20,13 +20,15 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.simiacryptus.ref.lang.RefAware;
+
+import javax.annotation.Nonnull;
 
 public abstract class FormQuery<T> extends HtmlQuery<T> {
-  public FormQuery(NotebookOutput log) {
+  public FormQuery(@Nonnull NotebookOutput log) {
     super(log);
   }
 
+  @Nonnull
   @Override
   protected String getActiveHtml() throws JsonProcessingException {
     return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + "<form action=\"" + id
@@ -41,6 +43,7 @@ public abstract class FormQuery<T> extends HtmlQuery<T> {
 
   protected abstract String getFormInnerHtml() throws JsonProcessingException;
 
+  @Nonnull
   protected String getHeader() {
     return "";
   }

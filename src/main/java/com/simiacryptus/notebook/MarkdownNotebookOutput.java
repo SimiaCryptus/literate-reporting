@@ -21,11 +21,7 @@ package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.TimedResult;
 import com.simiacryptus.lang.UncheckedSupplier;
-import com.simiacryptus.ref.lang.RefAware;
-import com.simiacryptus.ref.wrappers.RefArrays;
-import com.simiacryptus.ref.wrappers.RefConsumer;
-import com.simiacryptus.ref.wrappers.RefStream;
-import com.simiacryptus.ref.wrappers.RefString;
+import com.simiacryptus.ref.wrappers.*;
 import com.simiacryptus.util.CodeUtil;
 import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
@@ -71,6 +67,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public static final Random random = new Random();
   static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
+  @Nonnull
   public static Map<String, Object> uploadCache = new HashMap<>();
   public static int MAX_OUTPUT = 1024 * 2;
   private static int excerptNumber = 0;
@@ -82,6 +79,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final List<CharSequence> markdownData = new ArrayList<>();
   private final List<Runnable> onComplete = new ArrayList<>();
   private final Map<CharSequence, CharSequence> frontMatter = new HashMap<>();
+  @Nullable
   private final FileNanoHTTPD httpd;
   private final ArrayList<Runnable> onWriteHandlers = new ArrayList<>();
   @Nonnull
@@ -90,7 +88,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   UUID id;
   private String name;
   private int maxImageSize = 1600;
+  @Nullable
   private URI currentHome = null;
+  @Nullable
   private URI archiveHome = null;
   private boolean enableZip = false;
   private boolean enablePdf = false;
@@ -99,8 +99,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName(), UUID.randomUUID());
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, final int httpPort, boolean browse, String name,
-      UUID id) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, final int httpPort, boolean browse, @Nonnull String name,
+                                UUID id) throws FileNotFoundException {
     this.setName(name);
     root = reportFile.getAbsoluteFile();
     root.mkdirs();
@@ -139,7 +139,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           printStream.print("Done");
         }
         logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
-        com.simiacryptus.ref.wrappers.RefSystem.exit(0);
+        RefSystem.exit(0);
       });
     log.info(RefString.format("Serving %s/%s at http://localhost:%d", root.getAbsoluteFile(), getName(), httpPort));
     if (null != httpd) {
@@ -160,7 +160,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
               Thread.sleep(100);
             if (ReportingUtil.AUTO_BROWSE_LIVE)
               ReportingUtil.browse(new URI(RefString.format("http://localhost:%d", httpPort)));
-          } catch (InterruptedException | IOException | URISyntaxException e) {
+          } catch (@Nonnull InterruptedException | IOException | URISyntaxException e) {
             e.printStackTrace();
           }
         }).start();
@@ -178,15 +178,18 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       });
   }
 
+  @Nullable
   @Override
   public URI getArchiveHome() {
     return archiveHome;
   }
 
+  @Nullable
   public FileHTTPD getHttpd() {
     return (null != this.httpd) ? httpd : new NullHTTPD();
   }
 
+  @Nonnull
   @Override
   public String getId() {
     return id.toString();
@@ -212,8 +215,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public File getResourceDir() {
-    @Nonnull
-    final File etc = new File(getReportFile().getParentFile(), "etc").getAbsoluteFile();
+    @Nonnull final File etc = new File(getReportFile().getParentFile(), "etc").getAbsoluteFile();
     etc.mkdirs();
     return etc;
   }
@@ -228,6 +230,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return enablePdf;
   }
 
+  @Nonnull
   public MarkdownNotebookOutput setEnablePdf(boolean enablePdf) {
     this.enablePdf = enablePdf;
     return this;
@@ -237,11 +240,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return enableZip;
   }
 
+  @Nonnull
   public MarkdownNotebookOutput setEnableZip(boolean enableZip) {
     this.enableZip = enableZip;
     return this;
   }
 
+  @Nonnull
   public static RefConsumer<NotebookOutput> wrapFrontmatter(@Nonnull final RefConsumer<NotebookOutput> fn) {
     return log -> {
       @Nonnull
@@ -258,7 +263,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     };
   }
 
-  public static NotebookOutput get(File path) {
+  @Nonnull
+  public static NotebookOutput get(@Nonnull File path) {
     try {
       StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[2];
       String methodName = callingFrame.getMethodName();
@@ -278,7 +284,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return e.getClass().getSimpleName();
   }
 
-  public static NotebookOutput get(final String s) {
+  @Nonnull
+  public static NotebookOutput get(@Nonnull final String s) {
     return get(new File(s));
   }
 
@@ -293,11 +300,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Override
   public void close() {
     try {
-      if (null != primaryOut) {
-        primaryOut.close();
-      }
+      primaryOut.close();
       try (@Nonnull
-      PrintWriter out = new PrintWriter(new FileOutputStream(getReportFile()))) {
+           PrintWriter out = new PrintWriter(new FileOutputStream(getReportFile()))) {
         write(out);
       }
       File root = getRoot();
@@ -316,11 +321,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  public File writeZip(final File root, final String baseName) throws IOException {
+  @javax.annotation.Nullable
+  public File writeZip(@Nonnull final File root, final String baseName) throws IOException {
     File zipFile = new File(root, baseName + ".zip");
     logger.info(RefString.format("Archiving %s to %s", root.getAbsolutePath(), zipFile.getAbsolutePath()));
     try (@Nonnull
-    ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile))) {
+         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFile))) {
       zipArchive(root, root, out,
           file -> !file.getName().equals(baseName + ".zip") && !file.getName().endsWith(".pdf"));
     }
@@ -329,13 +335,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   @Nonnull
-  public NotebookOutput onComplete(Runnable... tasks) {
+  public NotebookOutput onComplete(@Nonnull Runnable... tasks) {
     RefArrays.stream(tasks).forEach(onComplete::add);
     return this;
   }
 
   @Nonnull
-  public String toString(final List<CharSequence> list) {
+  public String toString(@Nonnull final List<CharSequence> list) {
     if (list.size() > 0 && list.stream().allMatch(x -> {
       if (x.length() > 1) {
         char c = x.charAt(0);
@@ -350,8 +356,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       return list.stream().reduce((a, b) -> a + "\n" + b).orElse("").toString();
   }
 
-  public void zipArchive(final File root, final File dir, final ZipOutputStream out,
-      final Predicate<? super File> filter) {
+  public void zipArchive(@Nonnull final File root, @Nonnull final File dir, @Nonnull final ZipOutputStream out,
+                         @Nonnull final Predicate<? super File> filter) {
     RefArrays.stream(dir.listFiles()).filter(filter).forEach(file -> {
       if (file.isDirectory()) {
         zipArchive(root, file, out, filter);
@@ -371,7 +377,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     });
   }
 
-  public void write(final PrintWriter out) {
+  public void write(@Nonnull final PrintWriter out) {
     if (!frontMatter.isEmpty()) {
       out.println("---");
       frontMatter.forEach((key, value) -> {
@@ -395,10 +401,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return frontMatter.get(key);
   }
 
+  @Nonnull
   public CharSequence anchor(CharSequence anchorId) {
     return RefString.format("<a id=\"%s\"></a>", anchorId);
   }
 
+  @Nonnull
   public CharSequence anchorId() {
     return RefString.format("p-%d", anchor++);
   }
@@ -451,7 +459,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Nonnull
   @Override
   public String file(@Nullable final CharSequence data, @Nonnull final CharSequence fileName,
-      final CharSequence caption) {
+                     final CharSequence caption) {
     try {
       if (null != data) {
         IOUtils.write(data, new FileOutputStream(new File(getResourceDir(), fileName.toString())),
@@ -495,8 +503,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String png(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage)
       return "";
-    @Nonnull
-    final File file = pngFile(rawImage,
+    @Nonnull final File file = pngFile(rawImage,
         new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".png"));
     return imageMarkdown(caption, file);
   }
@@ -506,15 +513,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String svg(@Nullable final String rawImage, final CharSequence caption) {
     if (null == rawImage)
       return "";
-    @Nonnull
-    final File file = svgFile(rawImage,
+    @Nonnull final File file = svgFile(rawImage,
         new File(getResourceDir(), getName() + "." + ++MarkdownNotebookOutput.imageNumber + ".svg"));
     return anchor(anchorId()) + "[" + caption + "](etc/" + file.getName() + ")";
   }
 
   @Override
   @Nonnull
-  public File svgFile(@Nonnull final String rawImage, final File file) {
+  public File svgFile(@Nonnull final String rawImage, @Nonnull final File file) {
     try {
       FileUtils.write(file, rawImage, "UTF-8");
     } catch (IOException e) {
@@ -525,15 +531,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   @Nonnull
-  public File pngFile(@Nonnull final BufferedImage rawImage, final File file) {
-    @Nullable
-    final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
+  public File pngFile(@Nonnull final BufferedImage rawImage, @Nonnull final File file) {
+    @Nullable final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
     try {
       if (stdImage != rawImage) {
-        @Nonnull
-        final String rawName = file.getName().replace(".png", "_raw.png");
+        @Nonnull final String rawName = file.getName().replace(".png", "_raw.png");
         ImageIO.write(rawImage, "png", new File(file.getParent(), rawName));
       }
+      assert stdImage != null;
       ImageIO.write(stdImage, "png", file);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -546,24 +551,22 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String jpg(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage)
       return "";
-    @Nonnull
-    final File file = jpgFile(rawImage, new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg"));
+    @Nonnull final File file = jpgFile(rawImage, new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg"));
     return imageMarkdown(caption, file);
   }
 
-  public String imageMarkdown(CharSequence caption, File file) {
+  @Nonnull
+  public String imageMarkdown(CharSequence caption, @Nonnull File file) {
     return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
   }
 
   @Override
   @Nonnull
-  public File jpgFile(@Nonnull final BufferedImage rawImage, final File file) {
-    @Nullable
-    final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
+  public File jpgFile(@Nonnull final BufferedImage rawImage, @Nonnull final File file) {
+    @Nullable final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
     if (stdImage != rawImage) {
       try {
-        @Nonnull
-        final String rawName = file.getName().replace(".jpg", "_raw.jpg");
+        @Nonnull final String rawName = file.getName().replace(".jpg", "_raw.jpg");
         ImageIO.write(rawImage, "jpg", new File(file.getParent(), rawName));
       } catch (IOException e) {
         throw new RuntimeException(
@@ -571,25 +574,27 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
     }
     try {
+      assert stdImage != null;
       ImageIO.write(stdImage, "jpg", file);
     } catch (Throwable e) {
+      assert stdImage != null;
       log.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()),
           e);
     }
     return file;
   }
 
+  @Nonnull
   @Override
   @SuppressWarnings("unchecked")
   public <T> T eval(@Nonnull final UncheckedSupplier<T> fn, final int maxLog, final int framesNo) {
     try {
       final StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[framesNo];
       final String sourceCode = CodeUtil.getInnerText(callingFrame);
-      @Nonnull
-      final SysOutInterceptor.LoggedResult<TimedResult<Object>> result = SysOutInterceptor.withOutput(() -> {
+      @Nonnull final SysOutInterceptor.LoggedResult<TimedResult<Object>> result = SysOutInterceptor.withOutput(() -> {
         long priorGcMs = ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime())
             .sum();
-        final long start = com.simiacryptus.ref.wrappers.RefSystem.nanoTime();
+        final long start = RefSystem.nanoTime();
         try {
           @Nullable
           Object result1 = null;
@@ -602,11 +607,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           }
           long gcTime = ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime())
               .sum() - priorGcMs;
-          return new TimedResult<Object>(result1, com.simiacryptus.ref.wrappers.RefSystem.nanoTime() - start, gcTime);
+          return new TimedResult<Object>(result1, RefSystem.nanoTime() - start, gcTime);
         } catch (@Nonnull final Throwable e) {
           long gcTime = ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime())
               .sum() - priorGcMs;
-          return new TimedResult<Object>(e, com.simiacryptus.ref.wrappers.RefSystem.nanoTime() - start, gcTime);
+          return new TimedResult<Object>(e, RefSystem.nanoTime() - start, gcTime);
         }
       });
       out(anchor(anchorId()) + "Code from [%s:%s](%s#L%s) executed in %.2f seconds (%.3f gc): ",
@@ -631,8 +636,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         String str;
         boolean escape;
         if (eval instanceof Throwable) {
-          @Nonnull
-          final ByteArrayOutputStream out = new ByteArrayOutputStream();
+          @Nonnull final ByteArrayOutputStream out = new ByteArrayOutputStream();
           ((Throwable) eval).printStackTrace(new PrintStream(out));
           str = new String(out.toByteArray(), "UTF-8");
           escape = true;//
@@ -672,6 +676,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           throw new RuntimeException((Throwable) result.obj.result);
         }
       }
+      assert eval != null;
       return (T) eval;
     } catch (@Nonnull final IOException e) {
       throw new RuntimeException(e);
@@ -688,14 +693,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
+  @Nonnull
   public CharSequence pathTo(@Nonnull File file) {
     return stripPrefix(Util.toString(pathToFile(getReportFile(), file)), "/");
   }
 
   @Override
   public void out(@Nonnull final CharSequence fmt, final Object... args) {
-    @Nonnull
-    final String msg = format(fmt, args);
+    @Nonnull final String msg = format(fmt, args);
     markdownData.add(msg);
     primaryOut.println(msg);
     log.info(msg);
@@ -714,8 +719,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Nonnull
   public String summarize(@Nonnull String logSrc, final int maxLog) {
     if (logSrc.length() > maxLog * 2) {
-      @Nonnull
-      final String prefix = logSrc.substring(0, maxLog);
+      @Nonnull final String prefix = logSrc.substring(0, maxLog);
       logSrc = prefix + RefString.format(
           (prefix.endsWith("\n") ? "" : "\n") + "~```\n~..." + file(logSrc, "skipping %s bytes") + "...\n~```\n",
           logSrc.length() - 2 * maxLog) + logSrc.substring(logSrc.length() - maxLog);
@@ -724,21 +728,24 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+  public <T> T subreport(@Nonnull Function<NotebookOutput, T> fn, @Nonnull String name) {
     return subreport(name, fn, this);
   }
 
+  @Nonnull
   public NotebookOutput setMaxImageSize(int maxImageSize) {
     this.maxImageSize = maxImageSize;
     return this;
   }
 
+  @Nonnull
   @Override
   public NotebookOutput setCurrentHome(URI currentHome) {
     this.currentHome = currentHome;
     return this;
   }
 
+  @Nonnull
   @Override
   public NotebookOutput setArchiveHome(URI archiveHome) {
     this.archiveHome = archiveHome;
@@ -746,8 +753,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
+  @Nonnull
   @Override
-  public NotebookOutput setName(String name) {
+  public NotebookOutput setName(@Nonnull String name) {
     this.name = name.replaceAll("\\.md$", "").replaceAll("\\$$", "").replaceAll("[:%\\{\\}\\(\\)\\+\\*]", "_")
         .replaceAll("_{2,}", "_");
     int maxLength = 128;
@@ -763,7 +771,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  protected <T> T subreport(String reportName, Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
+  protected <T> T subreport(@Nonnull String reportName, @Nonnull Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
       MarkdownNotebookOutput subreport = new Subreport(root, parent, reportName);
@@ -796,7 +804,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
   }
 
-  private synchronized File writePdf(MutableDataSet options, File htmlFile) throws IOException {
+  @Nonnull
+  private synchronized File writePdf(@Nonnull MutableDataSet options, @Nonnull File htmlFile) throws IOException {
     File root = getRoot();
     CharSequence baseName = getName();
     try (FileOutputStream out = new FileOutputStream(new File(root, baseName + ".pdf"))) {
@@ -806,7 +815,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return new File(htmlFile.getPath().replaceAll("\\.html$", ".pdf"));
   }
 
-  private synchronized File writeHtml(MutableDataSet options) throws IOException {
+  @Nonnull
+  private synchronized File writeHtml(@Nonnull MutableDataSet options) throws IOException {
     List<Extension> extensions = RefArrays.asList(TablesExtension.create(), SubscriptExtension.create(),
         EscapedCharacterExtension.create());
     Parser parser = Parser.builder(options).extensions(extensions).build();

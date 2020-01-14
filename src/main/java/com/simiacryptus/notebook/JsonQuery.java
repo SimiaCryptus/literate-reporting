@@ -22,8 +22,9 @@ package com.simiacryptus.notebook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.simiacryptus.ref.lang.RefAware;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 
 public class JsonQuery<T> extends StringQuery<T> {
@@ -31,7 +32,7 @@ public class JsonQuery<T> extends StringQuery<T> {
       //.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
       .enable(SerializationFeature.INDENT_OUTPUT);
 
-  public JsonQuery(MarkdownNotebookOutput log) {
+  public JsonQuery(@Nonnull MarkdownNotebookOutput log) {
     super(log);
   }
 
@@ -39,14 +40,17 @@ public class JsonQuery<T> extends StringQuery<T> {
     return mapper;
   }
 
+  @Nonnull
   public JsonQuery<T> setMapper(ObjectMapper mapper) {
     this.mapper = mapper;
     return this;
   }
 
+  @Nullable
   @Override
-  protected T fromString(String text) {
+  protected T fromString(@Nonnull String text) {
     try {
+      assert getValue() != null;
       return (T) mapper.readValue(new ByteArrayInputStream(text.getBytes()), getValue().getClass());
     } catch (Throwable e) {
       logger.warn("Error deserializing", e);

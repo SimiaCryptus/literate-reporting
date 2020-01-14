@@ -19,7 +19,6 @@
 
 package com.simiacryptus.notebook;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefConsumer;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.io.AsyncOutputStream;
@@ -44,17 +43,16 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
   private final String mimeType;
   private boolean autobrowse = true;
 
-  public StreamNanoHTTPD(final int port, final String mimeType, final File primaryFile) throws IOException {
+  public StreamNanoHTTPD(final int port, final String mimeType, @Nonnull final File primaryFile) throws IOException {
     super(primaryFile.getParentFile(), port);
     try {
-      gatewayUri = null == primaryFile ? null
-          : new URI(RefString.format("http://localhost:%s/%s", port, primaryFile.getName()));
+      gatewayUri = new URI(RefString.format("http://localhost:%s/%s", port, primaryFile.getName()));
     } catch (@Nonnull final URISyntaxException e) {
       throw new RuntimeException(e);
     }
     this.primaryFile = primaryFile;
     this.mimeType = mimeType;
-    dataReciever = null == primaryFile ? null : new TeeOutputStream(new FileOutputStream(primaryFile), true) {
+    dataReciever = new TeeOutputStream(new FileOutputStream(primaryFile), true) {
       @Override
       public void close() {
         try {
@@ -75,21 +73,21 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     return autobrowse;
   }
 
+  @Nonnull
   public StreamNanoHTTPD setAutobrowse(boolean autobrowse) {
     this.autobrowse = autobrowse;
     return this;
   }
 
+  @Nonnull
   public static Function<IHTTPSession, Response> asyncHandler(@Nonnull final ExecutorService pool,
-      final String mimeType, @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
+                                                              final String mimeType, @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
     return session -> {
-      @Nonnull
-      final PipedInputStream snk = new PipedInputStream();
-      @Nonnull
-      final Semaphore onComplete = new Semaphore(0);
+      @Nonnull final PipedInputStream snk = new PipedInputStream();
+      @Nonnull final Semaphore onComplete = new Semaphore(0);
       pool.submit(() -> {
         try (@Nonnull
-        OutputStream out = new BufferedOutputStream(new AsyncOutputStream(new PipedOutputStream(snk)))) {
+             OutputStream out = new BufferedOutputStream(new AsyncOutputStream(new PipedOutputStream(snk)))) {
           try {
             logic.accept(out);
           } finally {
@@ -119,7 +117,7 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
       new Thread(() -> {
         try {
           Thread.sleep(100);
-          if (null != gatewayUri && isAutobrowse())
+          if (isAutobrowse())
             Desktop.getDesktop().browse(gatewayUri);
         } catch (@Nonnull final Exception e) {
           e.printStackTrace();
@@ -128,21 +126,21 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     return this;
   }
 
+  @Nonnull
   public Closeable addAsyncHandler(final CharSequence path, final String mimeType,
-      @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
+                                   @Nonnull final RefConsumer<OutputStream> logic, final boolean async) {
     return addGET(path, StreamNanoHTTPD.asyncHandler(pool, mimeType, logic, async));
   }
 
   @Override
-  public Response serve(final IHTTPSession session) {
+  public Response serve(@Nonnull final IHTTPSession session) {
     String requestPath = session.getUri();
     while (requestPath.startsWith("/")) {
       requestPath = requestPath.substring(1);
     }
-    if (null != primaryFile && requestPath.equals(primaryFile.getName())) {
+    if (requestPath.equals(primaryFile.getName())) {
       try {
-        @Nonnull
-        final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
+        @Nonnull final Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType,
             new BufferedInputStream(dataReciever.newInputStream()));
         response.setGzipEncoding(false);
         return response;

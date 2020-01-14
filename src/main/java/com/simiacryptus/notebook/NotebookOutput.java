@@ -20,7 +20,6 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefConsumer;
 
 import javax.annotation.Nonnull;
@@ -35,18 +34,23 @@ import java.util.function.Function;
 
 public interface NotebookOutput extends Closeable {
 
+  @javax.annotation.Nullable
   URI getArchiveHome();
 
+  @Nonnull
   NotebookOutput setArchiveHome(URI archiveHome);
 
+  @javax.annotation.Nullable
   FileHTTPD getHttpd();
 
+  @Nonnull
   String getId();
 
   int getMaxOutSize();
 
   String getName();
 
+  @Nonnull
   NotebookOutput setName(String name);
 
   @Nonnull
@@ -55,10 +59,12 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   File getRoot();
 
+  @Nonnull
   NotebookOutput setCurrentHome(URI currentHome);
 
+  @Nonnull
   static RefConsumer<NotebookOutput> concat(@Nonnull final RefConsumer<NotebookOutput> fn,
-      @Nonnull final RefConsumer<NotebookOutput> header) {
+                                            @Nonnull final RefConsumer<NotebookOutput> header) {
     return log -> {
       header.accept(log);
       fn.accept(log);
@@ -122,6 +128,7 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   String svg(String rawImage, CharSequence caption);
 
+  @Nonnull
   CharSequence link(File file, CharSequence text);
 
   default void out(final CharSequence fmt, final Object... args) {

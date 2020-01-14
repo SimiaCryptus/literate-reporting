@@ -20,7 +20,6 @@
 package com.simiacryptus.notebook;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
@@ -58,11 +57,12 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     return new FileNanoHTTPD(path, port).init();
   }
 
+  @Nonnull
   public static Function<IHTTPSession, Response> handler(final String mimeType,
-      @Nonnull final Consumer<OutputStream> logic) {
+                                                         @Nonnull final Consumer<OutputStream> logic) {
     return session -> {
       try (@Nonnull
-      ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+           ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         logic.accept(out);
         out.flush();
         final byte[] bytes = out.toByteArray();
@@ -75,18 +75,21 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
     };
   }
 
+  @Nonnull
   @Override
   public Closeable addGET(final CharSequence path, final Function<IHTTPSession, Response> value) {
     getHandlers.put(path, value);
     return () -> getHandlers.remove(path, value);
   }
 
+  @Nonnull
   @Override
   public Closeable addPOST(final CharSequence path, final Function<IHTTPSession, Response> value) {
     Function<IHTTPSession, Response> put = postHandlers.put(path, value);
     return () -> postHandlers.remove(path, put);
   }
 
+  @Nonnull
   public Closeable addGET(final CharSequence path, final String mimeType, @Nonnull final Consumer<OutputStream> logic) {
     return addGET(path, FileNanoHTTPD.handler(mimeType, logic));
   }
@@ -98,23 +101,20 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   }
 
   @Override
-  public Response serve(final IHTTPSession session) {
+  public Response serve(@Nonnull final IHTTPSession session) {
     String requestPath = Util.stripPrefix(session.getUri(), "/");
-    @Nonnull
-    final File file = new File(root, requestPath);
+    @Nonnull final File file = new File(root, requestPath);
     if (session.getMethod() == Method.GET) {
       Comparator<Map.Entry<CharSequence, Function<IHTTPSession, Response>>> objectComparator = Comparator
           .comparingInt(x -> {
             int temp_02_0001 = x.getKey().length();
-            if (null != x)
-              RefUtil.freeRef(x);
+            RefUtil.freeRef(x);
             return temp_02_0001;
           });
       Optional<Map.Entry<CharSequence, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response>>> temp_02_0005 = getHandlers
           .entrySet().stream().filter(e -> {
             String prefix = e.getKey().toString();
-            if (null != e)
-              RefUtil.freeRef(e);
+            RefUtil.freeRef(e);
             if (prefix.isEmpty() && requestPath.isEmpty())
               return true;
             if (prefix.isEmpty() || requestPath.isEmpty())
@@ -123,12 +123,10 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           }).sorted(objectComparator.reversed()).findFirst();
       Optional<Function<IHTTPSession, Response>> handler = temp_02_0005.map(e -> {
         Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0002 = e.getValue();
-        if (null != e)
-          RefUtil.freeRef(e);
+        RefUtil.freeRef(e);
         return temp_02_0002;
       });
-      if (null != temp_02_0005)
-        RefUtil.freeRef(temp_02_0005);
+      RefUtil.freeRef(temp_02_0005);
       handler.orElse(null);
       if (handler.isPresent()) {
         try {
@@ -137,7 +135,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           log.warn("Error requesting " + session.getUri(), e);
           throw new RuntimeException(e);
         }
-      } else if (null != file && file.exists() && file.isFile()) {
+      } else if (file.exists() && file.isFile()) {
         try {
           return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, null, new FileInputStream(file), file.length());
         } catch (@Nonnull final FileNotFoundException e) {
@@ -153,18 +151,15 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
       Optional<Map.Entry<CharSequence, Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response>>> temp_02_0006 = this.postHandlers
           .entrySet().stream().filter(e -> {
             boolean temp_02_0003 = requestPath.startsWith(e.getKey().toString());
-            if (null != e)
-              RefUtil.freeRef(e);
+            RefUtil.freeRef(e);
             return temp_02_0003;
           }).findAny();
       Optional<Function<IHTTPSession, Response>> handler = temp_02_0006.map(e -> {
         Function<NanoHTTPD.IHTTPSession, NanoHTTPD.Response> temp_02_0004 = e.getValue();
-        if (null != e)
-          RefUtil.freeRef(e);
+        RefUtil.freeRef(e);
         return temp_02_0004;
       });
-      if (null != temp_02_0006)
-        RefUtil.freeRef(temp_02_0006);
+      RefUtil.freeRef(temp_02_0006);
       handler.orElse(null);
       if (handler.isPresent()) {
         try {

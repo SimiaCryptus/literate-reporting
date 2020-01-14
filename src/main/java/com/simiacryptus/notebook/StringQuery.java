@@ -20,35 +20,40 @@
 package com.simiacryptus.notebook;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.simiacryptus.ref.lang.RefAware;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Map;
 
 public abstract class StringQuery<T> extends FormQuery<T> {
+  @Nonnull
   String formVar = "data";
 
-  public StringQuery(MarkdownNotebookOutput log) {
+  public StringQuery(@Nonnull MarkdownNotebookOutput log) {
     super(log);
   }
 
+  @Nonnull
   @Override
   protected String getFormInnerHtml() throws JsonProcessingException {
     return "<textarea name=\"" + formVar + "\" style=\"margin: 0px; width: " + width + "; height: " + height1 + ";\">"
         + toString(getValue()) + "</textarea>";
   }
 
-  public T valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
+  @Nullable
+  public T valueFromParams(@Nonnull Map<String, String> parms, Map<String, String> files) throws IOException {
     return fromString(parms.get(formVar));
   }
 
   protected abstract String toString(T value) throws JsonProcessingException;
 
+  @Nullable
   protected abstract T fromString(String text) throws IOException;
 
   public static class SimpleStringQuery extends StringQuery<String> {
 
-    public SimpleStringQuery(MarkdownNotebookOutput log) {
+    public SimpleStringQuery(@Nonnull MarkdownNotebookOutput log) {
       super(log);
     }
 

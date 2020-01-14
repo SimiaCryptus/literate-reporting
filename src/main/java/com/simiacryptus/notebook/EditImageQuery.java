@@ -19,11 +19,11 @@
 
 package com.simiacryptus.notebook;
 
-import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.wrappers.RefString;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -37,9 +37,10 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
 
   private final int heightPx;
   private final int widthPx;
+  @Nonnull
   private final String initUrl;
 
-  public EditImageQuery(NotebookOutput log, BufferedImage image) {
+  public EditImageQuery(@Nonnull NotebookOutput log, @Nonnull BufferedImage image) {
     super(log);
     this.widthPx = image.getWidth();
     this.heightPx = image.getHeight();
@@ -50,20 +51,24 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
     save(log, image);
   }
 
+  @Nonnull
   @Override
   protected String getActiveHtml() {
     return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
   }
 
+  @Nonnull
   @Override
   protected String getDisplayHtml() {
     return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + getFormInnerHtml() + "</body></html>";
   }
 
+  @Nonnull
   protected String getFormInnerHtml() {
     return "<div id=\"paint-app\"></div>";
   }
 
+  @Nonnull
   protected String getHeader() {
     try {
       final String jsInject = RefString.format("init('%s', '%s', %s, %s)", rawId, initUrl, widthPx, heightPx);
@@ -76,7 +81,8 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
     }
   }
 
-  public BufferedImage save(NotebookOutput log, BufferedImage image) {
+  @Nonnull
+  public BufferedImage save(@Nonnull NotebookOutput log, @Nonnull BufferedImage image) {
     try {
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
       ImageIO.write(image, "PNG", buffer);
@@ -87,8 +93,9 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
     return image;
   }
 
+  @Nonnull
   @Override
-  public BufferedImage valueFromParams(Map<String, String> parms, Map<String, String> files) throws IOException {
+  public BufferedImage valueFromParams(Map<String, String> parms, @Nonnull Map<String, String> files) throws IOException {
     String postData = files.get("postData");
     String prefix = "data:image/png;base64,";
     assert (postData.startsWith(prefix));

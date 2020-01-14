@@ -20,7 +20,6 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
-import com.simiacryptus.ref.lang.RefAware;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,16 +41,19 @@ public class NullNotebookOutput implements NotebookOutput {
     this("null");
   }
 
+  @Nonnull
   @Override
   public URI getArchiveHome() {
     return new File(".").toURI();
   }
 
+  @Nonnull
   @Override
   public FileHTTPD getHttpd() {
     return new NullHTTPD();
   }
 
+  @Nonnull
   @Override
   public String getId() {
     return "";
@@ -201,20 +203,23 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(Function<NotebookOutput, T> fn, String name) {
+  public <T> T subreport(@Nonnull Function<NotebookOutput, T> fn, String name) {
     return fn.apply(new NullNotebookOutput(name));
   }
 
+  @Nonnull
   @Override
   public NotebookOutput setCurrentHome(URI currentHome) {
     return this;
   }
 
+  @Nonnull
   @Override
   public NotebookOutput setArchiveHome(URI archiveHome) {
     return this;
   }
 
+  @Nonnull
   @Override
   public NotebookOutput setName(String name) {
     return this;
