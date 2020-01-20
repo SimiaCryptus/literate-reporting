@@ -21,6 +21,8 @@ package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.TimedResult;
 import com.simiacryptus.lang.UncheckedSupplier;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.*;
 import com.simiacryptus.util.CodeUtil;
 import com.simiacryptus.util.ReportingUtil;
@@ -260,6 +262,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         }
       });
       log.setFrontMatterProperty("execution_time", RefString.format("%.6f", time.timeNanos / 1e9));
+      time.freeRef();
     };
   }
 
@@ -584,10 +587,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return file;
   }
 
-  @Nonnull
+  @Nullable
   @Override
   @SuppressWarnings("unchecked")
-  public <T> T eval(@Nonnull final UncheckedSupplier<T> fn, final int maxLog, final int framesNo) {
+  public <T> T eval(@Nonnull @RefAware final UncheckedSupplier<T> fn, final int maxLog, final int framesNo) {
     try {
       final StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[framesNo];
       final String sourceCode = CodeUtil.getInnerText(callingFrame);
@@ -614,9 +617,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           return new TimedResult<Object>(e, RefSystem.nanoTime() - start, gcTime);
         }
       });
+      TimedResult<Object> obj = result.getObj();
       out(anchor(anchorId()) + "Code from [%s:%s](%s#L%s) executed in %.2f seconds (%.3f gc): ",
           callingFrame.getFileName(), callingFrame.getLineNumber(), CodeUtil.codeUrl(callingFrame),
-          callingFrame.getLineNumber(), result.obj.seconds(), result.obj.gc_seconds());
+          callingFrame.getLineNumber(), obj.seconds(), obj.gc_seconds());
       out("```java");
       out("  " + sourceCode.replaceAll("\n", "\n  "));
       out("```");
@@ -630,56 +634,63 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
       out("");
 
-      final Object eval = result.obj.result;
-      if (null != eval) {
-        out(anchor(anchorId()) + "Returns: \n");
-        String str;
-        boolean escape;
-        if (eval instanceof Throwable) {
-          @Nonnull final ByteArrayOutputStream out = new ByteArrayOutputStream();
-          ((Throwable) eval).printStackTrace(new PrintStream(out));
-          str = new String(out.toByteArray(), "UTF-8");
-          escape = true;//
-        } else if (eval instanceof Component) {
-          str = png(Util.toImage((Component) eval), "Result");
-          escape = false;
-        } else if (eval instanceof BufferedImage) {
-          str = png((BufferedImage) eval, "Result");
-          escape = false;
-        } else if (eval instanceof TableOutput) {
-          str = ((TableOutput) eval).toMarkdownTable();
-          escape = false;
-        } else if (eval instanceof double[]) {
-          str = RefArrays.toString(((double[]) eval));
-          escape = false;
-        } else if (eval instanceof int[]) {
-          str = RefArrays.toString(((int[]) eval));
-          escape = false;
-        } else {
-          str = eval.toString();
-          escape = true;
+      final Object eval = obj.getResult();
+      try {
+        if (null != eval) {
+          out(anchor(anchorId()) + "Returns: \n");
+          String str;
+          boolean escape;
+          if (eval instanceof Throwable) {
+            @Nonnull final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ((Throwable) eval).printStackTrace(new PrintStream(out));
+            str = new String(out.toByteArray(), "UTF-8");
+            escape = true;//
+          } else if (eval instanceof Component) {
+            str = png(Util.toImage((Component) eval), "Result");
+            escape = false;
+          } else if (eval instanceof BufferedImage) {
+            str = png((BufferedImage) eval, "Result");
+            escape = false;
+          } else if (eval instanceof TableOutput) {
+            str = ((TableOutput) eval).toMarkdownTable();
+            escape = false;
+          } else if (eval instanceof double[]) {
+            str = RefArrays.toString(((double[]) eval));
+            escape = false;
+          } else if (eval instanceof int[]) {
+            str = RefArrays.toString(((int[]) eval));
+            escape = false;
+          } else {
+            str = eval.toString();
+            escape = true;
+          }
+          @Nonnull
+          String fmt = escape ? "    " + summarize(str, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "") : str;
+          if (escape) {
+            out("```");
+            out(fmt);
+            out("```");
+          } else {
+            out(fmt);
+          }
+          out("\n\n");
+          if (eval instanceof Throwable) {
+            if (eval instanceof RuntimeException) {
+              throw (RuntimeException) eval;
+            } else {
+              throw new RuntimeException((Throwable) eval);
+            }
+          }
         }
-        @Nonnull
-        String fmt = escape ? "    " + summarize(str, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "") : str;
-        if (escape) {
-          out("```");
-          out(fmt);
-          out("```");
-        } else {
-          out(fmt);
-        }
-        out("\n\n");
-        if (eval instanceof RuntimeException) {
-          throw ((RuntimeException) result.obj.result);
-        }
-        if (eval instanceof Throwable) {
-          throw new RuntimeException((Throwable) result.obj.result);
-        }
+      } finally {
+        result.freeRef();
+        obj.freeRef();
       }
-      assert eval != null;
       return (T) eval;
     } catch (@Nonnull final IOException e) {
       throw new RuntimeException(e);
+    } finally {
+      RefUtil.freeRef(fn);
     }
   }
 
@@ -728,7 +739,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(@Nonnull Function<NotebookOutput, T> fn, @Nonnull String name) {
+  public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, @Nonnull String name) {
     return subreport(name, fn, this);
   }
 
@@ -771,7 +782,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  protected <T> T subreport(@Nonnull String reportName, @Nonnull Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
+  protected <T> T subreport(@Nonnull String reportName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
       MarkdownNotebookOutput subreport = new Subreport(root, parent, reportName);
@@ -801,6 +812,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
+    } finally {
+      RefUtil.freeRef(fn);
     }
   }
 
@@ -817,7 +830,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   private synchronized File writeHtml(@Nonnull MutableDataSet options) throws IOException {
-    List<Extension> extensions = RefArrays.asList(TablesExtension.create(), SubscriptExtension.create(),
+    List<Extension> extensions = Arrays.asList(TablesExtension.create(), SubscriptExtension.create(),
         EscapedCharacterExtension.create());
     Parser parser = Parser.builder(options).extensions(extensions).build();
     HtmlRenderer renderer = HtmlRenderer.builder(options).extensions(extensions).escapeHtml(false).indentSize(2)

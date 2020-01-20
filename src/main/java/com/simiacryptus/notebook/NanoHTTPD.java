@@ -462,7 +462,6 @@ public abstract class NanoHTTPD {
 
     @Nullable
     ServerSocket create() throws IOException;
-
   }
 
   public static class Cookie {
@@ -614,7 +613,6 @@ public abstract class NanoHTTPD {
     public ServerSocket create() throws IOException {
       return new ServerSocket();
     }
-
   }
 
   public static class SecureServerSocketFactory implements ServerSocketFactory {
@@ -631,8 +629,7 @@ public abstract class NanoHTTPD {
     @Nullable
     @Override
     public ServerSocket create() throws IOException {
-      SSLServerSocket ss = null;
-      ss = (SSLServerSocket) this.sslServerSocketFactory.createServerSocket();
+      SSLServerSocket ss = (SSLServerSocket) this.sslServerSocketFactory.createServerSocket();
       if (this.sslProtocols != null) {
         ss.setEnabledProtocols(this.sslProtocols);
       } else {
@@ -643,7 +640,6 @@ public abstract class NanoHTTPD {
       ss.setNeedClientAuth(false);
       return ss;
     }
-
   }
 
   public static class Response implements Closeable {
@@ -884,7 +880,6 @@ public abstract class NanoHTTPD {
       public int getRequestStatus() {
         return this.requestStatus;
       }
-
     }
 
     public interface IStatus {
@@ -924,7 +919,6 @@ public abstract class NanoHTTPD {
       public void finish() throws IOException {
         out.write("0\r\n\r\n".getBytes());
       }
-
     }
   }
 

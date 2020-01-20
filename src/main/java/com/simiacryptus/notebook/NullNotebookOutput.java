@@ -20,6 +20,8 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -83,7 +85,6 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Override
   public void close() {
-
   }
 
   @Nonnull
@@ -111,13 +112,14 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T eval(@Nonnull UncheckedSupplier<T> fn, int maxLog, int framesNo) {
+  public <T> T eval(@Nonnull @RefAware UncheckedSupplier<T> fn, int maxLog, int framesNo) {
     try {
       return fn.get();
     } catch (Exception e) {
       throw new RuntimeException(e);
+    } finally {
+      RefUtil.freeRef(fn);
     }
-
   }
 
   @Override
@@ -154,17 +156,14 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Override
   public void h1(CharSequence fmt, Object... args) {
-
   }
 
   @Override
   public void h2(CharSequence fmt, Object... args) {
-
   }
 
   @Override
   public void h3(CharSequence fmt, Object... args) {
-
   }
 
   @Nonnull
@@ -187,7 +186,6 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Override
   public void p(CharSequence fmt, Object... args) {
-
   }
 
   @Nonnull
@@ -203,8 +201,10 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(@Nonnull Function<NotebookOutput, T> fn, String name) {
-    return fn.apply(new NullNotebookOutput(name));
+  public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, String name) {
+    T result = fn.apply(new NullNotebookOutput(name));
+    RefUtil.freeRef(fn);
+    return result;
   }
 
   @Nonnull

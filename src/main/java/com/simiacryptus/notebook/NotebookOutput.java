@@ -20,6 +20,8 @@
 package com.simiacryptus.notebook;
 
 import com.simiacryptus.lang.UncheckedSupplier;
+import com.simiacryptus.ref.lang.RefAware;
+import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefConsumer;
 
 import javax.annotation.Nonnull;
@@ -71,18 +73,22 @@ public interface NotebookOutput extends Closeable {
     };
   }
 
-  default void run(@Nonnull final Runnable fn) {
-    this.eval(() -> {
-      fn.run();
-      return null;
-    }, getMaxOutSize(), 3);
+  default void run(@Nonnull @RefAware final Runnable fn) {
+    try {
+      this.eval(() -> {
+        fn.run();
+        return null;
+      }, getMaxOutSize(), 3);
+    } finally {
+      RefUtil.freeRef(fn);
+    }
   }
 
-  default <T> T eval(final UncheckedSupplier<T> fn) {
+  default <T> T eval(final @RefAware UncheckedSupplier<T> fn) {
     return eval(fn, getMaxOutSize(), 3);
   }
 
-  default <T> T out(final UncheckedSupplier<T> fn) {
+  default <T> T out(final @RefAware UncheckedSupplier<T> fn) {
     return eval(fn, Integer.MAX_VALUE, 3);
   }
 
@@ -98,7 +104,7 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   File jpgFile(@Nonnull BufferedImage rawImage, File file);
 
-  <T> T eval(UncheckedSupplier<T> fn, int maxLog, int framesNo);
+  <T> T eval(@RefAware UncheckedSupplier<T> fn, int maxLog, int framesNo);
 
   void onWrite(Runnable fn);
 
@@ -158,7 +164,7 @@ public interface NotebookOutput extends Closeable {
   @Nullable
   CharSequence getFrontMatterProperty(CharSequence key);
 
-  <T> T subreport(Function<NotebookOutput, T> fn, String name);
+  <T> T subreport(@RefAware Function<NotebookOutput, T> fn, String name);
 
   default <T> T subreport(String name, Function<NotebookOutput, T> fn) {
     return subreport(fn, name);
