@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,7 @@ public class CodeUtil {
   @Nonnull
   private static String getDefaultProjectRoot() {
     if (new File("src").exists())
-      return "..";
+      return "../..";
     else
       return ".";
   }
@@ -124,7 +125,8 @@ public class CodeUtil {
   @Nonnull
   public static URI findFile(@Nonnull final StackTraceElement callingFrame) {
     @Nonnull final CharSequence[] packagePath = callingFrame.getClassName().split("\\.");
-    String pkg = RefArrays.stream(packagePath).limit(packagePath.length - 1)
+    String pkg = RefArrays.stream(packagePath)
+        .limit(packagePath.length - 1)
         .collect(RefCollectors.joining(File.separator));
     if (!pkg.isEmpty())
       pkg += File.separator;
@@ -144,13 +146,26 @@ public class CodeUtil {
       }
     }
     for (final File root : CodeUtil.codeRoots) {
-      @Nonnull final File file = new File(root, path);
-      if (file.exists()) {
-        logger.debug(RefString.format("Resolved %s to %s", path, file));
-        return file.toURI();
-      }
+      @Nonnull final URI file = findFile(path, root);
+      if (file != null) return file;
     }
     throw new RuntimeException(RefString.format("Not Found: %s; Project Roots = %s", path, CodeUtil.codeRoots));
+  }
+
+  @org.jetbrains.annotations.Nullable
+  public static URI findFile(@Nonnull String path, File root) {
+    @Nonnull final File file = new File(root, path);
+    if (file.exists()) {
+      logger.debug(RefString.format("Resolved %s to %s", path, file));
+      return file.toURI();
+    }
+    for (File child : root.listFiles()) {
+      if(child.isDirectory()) {
+        @Nonnull final URI uri = findFile(path, child);
+        if (uri != null) return uri;
+      }
+    }
+    return null;
   }
 
   @Nonnull
@@ -324,10 +339,20 @@ public class CodeUtil {
   }
 
   private static List<File> scanLocalCodeRoots() {
-    List<File> temp_00_0006 = Arrays.stream(CodeUtil.projectRoot.listFiles())
-        .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
-    return Stream.concat(Stream.of(CodeUtil.projectRoot), temp_00_0006.stream()).flatMap(x -> scanProject(x).stream())
+    File projectRoot = CodeUtil.projectRoot;
+    return Stream.of(
+        Stream.of(projectRoot),
+        childFolders(projectRoot).stream(),
+        childFolders(projectRoot).stream().flatMap(x->childFolders(x).stream())
+    ).reduce(Stream::concat).get()
+        .flatMap(x -> scanProject(x).stream())
         .distinct().collect(Collectors.toList());
+  }
+
+  @NotNull
+  private static List<File> childFolders(File projectRoot) {
+    return Arrays.stream(projectRoot.listFiles())
+          .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
   }
 
   private static List<File> scanProject(File file) {
