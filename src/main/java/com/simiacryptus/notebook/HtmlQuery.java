@@ -139,7 +139,7 @@ public abstract class HtmlQuery<T> {
   public int height() {
     try {
       int textLines = getDisplayHtml().split("\n").length;
-      return (int) (Math.max(Math.min((textLines), 20), 3) * (200.0 / 12));
+      return (int) (Math.max(Math.min(textLines, 20), 3) * (200.0 / 12));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }

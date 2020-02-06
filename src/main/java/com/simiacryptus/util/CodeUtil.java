@@ -344,7 +344,7 @@ public class CodeUtil {
         Stream.of(projectRoot),
         childFolders(projectRoot).stream(),
         childFolders(projectRoot).stream().flatMap(x->childFolders(x).stream())
-    ).reduce(Stream::concat).get()
+    ).reduce((a, b) -> Stream.concat(a, b)).get()
         .flatMap(x -> scanProject(x).stream())
         .distinct().collect(Collectors.toList());
   }

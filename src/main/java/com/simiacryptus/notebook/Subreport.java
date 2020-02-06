@@ -48,10 +48,9 @@ class Subreport extends MarkdownNotebookOutput {
 
   @Override
   public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, String name) {
-    String newName = name;
-    assert null != newName;
-    assert !newName.isEmpty();
-    return subreport(newName, fn, parent);
+    assert null != name;
+    assert !name.isEmpty();
+    return subreport(name, fn, parent);
   }
 
   @Override

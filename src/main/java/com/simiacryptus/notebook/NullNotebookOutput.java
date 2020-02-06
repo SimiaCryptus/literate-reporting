@@ -202,9 +202,11 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Override
   public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, String name) {
-    T result = fn.apply(new NullNotebookOutput(name));
-    RefUtil.freeRef(fn);
-    return result;
+    try {
+      return fn.apply(new NullNotebookOutput(name));
+    } finally {
+      RefUtil.freeRef(fn);
+    }
   }
 
   @Nonnull

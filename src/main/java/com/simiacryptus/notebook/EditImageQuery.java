@@ -98,7 +98,7 @@ public class EditImageQuery extends HtmlQuery<BufferedImage> {
   public BufferedImage valueFromParams(Map<String, String> parms, @Nonnull Map<String, String> files) throws IOException {
     String postData = files.get("postData");
     String prefix = "data:image/png;base64,";
-    assert (postData.startsWith(prefix));
+    assert postData.startsWith(prefix);
     postData = postData.substring(prefix.length());
     return save(log, ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(postData))));
   }

@@ -64,7 +64,7 @@ public class ReportingUtil {
     @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
     @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
     out.println("<html><head></head><body>");
-    fragments.forEach(out::println);
+    fragments.forEach(x -> out.println(x));
     out.println("</body></html>");
     out.close();
     ReportingUtil.browse(report.toURI());

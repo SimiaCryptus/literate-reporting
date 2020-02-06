@@ -1462,7 +1462,7 @@ public abstract class NanoHTTPD {
         byte[] part_header_buff = new byte[MAX_HEADER_SIZE];
         for (int bi = 0; bi < boundary_idxs.length - 1; bi++) {
           fbuf.position(boundary_idxs[bi]);
-          int len = (fbuf.remaining() < MAX_HEADER_SIZE) ? fbuf.remaining() : MAX_HEADER_SIZE;
+          int len = fbuf.remaining() < MAX_HEADER_SIZE ? fbuf.remaining() : MAX_HEADER_SIZE;
           fbuf.get(part_header_buff, 0, len);
           BufferedReader in = new BufferedReader(
               new InputStreamReader(new ByteArrayInputStream(part_header_buff, 0, len), Charset.forName(encoding)),
@@ -1597,7 +1597,7 @@ public abstract class NanoHTTPD {
       int search_window_pos = 0;
       byte[] search_window = new byte[4 * 1024 + boundary.length];
 
-      int first_fill = (b.remaining() < search_window.length) ? b.remaining() : search_window.length;
+      int first_fill = b.remaining() < search_window.length ? b.remaining() : search_window.length;
       b.get(search_window, 0, first_fill);
       int new_bytes = first_fill - boundary.length;
 
@@ -1624,7 +1624,7 @@ public abstract class NanoHTTPD {
 
         // Refill search_window
         new_bytes = search_window.length - boundary.length;
-        new_bytes = (b.remaining() < new_bytes) ? b.remaining() : new_bytes;
+        new_bytes = b.remaining() < new_bytes ? b.remaining() : new_bytes;
         b.get(search_window, boundary.length, new_bytes);
       } while (new_bytes > 0);
       return res;

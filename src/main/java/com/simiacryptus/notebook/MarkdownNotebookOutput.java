@@ -67,7 +67,6 @@ import static com.simiacryptus.util.Util.stripPrefix;
 
 public class MarkdownNotebookOutput implements NotebookOutput {
   public static final Random random = new Random();
-  static final Logger log = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   @Nonnull
   public static Map<String, Object> uploadCache = new HashMap<>();
@@ -143,12 +142,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
         RefSystem.exit(0);
       });
-    log.info(RefString.format("Serving %s/%s at http://localhost:%d", root.getAbsoluteFile(), getName(), httpPort));
+    logger.info(RefString.format("Serving %s/%s at http://localhost:%d", root.getAbsoluteFile(), getName(), httpPort));
     if (null != httpd) {
       try {
         httpd.init();
       } catch (Throwable e) {
-        log.warn("Error starting web server", e);
+        logger.warn("Error starting web server", e);
         httpd = null;
       }
     }
@@ -188,7 +187,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nullable
   public FileHTTPD getHttpd() {
-    return (null != this.httpd) ? httpd : new NullHTTPD();
+    return null != this.httpd ? httpd : new NullHTTPD();
   }
 
   @Nonnull
@@ -294,7 +293,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   public static String stripPrefixes(String str, String... prefixes) {
     AtomicReference<String> reference = new AtomicReference<>(str);
-    while (RefStream.of(prefixes).filter(reference.get()::startsWith).findFirst().isPresent()) {
+    while (RefStream.of(prefixes).filter(prefix -> reference.get().startsWith(prefix)).findFirst().isPresent()) {
       reference.set(reference.get().substring(1));
     }
     return reference.get();
@@ -316,11 +315,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         try {
           fn.run();
         } catch (Throwable e) {
-          log.info("Error closing log", e);
+          logger.info("Error closing log", e);
         }
       });
     } catch (Throwable e) {
-      log.info("Error closing log", e);
+      logger.info("Error closing log", e);
     }
   }
 
@@ -339,7 +338,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Override
   @Nonnull
   public NotebookOutput onComplete(@Nonnull Runnable... tasks) {
-    RefArrays.stream(tasks).forEach(onComplete::add);
+    RefArrays.stream(tasks).forEach(e -> onComplete.add(e));
     return this;
   }
 
@@ -390,9 +389,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       });
       out.println("---");
     }
-    toc.forEach(out::println);
+    toc.forEach(x1 -> out.println(x1));
     out.print("\n\n");
-    markdownData.forEach(out::println);
+    markdownData.forEach(x -> out.println(x));
   }
 
   public void setFrontMatterProperty(CharSequence key, CharSequence value) {
@@ -422,7 +421,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Override
   public void write() throws IOException {
     MutableDataSet options = new MutableDataSet();
-    onWriteHandlers.stream().forEach(Runnable::run);
+    onWriteHandlers.stream().forEach(runnable -> runnable.run());
     File htmlFile = writeHtml(options);
     try {
       if (isEnablePdf())
@@ -581,7 +580,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       ImageIO.write(stdImage, "jpg", file);
     } catch (Throwable e) {
       assert stdImage != null;
-      log.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()),
+      logger.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()),
           e);
     }
     return file;
@@ -655,10 +654,10 @@ public class MarkdownNotebookOutput implements NotebookOutput {
             str = ((TableOutput) eval).toMarkdownTable();
             escape = false;
           } else if (eval instanceof double[]) {
-            str = RefArrays.toString(((double[]) eval));
+            str = RefArrays.toString((double[]) eval);
             escape = false;
           } else if (eval instanceof int[]) {
-            str = RefArrays.toString(((int[]) eval));
+            str = RefArrays.toString((int[]) eval);
             escape = false;
           } else {
             str = eval.toString();
@@ -714,7 +713,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     @Nonnull final String msg = format(fmt, args);
     markdownData.add(msg);
     primaryOut.println(msg);
-    log.info(msg);
+    logger.info(msg);
   }
 
   @Nonnull
@@ -843,7 +842,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     try (FileOutputStream out = new FileOutputStream(htmlFile)) {
       IOUtils.write(html, out, Charset.forName("UTF-8"));
     }
-    log.info("Wrote " + htmlFile); //     log.info("Wrote " + htmlFile); //
+    logger.info("Wrote " + htmlFile); //     log.info("Wrote " + htmlFile); //
     return htmlFile;
   }
 
