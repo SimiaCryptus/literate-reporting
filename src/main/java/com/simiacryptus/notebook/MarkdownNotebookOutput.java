@@ -69,7 +69,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public static final Random random = new Random();
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   @Nonnull
-  public static Map<String, Object> uploadCache = new HashMap<>();
+  public static RefMap<String, Object> uploadCache = new RefHashMap<>();
   public static int MAX_OUTPUT = 1024 * 2;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
@@ -351,9 +351,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
       return false;
     })) {
-      String temp_03_0001 = toString(
+      return toString(
           list.stream().map(x -> x.subSequence(1, x.length()).toString()).collect(Collectors.toList()));
-      return temp_03_0001;
     } else
       return list.stream().reduce((a, b) -> a + "\n" + b).orElse("").toString();
   }

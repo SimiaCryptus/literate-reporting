@@ -1,3 +1,5 @@
 .idea/
 java-util.iml literate-reporting.iml
 target/
+*.hprof
+

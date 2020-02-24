@@ -46,9 +46,9 @@ public class ReportingUtil {
 
   public static <T> T getLast(@Nonnull final RefStream<T> stream) {
     final RefList<T> collect = stream.collect(RefCollectors.toList());
-    T temp_01_0001 = collect.get(collect.size() - 1);
+    T t = collect.get(collect.size() - 1);
     collect.freeRef();
-    return temp_01_0001;
+    return t;
   }
 
   public static void report(@Nonnull final RefStream<CharSequence> fragments) throws IOException {
