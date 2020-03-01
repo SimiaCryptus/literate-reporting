@@ -61,6 +61,6 @@ class Subreport extends MarkdownNotebookOutput {
   @Override
   public void write() throws IOException {
     super.write();
-    parent.write();
+    //parent.write();
   }
 }
