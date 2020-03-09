@@ -39,6 +39,7 @@ import com.vladsch.flexmark.util.options.MutableDataSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -256,7 +257,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           fn.accept(log);
           log.setFrontMatterProperty("result", "OK");
         } catch (Throwable e) {
-          log.setFrontMatterProperty("result", getExceptionString(e).toString().replaceAll("\n", "<br/>").trim());
+          log.setFrontMatterProperty("result", replaceAll(getExceptionString(e).toString(), "\n", "<br/>").trim());
           throw (RuntimeException) (e instanceof RuntimeException ? e : new RuntimeException(e));
         }
       });
@@ -297,6 +298,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       reference.set(reference.get().substring(1));
     }
     return reference.get();
+  }
+
+  @NotNull
+  public static String replaceAll(@Nonnull String name, String search, String replace) {
+    return name.replaceAll(search, replace);
   }
 
   @Override
@@ -382,8 +388,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     if (!frontMatter.isEmpty()) {
       out.println("---");
       frontMatter.forEach((key, value) -> {
-        CharSequence escaped = StringEscapeUtils.escapeJson(String.valueOf(value)).replaceAll("\n", " ")
-            .replaceAll(":", "&#58;").replaceAll("\\{", "\\{").replaceAll("\\}", "\\}");
+        CharSequence escaped = replaceAll(replaceAll(replaceAll(replaceAll(
+            StringEscapeUtils.escapeJson(String.valueOf(value)),
+            "\n", " "),
+            ":", "&#58;"),
+            "\\{", "\\{"),
+            "\\}", "\\}");
         out.println(RefString.format("%s: %s", key, escaped));
       });
       out.println("---");
@@ -620,11 +630,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           callingFrame.getFileName(), callingFrame.getLineNumber(), CodeUtil.codeUrl(callingFrame),
           callingFrame.getLineNumber(), obj.seconds(), obj.gc_seconds());
       out("```java");
-      out("  " + sourceCode.replaceAll("\n", "\n  "));
+      out("  " + replaceAll(sourceCode, "\n", "\n  "));
       out("```");
 
       if (!result.log.isEmpty()) {
-        CharSequence summary = summarize(result.log, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "");
+        CharSequence summary = replaceAll(replaceAll(summarize(result.log, maxLog), "\n", "\n    "), "    ~", "");
         out(anchor(anchorId()) + "Logging: ");
         out("```");
         out("    " + summary);
@@ -663,7 +673,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
             escape = true;
           }
           @Nonnull
-          String fmt = escape ? "    " + summarize(str, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "") : str;
+          String fmt = escape ? "    " + replaceAll(replaceAll(summarize(str, maxLog), "\n", "\n    "), "    ~", "") : str;
           if (escape) {
             out("```");
             out(fmt);
@@ -727,7 +737,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public String summarize(@Nonnull String logSrc, final int maxLog) {
-    if (logSrc.length() > maxLog * 2) {
+    if (logSrc.length() > ((long) maxLog * 2)) {
       @Nonnull final String prefix = logSrc.substring(0, maxLog);
       logSrc = prefix + RefString.format(
           (prefix.endsWith("\n") ? "" : "\n") + "~```\n~..." + file(logSrc, "skipping %s bytes") + "...\n~```\n",
@@ -765,8 +775,12 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Nonnull
   @Override
   public NotebookOutput setName(@Nonnull String name) {
-    this.name = name.replaceAll("\\.md$", "").replaceAll("\\$$", "").replaceAll("[:%\\{\\}\\(\\)\\+\\*]", "_")
-        .replaceAll("_{2,}", "_");
+    this.name = replaceAll(replaceAll(replaceAll(replaceAll(
+        name,
+        "\\.md$", ""),
+        "\\$$", ""),
+        "[:%\\{\\}\\(\\)\\+\\*]", "_"),
+        "_{2,}", "_");
     int maxLength = 128;
     try {
       this.name = stripPrefixes(URLEncoder.encode(this.name, "UTF-8"), "_", "/", "-", " ", ".");
@@ -823,7 +837,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       PdfConverterExtension.exportToPdf(out, FileUtils.readFileToString(htmlFile, "UTF-8"),
           htmlFile.getAbsoluteFile().toURI().toString(), options);
     }
-    return new File(htmlFile.getPath().replaceAll("\\.html$", ".pdf"));
+    return new File(replaceAll(htmlFile.getPath(), "\\.html$", ".pdf"));
   }
 
   @Nonnull

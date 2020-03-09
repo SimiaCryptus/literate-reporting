@@ -24,6 +24,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.notebook.NotebookOutput;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import com.simiacryptus.ref.wrappers.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -160,7 +161,7 @@ public class CodeUtil {
       return file.toURI();
     }
     for (File child : root.listFiles()) {
-      if(child.isDirectory()) {
+      if (child.isDirectory()) {
         @Nonnull final URI uri = findFile(path, child);
         if (uri != null) return uri;
       }
@@ -267,6 +268,7 @@ public class CodeUtil {
       AppenderBase<ILoggingEvent> appender = new AppenderBase<ILoggingEvent>() {
         @Nullable
         PrintWriter out;
+        int index = 0;
         long remainingOut = 0;
         long killAt = 0;
 
@@ -286,7 +288,7 @@ public class CodeUtil {
             String date = dateFormat.format(new Date());
             try {
               String caption = RefString.format("Log at %s", date);
-              String filename = RefString.format("%s_%s.log", loggerName, date);
+              String filename = RefString.format("%s_%s_%s.log", loggerName, date, index++);
               out = new PrintWriter(sublog.file(filename));
               sublog.p("[%s](etc/%s)", caption, filename);
               sublog.write();
@@ -321,6 +323,37 @@ public class CodeUtil {
     }, log.getName() + "_" + "log_" + loggerName);
   }
 
+  public static <T> T withRefLeakMonitor(@Nonnull NotebookOutput log, @Nonnull RefFunction<NotebookOutput, T> fn) {
+    try (
+        LogInterception refLeakLog = intercept(log, ReferenceCountingBase.class.getCanonicalName())) {
+      T result = fn.apply(log);
+      RefSystem.gc();
+      Thread.sleep(1000);
+      if (refLeakLog.counter.get() != 0)
+        throw new AssertionError(RefString.format("RefLeak logged %d bytes", refLeakLog.counter.get()));
+      return result;
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void withRefLeakMonitor(@Nonnull NotebookOutput log, @Nonnull RefConsumer<NotebookOutput> fn) {
+    try (
+        LogInterception refLeakLog = intercept(log, ReferenceCountingBase.class.getCanonicalName())) {
+      fn.accept(log);
+      RefSystem.gc();
+      Thread.sleep(1000);
+      if (refLeakLog.counter.get() != 0)
+        throw new AssertionError(RefString.format("RefLeak logged %d bytes", refLeakLog.counter.get()));
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   protected static String getGitBase(File absoluteFile, String def) {
     try {
       Repository repository = new RepositoryBuilder().setWorkTree(absoluteFile).build();
@@ -343,7 +376,7 @@ public class CodeUtil {
     return Stream.of(
         Stream.of(projectRoot),
         childFolders(projectRoot).stream(),
-        childFolders(projectRoot).stream().flatMap(x->childFolders(x).stream())
+        childFolders(projectRoot).stream().flatMap(x -> childFolders(x).stream())
     ).reduce((a, b) -> Stream.concat(a, b)).get()
         .flatMap(x -> scanProject(x).stream())
         .distinct().collect(Collectors.toList());
@@ -352,7 +385,7 @@ public class CodeUtil {
   @NotNull
   private static List<File> childFolders(File projectRoot) {
     return Arrays.stream(projectRoot.listFiles())
-          .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
+        .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
   }
 
   private static List<File> scanProject(File file) {

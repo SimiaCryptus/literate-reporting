@@ -26,24 +26,30 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
-public class UploadImageQuery extends FormQuery<File> {
+public class OptionalUploadImageQuery extends FormQuery<Optional<File>> {
 
   private final String key;
   @Nonnull
   String formVar = "data";
 
-  public UploadImageQuery(String key, @Nonnull NotebookOutput log) {
+  public OptionalUploadImageQuery(String key, @Nonnull NotebookOutput log) {
     super(log);
     this.key = key;
+    setCancelable(true);
   }
 
   @Nonnull
   @Override
   protected String getFormInnerHtml() {
-    File currentValue = getValue();
+    Optional<File> currentValue = getValue();
     if (null != currentValue) {
-      return RefString.format("<img src=\"etc/%s\" />", currentValue.getName());
+      if (currentValue.isPresent()) {
+        return RefString.format("<img src=\"etc/%s\" />", currentValue.get().getName());
+      } else {
+        return "<b>" + key + "</b><br/>Input Terminated";
+      }
     } else {
       return "<b>" + key + "</b><br/><input type=\"file\" name=\"" + formVar + "\" accept=\"image/*\">";
     }
@@ -51,15 +57,15 @@ public class UploadImageQuery extends FormQuery<File> {
 
   @Nonnull
   @Override
-  public File valueFromParams(@Nonnull Map<String, String> parms, @Nonnull Map<String, String> files) throws IOException {
-    String pathname = files.get(formVar);
-    if (pathname == null || pathname.isEmpty()) {
-      return null;
+  public Optional<File> valueFromParams(@Nonnull Map<String, String> parms, @Nonnull Map<String, String> files) throws IOException {
+    if (cancelLabel.equals(parms.get("action"))) {
+      return Optional.empty();
+    } else {
+      File tmpFile = new File(files.get(formVar));
+      File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
+      FileUtils.copyFile(tmpFile, logFile);
+      return Optional.of(logFile);
     }
-    File tmpFile = new File(pathname);
-    File logFile = ((MarkdownNotebookOutput) log).resolveResource(parms.get(formVar));
-    FileUtils.copyFile(tmpFile, logFile);
-    return logFile;
   }
 
 }

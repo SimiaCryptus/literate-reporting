@@ -32,6 +32,7 @@ public abstract class StringQuery<T> extends FormQuery<T> {
 
   public StringQuery(@Nonnull MarkdownNotebookOutput log) {
     super(log);
+    setSubmitLabel("Submit");
   }
 
   @Nonnull

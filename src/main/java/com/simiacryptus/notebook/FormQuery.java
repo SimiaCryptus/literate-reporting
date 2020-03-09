@@ -24,6 +24,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import javax.annotation.Nonnull;
 
 public abstract class FormQuery<T> extends HtmlQuery<T> {
+  protected final String cancelLabel = "Cancel";
+  private String submitLabel = "Upload";
+  private boolean cancelable = false;
+
   public FormQuery(@Nonnull NotebookOutput log) {
     super(log);
   }
@@ -31,8 +35,10 @@ public abstract class FormQuery<T> extends HtmlQuery<T> {
   @Nonnull
   @Override
   protected String getActiveHtml() throws JsonProcessingException {
-    return "<html>" + getHeader() + "<body style=\"margin: 0;\">" + "<form action=\"" + id
-        + "\" method=\"POST\" enctype=\"multipart/form-data\">" + getFormInnerHtml() + "<br/><input type=\"submit\">"
+    return "<html>" + getHeader() + "<body style=\"margin: 0;\">"
+        + "<form action=\"" + id + "\" method=\"POST\" enctype=\"multipart/form-data\">" + getFormInnerHtml() + "<br/>"
+        + "<input type=\"submit\" name=\"action\" value=\"" + getSubmitLabel() + "\">"
+        + (isCancelable() ? ("<br/>" + "<input type=\"submit\" name=\"action\" value=\"" + cancelLabel + "\">") : "")
         + "</form></body></html>";
   }
 
@@ -46,5 +52,21 @@ public abstract class FormQuery<T> extends HtmlQuery<T> {
   @Nonnull
   protected String getHeader() {
     return "";
+  }
+
+  public String getSubmitLabel() {
+    return submitLabel;
+  }
+
+  public void setSubmitLabel(String submitLabel) {
+    this.submitLabel = submitLabel;
+  }
+
+  public boolean isCancelable() {
+    return cancelable;
+  }
+
+  public void setCancelable(boolean cancelable) {
+    this.cancelable = cancelable;
   }
 }
