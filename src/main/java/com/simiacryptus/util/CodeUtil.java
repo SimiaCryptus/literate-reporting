@@ -373,6 +373,7 @@ public class CodeUtil {
 
   private static List<File> scanLocalCodeRoots() {
     File projectRoot = CodeUtil.projectRoot;
+    if (null == projectRoot) throw new IllegalStateException();
     return Stream.of(
         Stream.of(projectRoot),
         childFolders(projectRoot).stream(),
@@ -384,7 +385,12 @@ public class CodeUtil {
 
   @NotNull
   private static List<File> childFolders(File projectRoot) {
-    return Arrays.stream(projectRoot.listFiles())
+    File[] files = projectRoot.listFiles();
+    if(files == null) {
+      logger.info("Not found: " + projectRoot.getAbsolutePath());
+      return new ArrayList<>();
+    }
+    return Arrays.stream(files)
         .filter(file -> file.exists() && file.isDirectory()).collect(Collectors.toList());
   }
 

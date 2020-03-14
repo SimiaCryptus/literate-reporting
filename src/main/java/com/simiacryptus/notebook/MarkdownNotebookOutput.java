@@ -28,14 +28,14 @@ import com.simiacryptus.util.CodeUtil;
 import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
 import com.simiacryptus.util.test.SysOutInterceptor;
-import com.vladsch.flexmark.Extension;
 import com.vladsch.flexmark.ext.escaped.character.EscapedCharacterExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.SubscriptExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.pdf.converter.PdfConverterExtension;
-import com.vladsch.flexmark.util.options.MutableDataSet;
+import com.vladsch.flexmark.util.data.MutableDataSet;
+import com.vladsch.flexmark.util.misc.Extension;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -602,7 +602,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     try {
       final StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[framesNo];
       final String sourceCode = CodeUtil.getInnerText(callingFrame);
-      @Nonnull final SysOutInterceptor.LoggedResult<TimedResult<Object>> result = SysOutInterceptor.withOutput(() -> {
+      final SysOutInterceptor.LoggedResult<TimedResult<Object>> result = SysOutInterceptor.withOutput(() -> {
         long priorGcMs = ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime())
             .sum();
         final long start = RefSystem.nanoTime();
