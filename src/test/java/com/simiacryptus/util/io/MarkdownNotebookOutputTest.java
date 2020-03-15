@@ -57,7 +57,7 @@ public class MarkdownNotebookOutputTest {
             }
           });
           return null;
-        }, notebookOutput.getName() + "_" + "Iteration_" + i);
+        }, String.format("%s (Iteration %d)", notebookOutput.getDisplayName(), i));
       });
     }
   }

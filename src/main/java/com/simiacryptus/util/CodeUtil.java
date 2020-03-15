@@ -320,7 +320,7 @@ public class CodeUtil {
           appender.stop();
         }
       };
-    }, log.getName() + "_" + "log_" + loggerName);
+    }, "Logs for " + loggerName);
   }
 
   public static <T> T withRefLeakMonitor(@Nonnull NotebookOutput log, @Nonnull RefFunction<NotebookOutput, T> fn) {

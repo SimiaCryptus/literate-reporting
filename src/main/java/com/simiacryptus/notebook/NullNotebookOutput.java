@@ -67,7 +67,12 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public String getName() {
+  public String getDisplayName() {
+    return name;
+  }
+
+  @Override
+  public String getFileName() {
     return name;
   }
 
@@ -221,10 +226,8 @@ public class NullNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  @Nonnull
   @Override
-  public NotebookOutput setName(String name) {
-    return this;
+  public void setDisplayName(String name) {
   }
 
 }

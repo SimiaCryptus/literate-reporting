@@ -32,18 +32,14 @@ class MarkdownSubreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 
   public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String reportName) throws FileNotFoundException {
-    super(subreportFile, -1, false, reportName, UUID.randomUUID());
+    super(subreportFile, false, UUID.randomUUID(), reportName, -1);
     this.parent = parent;
+    setEnableZip(false);
   }
 
   @Override
   public FileHTTPD getHttpd() {
     return parent.getHttpd();
-  }
-
-  @Override
-  public File writeZip(final File root, final String baseName) {
-    return root;
   }
 
   @Override

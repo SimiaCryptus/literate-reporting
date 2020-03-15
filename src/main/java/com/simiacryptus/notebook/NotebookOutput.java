@@ -50,10 +50,11 @@ public interface NotebookOutput extends Closeable {
 
   int getMaxOutSize();
 
-  String getName();
+  String getDisplayName();
 
-  @Nonnull
-  NotebookOutput setName(String name);
+  String getFileName();
+
+  void setDisplayName(String name);
 
   @Nonnull
   File getResourceDir();
