@@ -196,7 +196,7 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Nullable
   @Override
-  public CharSequence getFrontMatterProperty(CharSequence key) {
+  public CharSequence getMetadata(CharSequence key) {
     return null;
   }
 

@@ -28,10 +28,10 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
 
-class Subreport extends MarkdownNotebookOutput {
+class MarkdownSubreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 
-  public Subreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String reportName) throws FileNotFoundException {
+  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String reportName) throws FileNotFoundException {
     super(subreportFile, -1, false, reportName, UUID.randomUUID());
     this.parent = parent;
   }

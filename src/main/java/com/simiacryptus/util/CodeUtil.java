@@ -386,7 +386,7 @@ public class CodeUtil {
   @NotNull
   private static List<File> childFolders(File projectRoot) {
     File[] files = projectRoot.listFiles();
-    if(files == null) {
+    if (files == null) {
       logger.info("Not found: " + projectRoot.getAbsolutePath());
       return new ArrayList<>();
     }

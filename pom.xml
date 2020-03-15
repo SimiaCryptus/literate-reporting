@@ -82,8 +82,8 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -145,9 +145,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.20.1</version>
+                <version>3.0.0-M4</version>
                 <configuration>
-                    <groups>com.simiacryptus.util.test.TestCategories$UnitTest</groups>
+                    <groups>UnitTest</groups>
                 </configuration>
             </plugin>
         </plugins>
@@ -164,9 +164,9 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20.1</version>
+                        <version>3.0.0-M4</version>
                         <configuration>
-                            <groups>com.simiacryptus.util.test.TestCategories$Report</groups>
+                            <groups>Report</groups>
                         </configuration>
                     </plugin>
                 </plugins>

@@ -80,7 +80,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final PrintStream primaryOut;
   private final List<CharSequence> markdownData = new ArrayList<>();
   private final List<Runnable> onComplete = new ArrayList<>();
-  private final Map<CharSequence, CharSequence> frontMatter = new HashMap<>();
+  private final Map<CharSequence, CharSequence> metadata = new HashMap<>();
   @Nullable
   private final FileNanoHTTPD httpd;
   private final ArrayList<Runnable> onWriteHandlers = new ArrayList<>();
@@ -96,6 +96,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private URI archiveHome = null;
   private boolean enableZip = false;
   private boolean enablePdf = false;
+  private boolean ghPage = false;
+  private File metadataLocation = null;
 
   public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
     this(reportFile, random.nextInt(2 * 1024) + 2 * 1024, browse, reportFile.getName(), UUID.randomUUID());
@@ -205,6 +207,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return MAX_OUTPUT;
   }
 
+  public File getMetadataLocation() {
+    return metadataLocation;
+  }
+
+  public void setMetadataLocation(File metadataLocation) {
+    this.metadataLocation = metadataLocation;
+  }
+
   @Override
   public String getName() {
     return name;
@@ -248,6 +258,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
+  public boolean isGHPage() {
+    return ghPage;
+  }
+
+  public void setGhPage(boolean ghPage) {
+    this.ghPage = ghPage;
+  }
+
   @Nonnull
   public static RefConsumer<NotebookOutput> wrapFrontmatter(@Nonnull final RefConsumer<NotebookOutput> fn) {
     return log -> {
@@ -255,13 +273,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       TimedResult<Void> time = TimedResult.time(() -> {
         try {
           fn.accept(log);
-          log.setFrontMatterProperty("result", "OK");
+          log.setMetadata("result", "OK");
         } catch (Throwable e) {
-          log.setFrontMatterProperty("result", replaceAll(getExceptionString(e).toString(), "\n", "<br/>").trim());
+          log.setMetadata("result", replaceAll(getExceptionString(e).toString(), "\n", "<br/>").trim());
           throw (RuntimeException) (e instanceof RuntimeException ? e : new RuntimeException(e));
         }
       });
-      log.setFrontMatterProperty("execution_time", RefString.format("%.6f", time.timeNanos / 1e9));
+      log.setMetadata("execution_time", RefString.format("%.6f", time.timeNanos / 1e9));
       time.freeRef();
     };
   }
@@ -385,31 +403,44 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   public void write(@Nonnull final PrintWriter out) {
-    if (!frontMatter.isEmpty()) {
-      out.println("---");
-      frontMatter.forEach((key, value) -> {
-        CharSequence escaped = replaceAll(replaceAll(replaceAll(replaceAll(
-            StringEscapeUtils.escapeJson(String.valueOf(value)),
-            "\n", " "),
-            ":", "&#58;"),
-            "\\{", "\\{"),
-            "\\}", "\\}");
-        out.println(RefString.format("%s: %s", key, escaped));
-      });
-      out.println("---");
+    if (!metadata.isEmpty()) {
+      if (isGHPage()) {
+        out.println("---");
+        metadata.forEach((key, value) -> {
+          CharSequence escaped = replaceAll(replaceAll(replaceAll(replaceAll(
+              StringEscapeUtils.escapeJson(String.valueOf(value)),
+              "\n", " "),
+              ":", "&#58;"),
+              "\\{", "\\{"),
+              "\\}", "\\}");
+          out.println(RefString.format("%s: %s", key, escaped));
+        });
+        out.println("---");
+      }
+      if (null != getMetadataLocation()) {
+        try (PrintStream metadataOut = new PrintStream(new FileOutputStream(new File(getMetadataLocation(), id.toString() + ".json")))) {
+          metadataOut.println("{\n");
+          metadata.entrySet().stream().map(entry ->
+              String.format("%s: %s", entry.getKey(), StringEscapeUtils.escapeJson(String.valueOf(entry.getValue())))
+          ).reduce((a, b) -> a + ",\n" + b).orElse("");
+          metadataOut.println("\n}");
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
     }
     toc.forEach(x1 -> out.println(x1));
     out.print("\n\n");
     markdownData.forEach(x -> out.println(x));
   }
 
-  public void setFrontMatterProperty(CharSequence key, CharSequence value) {
-    frontMatter.put(key, value);
+  public void setMetadata(CharSequence key, CharSequence value) {
+    metadata.put(key, value);
   }
 
   @Override
-  public CharSequence getFrontMatterProperty(CharSequence key) {
-    return frontMatter.get(key);
+  public CharSequence getMetadata(CharSequence key) {
+    return metadata.get(key);
   }
 
   @Nonnull
@@ -797,7 +828,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   protected <T> T subreport(@Nonnull String reportName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
-      MarkdownNotebookOutput subreport = new Subreport(root, parent, reportName);
+      MarkdownNotebookOutput subreport = new MarkdownSubreport(root, parent, reportName);
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {

@@ -149,20 +149,20 @@ public interface NotebookOutput extends Closeable {
   @Override
   void close() throws IOException;
 
-  default void setFrontMatterProperty(CharSequence key, CharSequence value) {
+  default void setMetadata(CharSequence key, CharSequence value) {
   }
 
-  default void appendFrontMatterProperty(CharSequence key, CharSequence value, CharSequence delimiter) {
+  default void appendMetadata(CharSequence key, CharSequence value, CharSequence delimiter) {
     @Nullable
-    CharSequence prior = getFrontMatterProperty(key);
+    CharSequence prior = getMetadata(key);
     if (null == prior)
-      setFrontMatterProperty(key, value);
+      setMetadata(key, value);
     else
-      setFrontMatterProperty(key, prior.toString() + delimiter + value);
+      setMetadata(key, prior.toString() + delimiter + value);
   }
 
   @Nullable
-  CharSequence getFrontMatterProperty(CharSequence key);
+  CharSequence getMetadata(CharSequence key);
 
   <T> T subreport(@RefAware Function<NotebookOutput, T> fn, String name);
 
