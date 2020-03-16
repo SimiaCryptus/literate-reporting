@@ -22,6 +22,7 @@ package com.simiacryptus.notebook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.IOUtil;
+import com.simiacryptus.util.Util;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public abstract class HtmlQuery<T> {
           IOUtil.writeString(getActiveHtml(), out);
         }
       } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
+        throw Util.throwException(e);
       }
     });
     this.handler_post = log.getHttpd().addPOST(id, request -> {
@@ -88,7 +89,7 @@ public abstract class HtmlQuery<T> {
           throw new RuntimeException("Submit var not found");
         }
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw Util.throwException(e);
       }
       byte[] bytes = responseHtml.getBytes();
       return NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "text/html",
@@ -141,7 +142,7 @@ public abstract class HtmlQuery<T> {
       int textLines = getDisplayHtml().split("\n").length;
       return (int) (Math.max(Math.min(textLines, 20), 3) * (200.0 / 12));
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
   }
 
@@ -152,7 +153,7 @@ public abstract class HtmlQuery<T> {
       done.release();
       return getValue();
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
   }
 
@@ -166,7 +167,7 @@ public abstract class HtmlQuery<T> {
         return getValue();
       }
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
   }
 

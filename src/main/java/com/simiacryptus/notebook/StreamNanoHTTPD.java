@@ -21,6 +21,7 @@ package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.wrappers.RefConsumer;
 import com.simiacryptus.ref.wrappers.RefString;
+import com.simiacryptus.util.Util;
 import com.simiacryptus.util.io.AsyncOutputStream;
 import com.simiacryptus.util.io.TeeOutputStream;
 
@@ -48,7 +49,7 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
     try {
       gatewayUri = new URI(RefString.format("http://localhost:%s/%s", port, primaryFile.getName()));
     } catch (@Nonnull final URISyntaxException e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
     this.primaryFile = primaryFile;
     this.mimeType = mimeType;
@@ -94,14 +95,14 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
             onComplete.release();
           }
         } catch (@Nonnull final IOException e) {
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       });
       if (!async) {
         try {
           onComplete.acquire();
         } catch (@Nonnull final InterruptedException e) {
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       }
       return NanoHTTPD.newChunkedResponse(Response.Status.OK, mimeType, new BufferedInputStream(snk));
@@ -145,7 +146,7 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
         response.setGzipEncoding(false);
         return response;
       } catch (@Nonnull final IOException e) {
-        throw new RuntimeException(e);
+        throw Util.throwException(e);
       }
     } else {
       return super.serve(session);

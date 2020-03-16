@@ -22,6 +22,7 @@ package com.simiacryptus.notebook;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.util.Util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,6 +50,20 @@ public class NullNotebookOutput implements NotebookOutput {
     return new File(".").toURI();
   }
 
+  @Override
+  public String getDisplayName() {
+    return name;
+  }
+
+  @Override
+  public void setDisplayName(String name) {
+  }
+
+  @Override
+  public String getFileName() {
+    return name;
+  }
+
   @Nonnull
   @Override
   public FileHTTPD getHttpd() {
@@ -64,16 +79,6 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public int getMaxOutSize() {
     return 0;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
-  public String getFileName() {
-    return name;
   }
 
   @Nonnull
@@ -121,7 +126,7 @@ public class NullNotebookOutput implements NotebookOutput {
     try {
       return fn.get();
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     } finally {
       RefUtil.freeRef(fn);
     }
@@ -224,10 +229,6 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public NotebookOutput setArchiveHome(URI archiveHome) {
     return this;
-  }
-
-  @Override
-  public void setDisplayName(String name) {
   }
 
 }

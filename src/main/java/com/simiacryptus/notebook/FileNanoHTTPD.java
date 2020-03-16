@@ -70,7 +70,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
             bytes.length);
       } catch (@Nonnull final Throwable e) {
         log.warn("Error handling httprequest", e);
-        throw new RuntimeException(e);
+        throw Util.throwException(e);
       }
     };
   }
@@ -133,13 +133,13 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           return RefUtil.get(handler).apply(session);
         } catch (Throwable e) {
           log.warn("Error requesting " + session.getUri(), e);
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       } else if (file.exists() && file.isFile()) {
         try {
           return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, null, new FileInputStream(file), file.length());
         } catch (@Nonnull final FileNotFoundException e) {
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       } else {
         log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),
@@ -166,7 +166,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
           return RefUtil.get(handler).apply(session);
         } catch (Throwable e) {
           log.warn("Error requesting " + session.getUri(), e);
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       } else {
         log.warn(RefString.format("Not Found: %s\n\tCurrent Path: %s\n\t%s", requestPath, root.getAbsolutePath(),

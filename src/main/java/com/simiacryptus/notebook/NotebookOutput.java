@@ -42,6 +42,12 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   NotebookOutput setArchiveHome(URI archiveHome);
 
+  String getDisplayName();
+
+  void setDisplayName(String name);
+
+  String getFileName();
+
   @javax.annotation.Nullable
   FileHTTPD getHttpd();
 
@@ -49,12 +55,6 @@ public interface NotebookOutput extends Closeable {
   String getId();
 
   int getMaxOutSize();
-
-  String getDisplayName();
-
-  String getFileName();
-
-  void setDisplayName(String name);
 
   @Nonnull
   File getResourceDir();
@@ -64,15 +64,6 @@ public interface NotebookOutput extends Closeable {
 
   @Nonnull
   NotebookOutput setCurrentHome(URI currentHome);
-
-  @Nonnull
-  static RefConsumer<NotebookOutput> concat(@Nonnull final RefConsumer<NotebookOutput> fn,
-                                            @Nonnull final RefConsumer<NotebookOutput> header) {
-    return log -> {
-      header.accept(log);
-      fn.accept(log);
-    };
-  }
 
   default void run(@Nonnull @RefAware final Runnable fn) {
     try {
@@ -167,7 +158,7 @@ public interface NotebookOutput extends Closeable {
 
   <T> T subreport(@RefAware Function<NotebookOutput, T> fn, String name);
 
-  default <T> T subreport(String name, Function<NotebookOutput, T> fn) {
+  default <T> T subreport(String name, @RefAware Function<NotebookOutput, T> fn) {
     return subreport(fn, name);
   }
 

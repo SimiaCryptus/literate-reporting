@@ -95,7 +95,7 @@ public class CodeUtil {
             map.put(src.getCanonicalFile().toPath().relativize(file.getCanonicalFile().toPath()).toString()
                 .replace('\\', '/'), base);
           } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw Util.throwException(e);
           }
         });
       }
@@ -143,7 +143,7 @@ public class CodeUtil {
         logger.debug(RefString.format("Resolved %s to %s", path, classpathEntry));
         return classpathEntry.toURI();
       } catch (URISyntaxException e) {
-        throw new RuntimeException(e);
+        throw Util.throwException(e);
       }
     }
     for (final File root : CodeUtil.codeRoots) {
@@ -189,7 +189,7 @@ public class CodeUtil {
           allLines = IOUtils.readLines(resource.openStream(), "UTF-8");
           logger.debug(RefString.format("Resolved %s to %s (%s lines)", callingFrame, resource, allLines.size()));
         } catch (IOException e) {
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       } else {
         @Nonnull final URI file = CodeUtil.findFile(callingFrame);
@@ -293,7 +293,7 @@ public class CodeUtil {
               sublog.p("[%s](etc/%s)", caption, filename);
               sublog.write();
             } catch (Throwable e) {
-              throw new RuntimeException(e);
+              throw Util.throwException(e);
             }
             killAt = RefSystem.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1);
             remainingOut = 10L * 1024 * 1024;
@@ -332,10 +332,8 @@ public class CodeUtil {
       if (refLeakLog.counter.get() != 0)
         throw new AssertionError(RefString.format("RefLeak logged %d bytes", refLeakLog.counter.get()));
       return result;
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
   }
 
@@ -347,10 +345,8 @@ public class CodeUtil {
       Thread.sleep(1000);
       if (refLeakLog.counter.get() != 0)
         throw new AssertionError(RefString.format("RefLeak logged %d bytes", refLeakLog.counter.get()));
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw Util.throwException(e);
     }
   }
 

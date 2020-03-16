@@ -23,6 +23,7 @@ import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.notebook.NotebookOutput;
 import com.simiacryptus.ref.wrappers.RefIntStream;
 import com.simiacryptus.ref.wrappers.RefString;
+import com.simiacryptus.util.Util;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -37,7 +38,7 @@ public class MarkdownNotebookOutputTest {
           Thread.sleep(1000);
           notebookOutput.p("Iteration: " + i);
         } catch (InterruptedException e) {
-          throw new RuntimeException(e);
+          throw Util.throwException(e);
         }
       });
     }
@@ -53,7 +54,7 @@ public class MarkdownNotebookOutputTest {
               Thread.sleep(100);
               subreport.p(RefString.format("Iteration: %d / %d", i, j));
             } catch (InterruptedException e) {
-              throw new RuntimeException(e);
+              throw Util.throwException(e);
             }
           });
           return null;
