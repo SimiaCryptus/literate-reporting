@@ -22,7 +22,6 @@ package com.simiacryptus.notebook;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
-import com.simiacryptus.ref.wrappers.RefConsumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -63,7 +62,7 @@ public interface NotebookOutput extends Closeable {
   File getRoot();
 
   @Nonnull
-  NotebookOutput setCurrentHome(URI currentHome);
+  NotebookOutput setCurrentHome();
 
   default void run(@Nonnull @RefAware final Runnable fn) {
     try {

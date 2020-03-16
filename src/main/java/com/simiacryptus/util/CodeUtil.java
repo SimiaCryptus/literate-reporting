@@ -337,14 +337,23 @@ public class CodeUtil {
     }
   }
 
+  public static AutoCloseable refLeakMonitor(@Nonnull NotebookOutput log) {
+    LogInterception refLeakLog = intercept(log, ReferenceCountingBase.class.getCanonicalName());
+    return () -> {
+      long bytes = refLeakLog.counter.get();
+      refLeakLog.close();
+      log.setMetadata("refleak", Long.toString(bytes));
+      if (bytes > 0) {
+        throw new AssertionError(RefString.format("RefLeak logged %d bytes", bytes));
+      }
+    };
+  }
+
   public static void withRefLeakMonitor(@Nonnull NotebookOutput log, @Nonnull RefConsumer<NotebookOutput> fn) {
-    try (
-        LogInterception refLeakLog = intercept(log, ReferenceCountingBase.class.getCanonicalName())) {
+    try (AutoCloseable refLeakLog = refLeakMonitor(log)) {
       fn.accept(log);
       RefSystem.gc();
       Thread.sleep(1000);
-      if (refLeakLog.counter.get() != 0)
-        throw new AssertionError(RefString.format("RefLeak logged %d bytes", refLeakLog.counter.get()));
     } catch (Exception e) {
       throw Util.throwException(e);
     }

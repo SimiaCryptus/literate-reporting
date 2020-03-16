@@ -449,7 +449,7 @@ public abstract class NanoHTTPD {
     void clear();
 
     @Nonnull
-    TempFile createTempFile(String filename_hint) throws Exception;
+    TempFile createTempFile() throws Exception;
   }
 
   public interface TempFileManagerFactory {
@@ -599,7 +599,7 @@ public abstract class NanoHTTPD {
 
     @Nonnull
     @Override
-    public TempFile createTempFile(String filename_hint) throws Exception {
+    public TempFile createTempFile() throws Exception {
       DefaultTempFile tempFile = new DefaultTempFile(this.tmpdir);
       this.tempFiles.add(tempFile);
       return tempFile;
@@ -1180,7 +1180,7 @@ public abstract class NanoHTTPD {
     @Nonnull
     protected RandomAccessFile getTmpBucket() {
       try {
-        TempFile tempFile = this.tempFileManager.createTempFile(null);
+        TempFile tempFile = this.tempFileManager.createTempFile();
         return new RandomAccessFile(tempFile.getFile(), "rw");
       } catch (Exception e) {
         throw new Error(e); // we won't recover, so throw an error
@@ -1384,7 +1384,7 @@ public abstract class NanoHTTPD {
             }
           }
         } else if (Method.PUT.equals(this.method)) {
-          files.put("content", saveTmpFile(fbuf, 0, fbuf.limit(), null));
+          files.put("content", saveTmpFile(fbuf, 0, fbuf.limit()));
         }
       } finally {
         safeClose(randomAccessFile);
@@ -1522,7 +1522,7 @@ public abstract class NanoHTTPD {
             parms.put(part_name, new String(data_bytes, encoding));
           } else {
             // Read it into a file
-            String path = saveTmpFile(fbuf, part_data_start, part_data_end - part_data_start, file_name);
+            String path = saveTmpFile(fbuf, part_data_start, part_data_end - part_data_start);
             if (!files.containsKey(part_name)) {
               files.put(part_name, path);
             } else {
@@ -1636,12 +1636,12 @@ public abstract class NanoHTTPD {
     }
 
     @Nonnull
-    protected String saveTmpFile(@Nonnull ByteBuffer b, int offset, int len, String filename_hint) {
+    protected String saveTmpFile(@Nonnull ByteBuffer b, int offset, int len) {
       String path = "";
       if (len > 0) {
         FileOutputStream fileOutputStream = null;
         try {
-          TempFile tempFile = this.tempFileManager.createTempFile(filename_hint);
+          TempFile tempFile = this.tempFileManager.createTempFile();
           ByteBuffer src = b.duplicate();
           fileOutputStream = new FileOutputStream(tempFile.getFile());
           FileChannel dest = fileOutputStream.getChannel();

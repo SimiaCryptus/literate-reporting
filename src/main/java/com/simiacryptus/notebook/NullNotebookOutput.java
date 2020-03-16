@@ -221,7 +221,7 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public NotebookOutput setCurrentHome(URI currentHome) {
+  public NotebookOutput setCurrentHome() {
     return this;
   }
 

@@ -98,31 +98,35 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private boolean ghPage = false;
   private File metadataLocation = null;
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse) {
     this(reportFile, browse, reportFile.getName());
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, String displayName) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, String displayName) {
     this(reportFile, browse, displayName, UUID.randomUUID(), random.nextInt(2 * 1024) + 2 * 1024);
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, @Nonnull String displayName, UUID id, final int httpPort) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, @Nonnull String displayName, UUID id, final int httpPort) {
     this(reportFile, browse, displayName, displayName, id, httpPort);
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, UUID id, @Nonnull String displayName, final int httpPort) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, UUID id, @Nonnull String displayName, final int httpPort) {
     this(reportFile, browse, displayName, id.toString(), id, httpPort);
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, @Nonnull String displayName, @Nonnull String fileName, UUID id, final int httpPort) throws FileNotFoundException {
+  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, @Nonnull String displayName, @Nonnull String fileName, UUID id, final int httpPort) {
     this.setDisplayName(displayName);
     this.fileName = fileName;
     root = reportFile.getAbsoluteFile();
     root.mkdirs();
-    setCurrentHome(root.toURI());
+    setCurrentHome();
     setArchiveHome(null);
     this.id = id;
-    primaryOut = new PrintStream(new FileOutputStream(getReportFile("md")));
+    try {
+      primaryOut = new PrintStream(new FileOutputStream(getReportFile("md")));
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     FileNanoHTTPD httpd = httpPort <= 0 ? null : new FileNanoHTTPD(root, httpPort);
     if (null != httpd)
       httpd.addGET("", "text/html", out -> {
@@ -287,12 +291,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public static MarkdownNotebookOutput get(@Nonnull File path) {
-    try {
-      path.getAbsoluteFile().getParentFile().mkdirs();
-      return new MarkdownNotebookOutput(path, true);
-    } catch (FileNotFoundException e) {
-      throw Util.throwException(e);
-    }
+    path.getAbsoluteFile().getParentFile().mkdirs();
+    return new MarkdownNotebookOutput(path, true);
   }
 
   @Nonnull
@@ -783,7 +783,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public NotebookOutput setCurrentHome(URI currentHome) {
+  public NotebookOutput setCurrentHome() {
     return this;
   }
 

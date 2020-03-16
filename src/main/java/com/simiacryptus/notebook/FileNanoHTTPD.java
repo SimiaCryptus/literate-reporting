@@ -52,7 +52,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   }
 
   @Nonnull
-  public static FileNanoHTTPD create(final int port, @Nonnull final File path, final String mimeType)
+  public static FileNanoHTTPD create(final int port, @Nonnull final File path)
       throws IOException {
     return new FileNanoHTTPD(path, port).init();
   }
