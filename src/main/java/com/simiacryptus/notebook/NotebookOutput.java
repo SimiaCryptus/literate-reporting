@@ -19,9 +19,15 @@
 
 package com.simiacryptus.notebook;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
+import com.simiacryptus.util.CodeUtil;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -37,6 +43,8 @@ public interface NotebookOutput extends Closeable {
 
   @javax.annotation.Nullable
   URI getArchiveHome();
+
+  @NotNull JsonObject getMetadata();
 
   @Nonnull
   NotebookOutput setArchiveHome(URI archiveHome);
@@ -61,26 +69,90 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   File getRoot();
 
+  default void math(String mathExpr) {
+    out("```math\n" + mathExpr + "\n```\n");
+  }
+
+  default void mermaid(AdmonitionStyle qualifier, String title, String content) {
+    collapsable(true, qualifier, title,"```mermaid\n" + content + "\n```\n");
+    //String indent = "    ";
+    //out("!!! " + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
+  }
+
+  default void mermaid(String src) {
+    out("```mermaid\n" + src + "\n```\n");
+  }
+
+  enum AdmonitionStyle {
+    Abstract("abstract"),
+    Bug("bug"),
+    Error("error"),
+    Example("example"),
+    Failure("failure"),
+    Help("help"),
+    Info("info"),
+    Note("note"),
+    Quote("quote"),
+    Success("success"),
+    Tip("tip"),
+    Warning("warning");
+
+    public final String id;
+
+    AdmonitionStyle(String id) {
+      this.id = id;
+    }
+  }
+
+  default void admonition(AdmonitionStyle qualifier, String title, String content) {
+    String indent = "    ";
+    out("!!! " + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
+  }
+
+  default void collapsable(boolean initiallyOpen, AdmonitionStyle qualifier, String title, String content) {
+    String indent = "    ";
+    out((initiallyOpen ?"???+ ":"??? ") + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
+  }
+
   @Nonnull
   NotebookOutput setCurrentHome();
 
   default void run(@Nonnull @RefAware final Runnable fn) {
     try {
-      this.eval(() -> {
+      this.eval(null, () -> {
         fn.run();
         return null;
-      }, getMaxOutSize(), 3);
+      }, getMaxOutSize(), CodeUtil.getCallingFrame(3));
+    } finally {
+      RefUtil.freeRef(fn);
+    }
+  }
+
+  default void run(String title, @Nonnull @RefAware final Runnable fn) {
+    try {
+      this.eval(title, () -> {
+        fn.run();
+        return null;
+      }, getMaxOutSize(), CodeUtil.getCallingFrame(3));
     } finally {
       RefUtil.freeRef(fn);
     }
   }
 
   default <T> T eval(final @RefAware UncheckedSupplier<T> fn) {
-    return eval(fn, getMaxOutSize(), 3);
+    return eval(null, fn, getMaxOutSize(), CodeUtil.getCallingFrame(3));
+  }
+
+  default <T> T eval(String title, final @RefAware UncheckedSupplier<T> fn) {
+    return eval(title, fn, getMaxOutSize(), CodeUtil.getCallingFrame(3));
   }
 
   default <T> T out(final @RefAware UncheckedSupplier<T> fn) {
-    return eval(fn, Integer.MAX_VALUE, 3);
+    return eval(null, fn, Integer.MAX_VALUE, CodeUtil.getCallingFrame(3));
+  }
+
+  default <T> T out(String title, final @RefAware UncheckedSupplier<T> fn) {
+    return eval(title, fn, Integer.MAX_VALUE, CodeUtil.getCallingFrame(3));
   }
 
   @Nonnull
@@ -95,7 +167,7 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   File jpgFile(@Nonnull BufferedImage rawImage, File file);
 
-  <T> T eval(@RefAware UncheckedSupplier<T> fn, int maxLog, int framesNo);
+  <T> T eval(String title, @RefAware UncheckedSupplier<T> fn, int maxLog, StackTraceElement callingFrame);
 
   void onWrite(Runnable fn);
 
@@ -141,19 +213,23 @@ public interface NotebookOutput extends Closeable {
   void close() throws IOException;
 
   default void setMetadata(CharSequence key, CharSequence value) {
+    setMetadata(key, value == null ? null : new JsonPrimitive(value.toString()));
   }
 
-  default void appendMetadata(CharSequence key, CharSequence value, CharSequence delimiter) {
-    @Nullable
-    CharSequence prior = getMetadata(key);
-    if (null == prior)
-      setMetadata(key, value);
-    else
-      setMetadata(key, prior.toString() + delimiter + value);
+  default void setMetadata(CharSequence key, JsonElement value) {
   }
 
-  @Nullable
-  CharSequence getMetadata(CharSequence key);
+  default void addMetadata(CharSequence key, CharSequence value) {
+    JsonElement prior = getMetadata(key);
+    if (null == prior) {
+      JsonArray jsonArray = new JsonArray();
+      jsonArray.add(new JsonPrimitive(value.toString()));
+      setMetadata(key, jsonArray);
+    } else
+      prior.getAsJsonArray().add(new JsonPrimitive(value.toString()));
+  }
+
+  JsonElement getMetadata(CharSequence key);
 
   <T> T subreport(@RefAware Function<NotebookOutput, T> fn, String name);
 

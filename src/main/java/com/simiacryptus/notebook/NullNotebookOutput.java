@@ -19,10 +19,13 @@
 
 package com.simiacryptus.notebook;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.util.Util;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,6 +51,11 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public URI getArchiveHome() {
     return new File(".").toURI();
+  }
+
+  @Override
+  public @NotNull JsonObject getMetadata() {
+    return new JsonObject();
   }
 
   @Override
@@ -122,7 +130,7 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T eval(@Nonnull @RefAware UncheckedSupplier<T> fn, int maxLog, int framesNo) {
+  public <T> T eval(String title, @Nonnull @RefAware UncheckedSupplier<T> fn, int maxLog, StackTraceElement callingFrame) {
     try {
       return fn.get();
     } catch (Exception e) {
@@ -204,9 +212,8 @@ public class NullNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  @Nullable
   @Override
-  public CharSequence getMetadata(CharSequence key) {
+  public JsonElement getMetadata(CharSequence key) {
     return null;
   }
 

@@ -19,12 +19,14 @@
 
 package com.simiacryptus.util;
 
+import com.amazonaws.regions.*;
+import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefString;
-import com.simiacryptus.util.Util;
 import com.simiacryptus.util.test.NotebookReportBase;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -45,12 +47,60 @@ import java.util.stream.Collectors;
 public class S3Uploader {
 
   protected static final Logger logger = LoggerFactory.getLogger(NotebookReportBase.class);
+  private static final AmazonS3 GLOBAL_S3 = AmazonS3ClientBuilder.standard()
+      .withRegion(Regions.DEFAULT_REGION)
+      .build();
+
+  private static String getCurrentRegion() {
+    try {
+      Region currentRegion = Regions.getCurrentRegion();
+      if (null == currentRegion)
+        return Regions.US_EAST_1.getName();
+      return currentRegion.getName();
+    } catch (Throwable e) {
+      return Regions.US_EAST_1.getName();
+    }
+  }
 
   public static void uploadOnComplete(MarkdownNotebookOutput log, AmazonS3 amazonS3) {
     log.onComplete(() -> {
       URI archiveHome = log.getArchiveHome();
-      if (null != archiveHome) upload(amazonS3, archiveHome, log.getRoot());
+      if (null != archiveHome) {
+        upload(amazonS3, archiveHome, log.getRoot());
+      }
     });
+  }
+
+  public static void uploadOnComplete(MarkdownNotebookOutput log) {
+    log.onComplete(() -> {
+      URI archiveHome = log.getArchiveHome();
+      if (null != archiveHome) {
+        upload(buildClientForBucket(archiveHome.getHost()), archiveHome, log.getRoot());
+      }
+    });
+  }
+
+  public static AmazonS3 buildClientForBucket(String bucket) {
+    return buildClientForRegion(getRegion(bucket));
+  }
+
+  public static AmazonS3 buildClientForRegion(String region) {
+    if(region.equals("US")) {
+      return AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
+    } else {
+      return AmazonS3ClientBuilder.standard().withRegion(region).build();
+    }
+  }
+
+  public static String getRegion(String bucket) {
+    String region;
+    try {
+      region = GLOBAL_S3.getBucketLocation(bucket);
+    } catch (Throwable e) {
+      e.printStackTrace();
+      region = System.getProperty("AWS_REGION", getCurrentRegion());
+    }
+    return region;
   }
 
   @Nonnull

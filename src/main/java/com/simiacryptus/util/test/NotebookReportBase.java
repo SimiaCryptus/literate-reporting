@@ -19,7 +19,6 @@
 
 package com.simiacryptus.util.test;
 
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.notebook.NotebookOutput;
 import com.simiacryptus.util.CodeUtil;
@@ -54,6 +53,7 @@ public abstract class NotebookReportBase {
   }
 
   private MarkdownNotebookOutput log;
+  public static final Map<File, String> reports = new HashMap<>();
 
   protected MarkdownNotebookOutput getLog() {
     return log;
@@ -132,17 +132,20 @@ public abstract class NotebookReportBase {
     log = new MarkdownNotebookOutput(
         reportRoot, true, testInfo.getTestMethod().get().getName()
     );
+    reports.put(log.getReportFile("html"), log.getDisplayName());
     log.setEnableZip(false);
     URI testArchive = TestSettings.INSTANCE.testArchive;
-    if (null != testArchive) log.setArchiveHome(testArchive.resolve(
-        Util.mkString("/",
-            toPathString(targetClass, '/'),
-            testInfo.getTestClass().map(c -> c.getSimpleName()).orElse(""),
-            testInfo.getTestMethod().get().getName(),
-            new SimpleDateFormat("yyyyMMddmmss").format(new Date())
-        )
-    ));
-    S3Uploader.uploadOnComplete(log, AmazonS3ClientBuilder.standard().build());
+    if (null != testArchive) {
+      log.setArchiveHome(testArchive.resolve(
+          Util.mkString("/",
+              toPathString(targetClass, '/'),
+              testInfo.getTestClass().map(c -> c.getSimpleName()).orElse(""),
+              testInfo.getTestMethod().get().getName(),
+              new SimpleDateFormat("yyyyMMddmmss").format(new Date())
+          )
+      ));
+    }
+    S3Uploader.uploadOnComplete(log);
     File metadataLocation = new File(TestSettings.INSTANCE.testRepo, "registry");
     metadataLocation.mkdirs();
     log.setMetadataLocation(metadataLocation);
@@ -189,7 +192,7 @@ public abstract class NotebookReportBase {
       Optional<Throwable> executionException = context.getExecutionException();
       if (executionException.isPresent()) {
         String string = MarkdownNotebookOutput.getExceptionString(executionException.get()).toString();
-        string = MarkdownNotebookOutput.replaceAll(string, "\n", "<br/>").trim();
+        string = string.replaceAll("\n", "<br/>").trim();
         log.setMetadata("result", string);
       } else {
         log.setMetadata("result", "OK");

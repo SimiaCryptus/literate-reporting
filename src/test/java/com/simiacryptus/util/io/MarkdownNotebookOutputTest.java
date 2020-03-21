@@ -21,46 +21,122 @@ package com.simiacryptus.util.io;
 
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.notebook.NotebookOutput;
+import com.simiacryptus.notebook.NotebookOutput.AdmonitionStyle;
 import com.simiacryptus.ref.wrappers.RefIntStream;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
+import com.simiacryptus.util.test.NotebookReportBase;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.HashMap;
 
-public class MarkdownNotebookOutputTest {
+public class MarkdownNotebookOutputTest extends NotebookReportBase {
 
-  @Test
-  public void test() throws Exception {
-    try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/test.md"))) {
-      RefIntStream.range(0, 10).forEach(i -> {
-        try {
-          Thread.sleep(1000);
-          notebookOutput.p("Iteration: " + i);
-        } catch (InterruptedException e) {
-          throw Util.throwException(e);
-        }
-      });
-    }
+  @Override
+  public @Nonnull ReportType getReportType() {
+    return ReportType.Components;
+  }
+
+  @Override
+  protected Class<?> getTargetClass() {
+    return MarkdownNotebookOutput.class;
   }
 
   @Test
-  public void testSubreport() throws Exception {
-    try (NotebookOutput notebookOutput = MarkdownNotebookOutput.get(new File("target/report/testSubreport.md"))) {
-      RefIntStream.range(0, 10).forEach(i -> {
-        notebookOutput.subreport(subreport -> {
-          RefIntStream.range(0, 10).forEach(j -> {
-            try {
-              Thread.sleep(100);
-              subreport.p(RefString.format("Iteration: %d / %d", i, j));
-            } catch (InterruptedException e) {
-              throw Util.throwException(e);
-            }
-          });
-          return null;
-        }, String.format("%s (Iteration %d)", notebookOutput.getDisplayName(), i));
+  public void test() {
+    MarkdownNotebookOutput log = getLog();
+    log.h1("Notebook Example");
+
+    log.h2("Code");
+    log.eval(()->{
+      System.out.println("This is some output");
+      return "This is a STRING return value";
+    });
+    log.eval("JSON Test", ()->{
+      HashMap<String, Object> map = new HashMap<>();
+      {
+        map.put("foo", "bar");
+        map.put("fooz", Arrays.asList("baz", "bat"));
+      }
+      return map;
+    });
+    Assertions.assertThrows(RuntimeException.class, ()->{
+      log.eval(()->{
+        for (int i = 0; i < 10000; i++) {
+          System.out.println("Very, very long output");
+        }
+        throw new RuntimeException("Test Exception");
       });
-    }
+    });
+
+    log.h2("Math");
+    log.p("Output Message");
+    log.p("Here is some math: $`a^2+b^2=c^2`$");
+    log.math("a^2+b^2=c^2");
+
+    log.h2("Diagrams");
+    // See http://mermaid-js.github.io/mermaid/#/examples
+    log.mermaid(
+        "graph TD;\n" +
+            "  A-->B;\n" +
+            "  A-->C;\n" +
+            "  B-->D;\n" +
+            "  C-->D;");
+    log.mermaid(AdmonitionStyle.Example, "With Highlight Style",
+        "sequenceDiagram\n" +
+            "    Alice ->> Bob: Hello Bob, how are you?\n" +
+            "    Bob-->>John: How about you John?\n" +
+            "    Bob--x Alice: I am good thanks!\n" +
+            "    Bob-x John: I am good thanks!\n" +
+            "    Note right of John: Bob thinks a long<br/>long time, so long<br/>that the text does<br/>not fit on a row.\n" +
+            "\n" +
+            "    Bob-->Alice: Checking with John...\n" +
+            "    Alice->John: Yes... John, how are you?");
+
+    log.h2("Boxes");
+    // See https://github.com/vsch/flexmark-java/wiki/Admonition-Extension
+    log.admonition(AdmonitionStyle.Help, "Flexmark Admonition Extension",
+        "[https://github.com/vsch/flexmark-java/wiki/Admonition-Extension](https://github.com/vsch/flexmark-java/wiki/Admonition-Extension)");
+    log.admonition(AdmonitionStyle.Example, "Preformatted Text",
+        "```\n" +
+            "preformatted test\n" +
+            "another         line!\n" +
+            "```\n");
+    log.admonition(AdmonitionStyle.Example, "Code Display",
+        "```java\n" +
+            "//  This is  _a_  test\n" +
+            "System.out.println(\"Testing\");\n" +
+            "```\n");
+    log.admonition(AdmonitionStyle.Example, "Normal markdown",
+        "block content \n" +
+            "block content \n" +
+            "block content \n");
+    log.collapsable(false, AdmonitionStyle.Note, "Collapsed Block",
+        "block content \n" +
+            "block content \n" +
+            "block content \n");
+    log.p("Done");
+  }
+
+  @Test
+  public void testSubreport() {
+    NotebookOutput log = getLog();
+    RefIntStream.range(0, 10).forEach(i -> {
+      log.subreport(subreport -> {
+        RefIntStream.range(0, 10).forEach(j -> {
+          try {
+            Thread.sleep(100);
+            subreport.p(RefString.format("Iteration: %d / %d", i, j));
+          } catch (InterruptedException e) {
+            throw Util.throwException(e);
+          }
+        });
+        return null;
+      }, String.format("%s (Iteration %d)", log.getDisplayName(), i));
+    });
   }
 
 }

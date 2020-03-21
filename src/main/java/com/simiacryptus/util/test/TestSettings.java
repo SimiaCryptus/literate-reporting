@@ -20,6 +20,7 @@
 package com.simiacryptus.util.test;
 
 import com.simiacryptus.lang.Settings;
+import com.simiacryptus.util.Util;
 
 import java.net.URI;
 
@@ -29,8 +30,8 @@ public class TestSettings implements Settings {
   public static final TestSettings INSTANCE = new TestSettings();
   public final String tag = get("GIT_TAG", "master");
   public final String testRepo = get("TEST_REPO", "H:\\SimiaCryptus\\all-projects\\reports");
-  //testArchive = get("TEST_ARCHIVE", Util.getURI("s3://simiacryptus/tests/"));
-  public final URI testArchive = get("TEST_ARCHIVE", (URI) null);
+  public final URI testArchive = get("TEST_ARCHIVE", Util.getURI("s3://simiacryptus/tests/"));
+//  public final URI testArchive = get("TEST_ARCHIVE", (URI) null);
   public boolean isInteractive = false;
 
   private TestSettings() {

@@ -19,26 +19,33 @@
 
 package com.simiacryptus.notebook;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.simiacryptus.lang.TimedResult;
 import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.*;
 import com.simiacryptus.util.CodeUtil;
+import com.simiacryptus.util.JsonUtil;
 import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
 import com.simiacryptus.util.test.SysOutInterceptor;
+import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
+import com.vladsch.flexmark.ext.anchorlink.AnchorLinkExtension;
 import com.vladsch.flexmark.ext.escaped.character.EscapedCharacterExtension;
 import com.vladsch.flexmark.ext.gfm.strikethrough.SubscriptExtension;
+import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.ext.toc.TocExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.pdf.converter.PdfConverterExtension;
+import com.vladsch.flexmark.util.data.DataSet;
 import com.vladsch.flexmark.util.data.MutableDataSet;
-import com.vladsch.flexmark.util.misc.Extension;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,9 +70,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.simiacryptus.util.Util.pathToFile;
-import static com.simiacryptus.util.Util.stripPrefix;
-
 public class MarkdownNotebookOutput implements NotebookOutput {
   public static final Random random = new Random();
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
@@ -80,7 +84,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final PrintStream primaryOut;
   private final List<CharSequence> markdownData = new ArrayList<>();
   private final List<Runnable> onComplete = new ArrayList<>();
-  private final Map<CharSequence, CharSequence> metadata = new HashMap<>();
+  private final Map<CharSequence, JsonElement> metadata = new HashMap<>();
   @Nullable
   private final FileNanoHTTPD httpd;
   private final ArrayList<Runnable> onWriteHandlers = new ArrayList<>();
@@ -317,11 +321,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return reference.get();
   }
 
-  @NotNull
-  public static String replaceAll(@Nonnull String name, String search, String replace) {
-    return name.replaceAll(search, replace);
-  }
-
   @javax.annotation.Nullable
   public static File writeZip(@Nonnull final File root, final String baseName) throws IOException {
     File zipFile = new File(root, baseName + ".zip");
@@ -364,10 +363,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public void close() {
     try {
       primaryOut.close();
-      try (@Nonnull
-           PrintWriter out = new PrintWriter(new FileOutputStream(getReportFile("md")))) {
-        write(out);
-      }
       File root = getRoot();
       write();
       if (isEnableZip())
@@ -406,26 +401,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       return list.stream().reduce((a, b) -> a + "\n" + b).orElse("").toString();
   }
 
-  public void write(@Nonnull final PrintWriter out) {
-    if (!metadata.isEmpty()) {
-      if (isGHPage()) {
-        out.println("---");
-        metadata.forEach((key, value) -> {
-          out.println(RefString.format("%s: %s", key, StringEscapeUtils.escapeJava(String.valueOf(value))));
-        });
-        out.println("---");
-      }
-      if (null != getMetadataLocation()) {
-        writeMetadata(getReportFile("metadata.json"));
-        writeMetadata(new File(getMetadataLocation(), id.toString() + ".json"));
-      }
-    }
-    toc.forEach(x1 -> out.println(x1));
-    out.print("\n\n");
-    markdownData.forEach(x -> out.println(x));
-  }
-
-  public void setMetadata(CharSequence key, CharSequence value) {
+  public void setMetadata(CharSequence key, JsonElement value) {
     if (null == value) {
       metadata.remove(key);
     } else {
@@ -434,7 +410,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public CharSequence getMetadata(CharSequence key) {
+  public JsonElement getMetadata(CharSequence key) {
     return metadata.get(key);
   }
 
@@ -455,7 +431,21 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   public void write() throws IOException {
-    MutableDataSet options = new MutableDataSet();
+    DataSet options = new MutableDataSet()
+        .set(TablesExtension.COLUMN_SPANS, false)
+        .set(TablesExtension.APPEND_MISSING_COLUMNS, true)
+        .set(TablesExtension.DISCARD_EXTRA_COLUMNS, true)
+        .set(TablesExtension.HEADER_SEPARATOR_COLUMN_MATCH, true)
+        .set(Parser.EXTENSIONS, Arrays.asList(
+            TablesExtension.create(),
+            TocExtension.create(),
+            SubscriptExtension.create(),
+            EscapedCharacterExtension.create(),
+            GitLabExtension.create(),
+            AdmonitionExtension.create(),
+            AnchorLinkExtension.create()
+        ))
+        .toImmutable();
     onWriteHandlers.stream().forEach(runnable -> runnable.run());
     File htmlFile = writeHtml(options);
     try {
@@ -624,9 +614,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Nullable
   @Override
   @SuppressWarnings("unchecked")
-  public <T> T eval(@Nonnull @RefAware final UncheckedSupplier<T> fn, final int maxLog, final int framesNo) {
+  public <T> T eval(String title, @Nonnull @RefAware final UncheckedSupplier<T> fn, final int maxLog, StackTraceElement callingFrame) {
     try {
-      final StackTraceElement callingFrame = Thread.currentThread().getStackTrace()[framesNo];
       final String sourceCode = CodeUtil.getInnerText(callingFrame);
       final SysOutInterceptor.LoggedResult<TimedResult<Object>> result = SysOutInterceptor.withOutput(() -> {
         long priorGcMs = ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime())
@@ -650,61 +639,39 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         }
       });
       TimedResult<Object> obj = result.getObj();
-      out(anchor(anchorId()) + "Code from [%s:%s](%s#L%s) executed in %.2f seconds (%.3f gc): ",
-          callingFrame.getFileName(), callingFrame.getLineNumber(), CodeUtil.codeUrl(callingFrame),
-          callingFrame.getLineNumber(), obj.seconds(), obj.gc_seconds());
-      out("```java");
-      out("  " + replaceAll(sourceCode, "\n", "\n  "));
-      out("```");
+      String fileName = callingFrame.getFileName();
+      String language = language(fileName);
+      out(anchor(anchorId()));
 
-      if (!result.log.isEmpty()) {
-        CharSequence summary = replaceAll(replaceAll(summarize(result.log, maxLog), "\n", "\n    "), "    ~", "");
-        out(anchor(anchorId()) + "Logging: ");
-        out("```");
-        out("    " + summary);
+      String codeID = fileName + ":" + callingFrame.getLineNumber();
+      String codeLink = CodeUtil.codeUrl(callingFrame) + "#L" + callingFrame.getLineNumber();
+      String codeTitle = "__[" + (null == title ? codeID : title) + "](" + codeLink + ")__";
+      String perfString = String.format(
+          " executed in %.2f seconds (%.3f gc): ",
+          obj.seconds(), obj.gc_seconds());
+      boolean useAdmonition = true;
+      if(useAdmonition) {
+        out(codeTitle);
+        collapsable(false, AdmonitionStyle.Abstract,
+            codeID + perfString,
+            "```" + language + "\n  \u00A0" + sourceCode.replaceAll("\n", "\n  \u00A0") + "\n```"
+        );
+      } else {
+        out(codeTitle + perfString);
+        out("```" + language);
+        out("  " + sourceCode.replaceAll("\n", "\n  "));
         out("```");
       }
-      out("");
+
+      if (!result.log.isEmpty()) {
+        CharSequence summary = summarize(result.log, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "");
+        collapsable(false, AdmonitionStyle.Quote, "Logging", "```\n    " + summary + "\n```");
+      }
 
       final Object eval = obj.getResult();
       try {
         if (null != eval) {
-          out(anchor(anchorId()) + "Returns: \n");
-          String str;
-          boolean escape;
-          if (eval instanceof Throwable) {
-            @Nonnull final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            ((Throwable) eval).printStackTrace(new PrintStream(out));
-            str = new String(out.toByteArray(), "UTF-8");
-            escape = true;//
-          } else if (eval instanceof Component) {
-            str = png(Util.toImage((Component) eval), "Result");
-            escape = false;
-          } else if (eval instanceof BufferedImage) {
-            str = png((BufferedImage) eval, "Result");
-            escape = false;
-          } else if (eval instanceof TableOutput) {
-            str = ((TableOutput) eval).toMarkdownTable();
-            escape = false;
-          } else if (eval instanceof double[]) {
-            str = RefArrays.toString((double[]) eval);
-            escape = false;
-          } else if (eval instanceof int[]) {
-            str = RefArrays.toString((int[]) eval);
-            escape = false;
-          } else {
-            str = eval.toString();
-            escape = true;
-          }
-          @Nonnull
-          String fmt = escape ? "    " + replaceAll(replaceAll(summarize(str, maxLog), "\n", "\n    "), "    ~", "") : str;
-          if (escape) {
-            out("```");
-            out(fmt);
-            out("```");
-          } else {
-            out(fmt);
-          }
+          printResult(eval, maxLog);
           out("\n\n");
           if (eval instanceof Throwable) {
             if (eval instanceof RuntimeException) {
@@ -719,18 +686,77 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         obj.freeRef();
       }
       return (T) eval;
-    } catch (@Nonnull final IOException e) {
-      throw Util.throwException(e);
     } finally {
       RefUtil.freeRef(fn);
     }
+  }
+
+  public void printResult(Object eval, int maxLog) {
+    if (eval instanceof Throwable) {
+      collapsable(false, AdmonitionStyle.Failure, ((Throwable) eval).getMessage(), "```\n" + escape(Util.toString((Throwable) eval), maxLog) + "\n    \n```");
+    } else {
+      final String escape;
+      final String str;
+      if (eval instanceof Component) {
+        str = png(Util.toImage((Component) eval), "Result");
+        escape = "";
+      } else if (eval instanceof BufferedImage) {
+        str = png((BufferedImage) eval, "Result");
+        escape = "";
+      } else if (eval instanceof TableOutput) {
+        str = ((TableOutput) eval).toMarkdownTable();
+        escape = "";
+      } else if (eval instanceof double[]) {
+        str = Arrays.toString((double[]) eval);
+        escape = "";
+      } else if (eval instanceof int[]) {
+        str = Arrays.toString((int[]) eval);
+        escape = "";
+      } else if (eval instanceof String) {
+        str = eval.toString();
+        escape = "txt";
+      } else if (eval instanceof JsonObject) {
+        str = new GsonBuilder().setPrettyPrinting().create().toJson(eval);
+        escape = "json";
+      } else {
+        str = JsonUtil.toJson(eval).toString();
+        escape = "json";
+      }
+      boolean useAdmonition = true;
+      if (escape.equals("txt")) {
+        if(useAdmonition) {
+          admonition(AdmonitionStyle.Success, "Returning", "```\n" + escape(str, maxLog) + "\n```");
+        } else {
+          out("Returns\n```\n" + escape(str, maxLog) + "\n```");
+        }
+      } else if (escape.equals("json")) {
+        if(useAdmonition) {
+          admonition(AdmonitionStyle.Success, "Returning", "```json\n" + escape(str, maxLog) + "\n```");
+        } else {
+          out("Returns\n```json\n" + escape(str, maxLog) + "\n```");
+        }
+      } else {
+        if(useAdmonition) {
+          admonition(AdmonitionStyle.Success, "Returning", str);
+        } else {
+          out("Returns\n"+str);
+        }
+      }
+    }
+  }
+
+  public String language(String fileName) {
+    String[] split = fileName.split("\\.");
+    return split[split.length - 1];
   }
 
   @Nonnull
   @Override
   public CharSequence link(@Nonnull final File file, final CharSequence text) {
     try {
-      return "[" + text + "](" + URLEncoder.encode(pathTo(file).toString(), "UTF-8") + ")";
+      String relative = pathTo(file).toString();
+      if (File.separatorChar != '/') relative = relative.replace(File.separatorChar, '/');
+      return "[" + text + "](" + URLEncoder.encode(relative, "UTF-8").replaceAll("%2F", "/") + ")";
     } catch (UnsupportedEncodingException e) {
       throw Util.throwException(e);
     }
@@ -738,7 +764,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public CharSequence pathTo(@Nonnull File file) {
-    return stripPrefix(Util.toString(pathToFile(getRoot(), file)), "/");
+    return Util.stripPrefix(Util.toString(Util.pathToFile(getRoot(), file)), "/");
   }
 
   @Override
@@ -834,42 +860,85 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   private void writeMetadata(File file) {
     try (PrintStream metadataOut = new PrintStream(new FileOutputStream(file))) {
-      metadataOut.print("{\n  ");
-      metadataOut.print(metadata.entrySet().stream().map(entry ->
-          String.format("\"%s\": \"%s\"", entry.getKey(), StringEscapeUtils.escapeJava(String.valueOf(entry.getValue())))
-      ).reduce((a, b) -> a + ",\n  " + b).orElse(""));
-      metadataOut.print("\n}");
+      JsonObject jsonObject = getMetadata();
+      metadataOut.print(new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject));
     } catch (IOException e) {
       throw Util.throwException(e);
     }
   }
 
-  @Nonnull
-  private synchronized File writePdf(@Nonnull MutableDataSet options, @Nonnull File htmlFile) throws IOException {
-    try (FileOutputStream out = new FileOutputStream(getReportFile("pdf"))) {
-      PdfConverterExtension.exportToPdf(out, FileUtils.readFileToString(htmlFile, "UTF-8"),
-          htmlFile.getAbsoluteFile().toURI().toString(), options);
-    }
-    return new File(replaceAll(htmlFile.getPath(), "\\.html$", ".pdf"));
+  @Override
+  @NotNull
+  public JsonObject getMetadata() {
+    JsonObject jsonObject = new JsonObject();
+    metadata.forEach((key, value) -> jsonObject.add(key.toString(), value));
+    return jsonObject;
   }
 
   @Nonnull
-  private synchronized File writeHtml(@Nonnull MutableDataSet options) throws IOException {
-    List<Extension> extensions = Arrays.asList(TablesExtension.create(), SubscriptExtension.create(),
-        EscapedCharacterExtension.create());
-    Parser parser = Parser.builder(options).extensions(extensions).build();
-    HtmlRenderer renderer = HtmlRenderer.builder(options).extensions(extensions).escapeHtml(false).indentSize(2)
-        .softBreak("\n").build();
+  private synchronized File writePdf(DataSet options, @Nonnull File htmlFile) throws IOException {
+    try (FileOutputStream out = new FileOutputStream(getReportFile("pdf"))) {
+      PdfConverterExtension.exportToPdf(out,
+          FileUtils.readFileToString(htmlFile, "UTF-8"),
+          htmlFile.getAbsoluteFile().toURI().toString(),
+          options);
+    }
+    return new File(htmlFile.getPath().replaceAll("\\.html$", ".pdf"));
+  }
+
+  @Nonnull
+  private synchronized File writeHtml(DataSet options) throws IOException {
+    Parser parser = Parser.builder(options)
+        .build();
+    HtmlRenderer renderer = HtmlRenderer.builder(options)
+        .escapeHtml(false)
+        .indentSize(2)
+        .softBreak("\n")
+        .build();
     String txt = toString(toc) + "\n\n" + toString(markdownData);
     FileUtils.write(getReportFile("md"), txt, "UTF-8");
     File htmlFile = getReportFile("html");
-    String html = renderer.render(parser.parse(txt));
-    html = "<html><body>" + html + "</body></html>";
+    FileUtils.write(new File(getRoot(), "admonition.css"), AdmonitionExtension.getDefaultCSS(), "UTF-8");
+    FileUtils.write(new File(getRoot(), "admonition.js"), AdmonitionExtension.getDefaultScript(), "UTF-8");
+    String bodyInnerHtml = renderer.render(parser.parse(txt));
+    String headerInnerHtml = "" +
+        // Mermaid:
+        "<script src=\"https://cdn.jsdelivr.net/npm/mermaid@8.4.0/dist/mermaid.min.js\"></script>\n" +
+        // Katex:
+        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css\" integrity=\"sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq\" crossorigin=\"anonymous\">\n" +
+        "<script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js\" integrity=\"sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz\" crossorigin=\"anonymous\"></script>\n" +
+        "<script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js\" integrity=\"sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI\" crossorigin=\"anonymous\" onload=\"renderMathInElement(document.body);\"></script>\n" +
+        // Prism:
+        "<link href=\"https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css\" rel=\"stylesheet\" />\n" +
+        // Admonition:
+        "<link href=\"admonition.css\" rel=\"stylesheet\" />\n" +
+        "";
+    String bodyPrefix = "" +
+        // Prism:
+        "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/prism.min.js\"></script>\n" +
+        "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/plugins/autoloader/prism-autoloader.min.js\"></script>\n" +
+        "";
+    String bodySuffix = "\n" +
+        // Admonition:
+        "<script src=\"admonition.js\"></script>" +
+        "";
+    bodyInnerHtml = "<html><head>" + headerInnerHtml + "</head><body>" + bodyPrefix + bodyInnerHtml + bodySuffix + "</body></html>";
     try (FileOutputStream out = new FileOutputStream(htmlFile)) {
-      IOUtils.write(html, out, Charset.forName("UTF-8"));
+      IOUtils.write(bodyInnerHtml, out, Charset.forName("UTF-8"));
     }
     logger.info("Wrote " + htmlFile); //     log.info("Wrote " + htmlFile); //
     return htmlFile;
+  }
+
+  public @NotNull String escape(String str, int maxLog) {
+    return escape(str, maxLog, "    \u00A0");
+  }
+
+  @NotNull
+  public String escape(String str, int maxLog, String prefix) {
+    return prefix + summarize(str, maxLog)
+        .replaceAll("\n", "\n" + prefix)
+        .replaceAll(prefix + "~", "");
   }
 
 }
