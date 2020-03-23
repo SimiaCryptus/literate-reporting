@@ -301,9 +301,13 @@ public class CodeUtil {
     String fileName = callingFrame.getFileName();
     assert fileName != null;
     //String codePath = (language(fileName) + "/" + packagePath(className) + "/" + fileName).replaceAll("//", "/");
-    String codePath = (packagePath(className) + "/" + fileName).replaceAll("//", "/");
+    return codeUrl((packagePath(className) + "/" + fileName).replaceAll("//", "/"));
+  }
+
+  @Nonnull
+  public static CharSequence codeUrl(String codePath) {
     if (classSourceInfo.containsKey(codePath))
-      return classSourceInfo.get(codePath) + codePath;
+      return classSourceInfo.get(codePath) + "/" + codePath;
     return codePath;
   }
 

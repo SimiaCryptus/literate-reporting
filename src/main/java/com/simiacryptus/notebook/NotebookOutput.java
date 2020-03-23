@@ -200,11 +200,11 @@ public interface NotebookOutput extends Closeable {
   @Nonnull
   CharSequence link(File file, CharSequence text);
 
-  default void out(final CharSequence fmt, final Object... args) {
-    p(fmt, args);
-  }
+  void out(final CharSequence fmt, final Object... args);
 
-  void p(CharSequence fmt, Object... args);
+  default void p(CharSequence fmt, Object... args) {
+    out(fmt, args);
+  }
 
   @Nonnull
   NotebookOutput onComplete(Runnable... tasks);

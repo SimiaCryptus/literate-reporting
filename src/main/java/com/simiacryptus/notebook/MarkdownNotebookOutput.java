@@ -19,6 +19,7 @@
 
 package com.simiacryptus.notebook;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -71,11 +72,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class MarkdownNotebookOutput implements NotebookOutput {
+  public static final String ADMONITION_INDENT_DELIMITER = "";//""\u00A0";
+  private static final boolean useAdmonition = false;
+
   public static final Random random = new Random();
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   @Nonnull
   public static RefMap<String, Object> uploadCache = new RefHashMap<>();
-  public static int MAX_OUTPUT = 1024 * 2;
+  public static int MAX_OUTPUT = 1024 * 8;
   private static int excerptNumber = 0;
   private static int imageNumber = 0;
   @Nonnull
@@ -174,8 +178,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
     }
     this.httpd = httpd;
-    if (browse && !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
-        && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+    if (browse && ReportingUtil.canBrowse()) {
       if (null != httpd)
         new Thread(() -> {
           try {
@@ -200,11 +203,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         this.httpd.stop();
       });
     }
-    setMetadata("root", getRoot().getAbsolutePath());
-    setMetadata("display_name", getDisplayName());
+    //setMetadata("root", getRoot().getAbsolutePath());
     setMetadata("file_name", getFileName());
     setMetadata("id", getId());
-    setMetadata("local_root", getRoot().getAbsolutePath());
   }
 
   @Nullable
@@ -220,6 +221,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   public void setDisplayName(@Nonnull String name) {
+    setMetadata("display_name", name);
     this.displayName = name;
   }
 
@@ -446,6 +448,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
             AnchorLinkExtension.create()
         ))
         .toImmutable();
+    JsonObject metadata = getMetadata();
+    if(!metadata.keySet().isEmpty()) {
+      Gson gson = new GsonBuilder().setPrettyPrinting().create();
+      FileUtils.write(getReportFile("metadata.json"), gson.toJson(metadata), "UTF-8");
+    }
     onWriteHandlers.stream().forEach(runnable -> runnable.run());
     File htmlFile = writeHtml(options);
     try {
@@ -649,12 +656,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       String perfString = String.format(
           " executed in %.2f seconds (%.3f gc): ",
           obj.seconds(), obj.gc_seconds());
-      boolean useAdmonition = true;
       if(useAdmonition) {
         out(codeTitle);
         collapsable(false, AdmonitionStyle.Abstract,
             codeID + perfString,
-            "```" + language + "\n  \u00A0" + sourceCode.replaceAll("\n", "\n  \u00A0") + "\n```"
+            "```" + language + "\n  " + ADMONITION_INDENT_DELIMITER + sourceCode.replaceAll("\n", "\n  " + ADMONITION_INDENT_DELIMITER) + "\n```"
         );
       } else {
         out(codeTitle + perfString);
@@ -719,10 +725,18 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         str = new GsonBuilder().setPrettyPrinting().create().toJson(eval);
         escape = "json";
       } else {
-        str = JsonUtil.toJson(eval).toString();
-        escape = "json";
+        CharSequence toJson;
+        String escape1;
+        try {
+          toJson = JsonUtil.toJson(eval);
+          escape1 = "json";
+        } catch (Throwable e) {
+          toJson = eval.toString();
+          escape1 = "txt";
+        }
+        str = toJson.toString();
+        escape = escape1;
       }
-      boolean useAdmonition = true;
       if (escape.equals("txt")) {
         if(useAdmonition) {
           admonition(AdmonitionStyle.Success, "Returning", "```\n" + escape(str, maxLog) + "\n```");
@@ -739,7 +753,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         if(useAdmonition) {
           admonition(AdmonitionStyle.Success, "Returning", str);
         } else {
-          out("Returns\n"+str);
+          out("Returns\n\n"+str);
         }
       }
     }
@@ -829,7 +843,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
-
         this.p(this.link(subreport.getReportFile("html"), "Subreport: " + reportName));
         getHttpd().addGET(subreport.getFileName() + ".html", "text/html", out -> {
           try {
@@ -855,15 +868,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       throw Util.throwException(e);
     } finally {
       RefUtil.freeRef(fn);
-    }
-  }
-
-  private void writeMetadata(File file) {
-    try (PrintStream metadataOut = new PrintStream(new FileOutputStream(file))) {
-      JsonObject jsonObject = getMetadata();
-      metadataOut.print(new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject));
-    } catch (IOException e) {
-      throw Util.throwException(e);
     }
   }
 
@@ -931,7 +935,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   public @NotNull String escape(String str, int maxLog) {
-    return escape(str, maxLog, "    \u00A0");
+    return escape(str, maxLog, "    " + ADMONITION_INDENT_DELIMITER);
   }
 
   @NotNull

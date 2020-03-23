@@ -203,7 +203,7 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void p(CharSequence fmt, Object... args) {
+  public void out(CharSequence fmt, Object... args) {
   }
 
   @Nonnull

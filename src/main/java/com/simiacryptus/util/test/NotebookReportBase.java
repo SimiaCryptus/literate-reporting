@@ -19,6 +19,8 @@
 
 package com.simiacryptus.util.test;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.notebook.NotebookOutput;
 import com.simiacryptus.util.CodeUtil;
@@ -59,26 +61,26 @@ public abstract class NotebookReportBase {
     return log;
   }
 
-  public Class<? extends NotebookReportBase> getReportClass() {
-    return getClass();
-  }
-
   @Nonnull
   public abstract ReportType getReportType();
 
   protected abstract Class<?> getTargetClass();
 
   @Nullable
-  public static CharSequence setReportType(@Nonnull NotebookOutput log, @Nullable Class<?> networkClass,
-                                           final CharSequence prefix) {
+  public static CharSequence setClassData(@Nonnull NotebookOutput log, @Nullable Class<?> networkClass,
+                                          final CharSequence prefix) {
     if (null == networkClass)
       return null;
     @Nullable
     String javadoc = CodeUtil.getJavadoc(networkClass);
-    log.setMetadata(prefix + "_class_short", networkClass.getSimpleName());
-    log.setMetadata(prefix + "_class_full", networkClass.getCanonicalName());
     assert javadoc != null;
-    log.setMetadata(prefix + "_class_doc", javadoc.replaceAll("\n", ""));
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.addProperty("simpleName",networkClass.getSimpleName());
+    jsonObject.addProperty("canonicalName",networkClass.getCanonicalName());
+    String filename = CodeUtil.filename(networkClass);
+    if(null != filename) jsonObject.addProperty("link",CodeUtil.codeUrl(filename).toString());
+    jsonObject.addProperty("javaDoc",javadoc);
+    log.setMetadata(prefix, jsonObject);
     return javadoc;
   }
 
@@ -95,13 +97,13 @@ public abstract class NotebookReportBase {
   }
 
   public void printHeader(@Nonnull NotebookOutput log) {
-    log.setMetadata("created_on", new Date().toString());
+    log.setMetadata("created_on", new JsonPrimitive(System.currentTimeMillis()));
     log.setMetadata("report_type", getReportType().name());
-    CharSequence targetDescription = setReportType(log, getTargetClass(), "network");
+    CharSequence targetDescription = setClassData(log, getTargetClass(), "target");
     if (null != targetDescription && targetDescription.length() > 0) {
       log.p("__Target Description:__ " + targetDescription);
     }
-    CharSequence reportDescription = setReportType(log, getReportClass(), "report");
+    CharSequence reportDescription = setClassData(log, getClass(), "report");
     if (null != reportDescription && reportDescription.length() > 0) {
       log.p("__Report Description:__ " + reportDescription);
     }
@@ -187,8 +189,10 @@ public abstract class NotebookReportBase {
       long gcTime = gcTime() - store.remove(START_GC_TIME, long.class);
       NotebookReportBase reportingTest = (NotebookReportBase) context.getTestInstance().get();
       MarkdownNotebookOutput log = reportingTest.getLog();
-      log.setMetadata("execution_time", String.format("%.3f", duration / 1e3));
-      log.setMetadata("gc_time", String.format("%.3f", gcTime / 1e3));
+      JsonObject perfData = new JsonObject();
+      perfData.addProperty("execution_time", String.format("%.3f", duration / 1e3));
+      perfData.addProperty("gc_time", String.format("%.3f", gcTime / 1e3));
+      log.setMetadata("performance", perfData);
       Optional<Throwable> executionException = context.getExecutionException();
       if (executionException.isPresent()) {
         String string = MarkdownNotebookOutput.getExceptionString(executionException.get()).toString();

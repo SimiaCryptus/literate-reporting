@@ -44,33 +44,8 @@ public class ReportingUtil {
       Desktop.getDesktop().browse(uri);
   }
 
-  public static <T> T getLast(@Nonnull final RefStream<T> stream) {
-    final RefList<T> collect = stream.collect(RefCollectors.toList());
-    T t = collect.get(collect.size() - 1);
-    collect.freeRef();
-    return t;
-  }
-
-  public static void report(@Nonnull final RefStream<CharSequence> fragments) throws IOException {
-    @Nonnull final File outDir;
-    if (new File("target").exists()) {
-      outDir = new File("target/reports");
-    } else {
-      outDir = new File("reports");
-    }
-    outDir.mkdirs();
-    final StackTraceElement caller = getLast(RefArrays.stream(Thread.currentThread().getStackTrace())//
-        .filter(x -> x.getClassName().contains("simiacryptus")));
-    @Nonnull final File report = new File(outDir, caller.getClassName() + "_" + caller.getLineNumber() + ".html");
-    @Nonnull final PrintStream out = new PrintStream(new FileOutputStream(report));
-    out.println("<html><head></head><body>");
-    fragments.forEach(x -> out.println(x));
-    out.println("</body></html>");
-    out.close();
-    ReportingUtil.browse(report.toURI());
-  }
-
-  public static void report(final CharSequence... fragments) throws IOException {
-    report(RefStream.of(fragments));
+  public static boolean canBrowse() {
+    return !GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
+        && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
   }
 }

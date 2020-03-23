@@ -19,7 +19,9 @@
 
 package com.simiacryptus.notebook;
 
+import com.google.gson.JsonObject;
 import com.simiacryptus.ref.lang.RefAware;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -58,5 +60,11 @@ class MarkdownSubreport extends MarkdownNotebookOutput {
   public void write() throws IOException {
     super.write();
     //parent.write();
+  }
+
+  @Override
+  public @NotNull JsonObject getMetadata() {
+    // Subreports never have metadata
+    return new JsonObject();
   }
 }

@@ -21,6 +21,7 @@ package com.simiacryptus.notebook;
 
 import com.simiacryptus.ref.wrappers.RefConsumer;
 import com.simiacryptus.ref.wrappers.RefString;
+import com.simiacryptus.util.ReportingUtil;
 import com.simiacryptus.util.Util;
 import com.simiacryptus.util.io.AsyncOutputStream;
 import com.simiacryptus.util.io.TeeOutputStream;
@@ -113,13 +114,12 @@ public class StreamNanoHTTPD extends FileNanoHTTPD {
   @Nonnull
   public StreamNanoHTTPD init() throws IOException {
     super.init();
-    if (!GraphicsEnvironment.isHeadless() && Desktop.isDesktopSupported()
-        && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+    if (ReportingUtil.canBrowse())
       new Thread(() -> {
         try {
           Thread.sleep(100);
           if (isAutobrowse())
-            Desktop.getDesktop().browse(gatewayUri);
+            ReportingUtil.browse(gatewayUri);
         } catch (@Nonnull final Exception e) {
           e.printStackTrace();
         }
