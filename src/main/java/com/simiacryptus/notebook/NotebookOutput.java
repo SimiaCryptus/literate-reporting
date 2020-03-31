@@ -27,6 +27,7 @@ import com.simiacryptus.lang.UncheckedSupplier;
 import com.simiacryptus.ref.lang.RefAware;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.util.CodeUtil;
+import com.simiacryptus.util.JsonUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -156,16 +157,15 @@ public interface NotebookOutput extends Closeable {
   }
 
   @Nonnull
-  File svgFile(@Nonnull String rawImage, File file);
+  File svgFile(@Nonnull String rawImage);
 
   @Nonnull
-  File pngFile(@Nonnull BufferedImage rawImage, File file);
+  File pngFile(@Nonnull BufferedImage rawImage);
 
   @Nonnull
   String jpg(@Nullable BufferedImage rawImage, CharSequence caption);
 
-  @Nonnull
-  File jpgFile(@Nonnull BufferedImage rawImage, File file);
+  File jpgFile(@Nonnull BufferedImage rawImage);
 
   <T> T eval(String title, @RefAware UncheckedSupplier<T> fn, int maxLog, StackTraceElement callingFrame);
 
@@ -175,6 +175,10 @@ public interface NotebookOutput extends Closeable {
 
   @Nonnull
   OutputStream file(CharSequence name);
+
+  default void json(Object obj) {
+    out("\n\n```json\n  " + JsonUtil.toJson(obj).toString().replaceAll("\n","\n  ") + "\n```\n\n");
+  }
 
   @Nonnull
   String file(CharSequence data, CharSequence caption);

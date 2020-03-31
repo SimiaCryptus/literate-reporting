@@ -122,11 +122,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     this(reportFile, browse, displayName, id.toString(), id, httpPort);
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, @Nonnull String displayName, @Nonnull String fileName, UUID id, final int httpPort) {
+  public MarkdownNotebookOutput(@Nonnull final File root, boolean browse, @Nonnull String displayName, @Nonnull String fileName, UUID id, final int httpPort) {
     this.setDisplayName(displayName);
     this.fileName = fileName;
-    root = reportFile.getAbsoluteFile();
-    root.mkdirs();
+    this.root = root.getAbsoluteFile();
+    this.root.mkdirs();
     setCurrentHome();
     setArchiveHome(null);
     this.id = id;
@@ -135,7 +135,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
-    FileNanoHTTPD httpd = httpPort <= 0 ? null : new FileNanoHTTPD(root, httpPort);
+    FileNanoHTTPD httpd = httpPort <= 0 ? null : new FileNanoHTTPD(this.root, httpPort);
     if (null != httpd)
       httpd.addGET("", "text/html", out -> {
         try {
@@ -168,7 +168,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
         RefSystem.exit(0);
       });
-    logger.info(RefString.format("Serving %s from %s at http://localhost:%d", getDisplayName(), root.getAbsoluteFile(), httpPort));
+    logger.info(RefString.format("Serving %s from %s at http://localhost:%d", getDisplayName(), this.root.getAbsoluteFile(), httpPort));
     if (null != httpd) {
       try {
         httpd.init();
@@ -303,11 +303,15 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public static CharSequence getExceptionString(Throwable e) {
-    if (e instanceof RuntimeException && e.getCause() != null && e.getCause() != e)
-      return getExceptionString(e.getCause());
-    if (e.getCause() != null && e.getCause() != e)
-      return e.getClass().getSimpleName() + " / " + getExceptionString(e.getCause());
-    return e.getClass().getSimpleName();
+    if (e.getCause() != null && e.getCause() != e) {
+      if (e instanceof RuntimeException) {
+        return getExceptionString(e.getCause());
+      } else {
+        return e.getClass().getSimpleName() + " / " + getExceptionString(e.getCause());
+      }
+    } else {
+      return e.getClass().getSimpleName();
+    }
   }
 
   @Nonnull
@@ -511,7 +515,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     @Nonnull
     CharSequence msg = format(fmt, args);
     toc.add(RefString.format("1. [%s](#%s)", msg, anchorId));
-    out("# " + anchor(anchorId) + msg);
+    out("# " + anchor(anchorId) + msg + "\n");
   }
 
   @Override
@@ -520,7 +524,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     @Nonnull
     CharSequence msg = format(fmt, args);
     toc.add(RefString.format("   1. [%s](#%s)", msg, anchorId));
-    out("## " + anchor(anchorId) + fmt, args);
+    out("## " + anchor(anchorId) + fmt + "\n", args);
   }
 
   @Override
@@ -529,7 +533,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     @Nonnull
     CharSequence msg = format(fmt, args);
     toc.add(RefString.format("      1. [%s](#%s)", msg, anchorId));
-    out("### " + anchor(anchorId) + fmt, args);
+    out("### " + anchor(anchorId) + fmt + "\n", args);
   }
 
   @Nonnull
@@ -537,8 +541,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String png(@Nullable final BufferedImage rawImage, final CharSequence caption) {
     if (null == rawImage)
       return "";
-    @Nonnull final File file = pngFile(rawImage,
-        new File(getResourceDir(), getFileName() + "." + ++MarkdownNotebookOutput.imageNumber + ".png"));
+    @Nonnull final File file = pngFile(rawImage);
     return imageMarkdown(caption, file);
   }
 
@@ -547,14 +550,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String svg(@Nullable final String rawImage, final CharSequence caption) {
     if (null == rawImage)
       return "";
-    @Nonnull final File file = svgFile(rawImage,
-        new File(getResourceDir(), getFileName() + "." + ++MarkdownNotebookOutput.imageNumber + ".svg"));
+    @Nonnull final File file = svgFile(rawImage);
     return anchor(anchorId()) + "[" + caption + "](etc/" + file.getName() + ")";
   }
 
   @Override
   @Nonnull
-  public File svgFile(@Nonnull final String rawImage, @Nonnull final File file) {
+  public File svgFile(@Nonnull final String rawImage) {
+    File file = new File(getResourceDir(), getFileName() + "." + ++MarkdownNotebookOutput.imageNumber + ".svg");
     try {
       FileUtils.write(file, rawImage, "UTF-8");
     } catch (IOException e) {
@@ -565,7 +568,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   @Nonnull
-  public File pngFile(@Nonnull final BufferedImage rawImage, @Nonnull final File file) {
+  public File pngFile(@Nonnull final BufferedImage rawImage) {
+    File file = new File(getResourceDir(), getFileName() + "." + ++MarkdownNotebookOutput.imageNumber + ".png");
     @Nullable final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
     try {
       if (stdImage != rawImage) {
@@ -583,10 +587,16 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   @Nonnull
   @Override
   public String jpg(@Nullable final BufferedImage rawImage, final CharSequence caption) {
-    if (null == rawImage)
-      return "";
-    @Nonnull final File file = jpgFile(rawImage, new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg"));
-    return imageMarkdown(caption, file);
+    if (null == rawImage) return "";
+    return imageMarkdown(caption, jpgFile(rawImage));
+  }
+
+  @NotNull
+  @Override
+  public File jpgFile(@NotNull BufferedImage rawImage) {
+    File jpgFile = new File(getResourceDir(), UUID.randomUUID().toString() + ".jpg");
+    jpgFile(rawImage, jpgFile);
+    return jpgFile;
   }
 
   @Nonnull
@@ -594,9 +604,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return anchor(anchorId()) + "![" + caption + "](etc/" + file.getName() + ")";
   }
 
-  @Override
-  @Nonnull
-  public File jpgFile(@Nonnull final BufferedImage rawImage, @Nonnull final File file) {
+  public void jpgFile(@Nonnull final BufferedImage rawImage, @Nonnull final File file) {
     @Nullable final BufferedImage stdImage = Util.maximumSize(rawImage, getMaxImageSize());
     if (stdImage != rawImage) {
       try {
@@ -615,7 +623,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       logger.warn(RefString.format("Error processing image with dims (%d,%d)", stdImage.getWidth(), stdImage.getHeight()),
           e);
     }
-    return file;
   }
 
   @Nullable
@@ -899,13 +906,23 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         .indentSize(2)
         .softBreak("\n")
         .build();
-    String txt = toString(toc) + "\n\n" + toString(markdownData);
+    String txt;
+    if(true) {
+      txt = String.format("%s\n\n%s",
+          toString(toc),
+          toString(markdownData));
+    } else {
+      txt = String.format("???+ info \"%s\"\n    %s\n\n%s",
+          getDisplayName(),
+          toString(toc).replaceAll("\n","\n    "),
+          toString(markdownData));
+    }
     FileUtils.write(getReportFile("md"), txt, "UTF-8");
     File htmlFile = getReportFile("html");
     FileUtils.write(new File(getRoot(), "admonition.css"), AdmonitionExtension.getDefaultCSS(), "UTF-8");
     FileUtils.write(new File(getRoot(), "admonition.js"), AdmonitionExtension.getDefaultScript(), "UTF-8");
     String bodyInnerHtml = renderer.render(parser.parse(txt));
-    String headerInnerHtml = "" +
+    String headerInnerHtml = "<title>"+getDisplayName()+"</title>" +
         // Mermaid:
         "<script src=\"https://cdn.jsdelivr.net/npm/mermaid@8.4.0/dist/mermaid.min.js\"></script>\n" +
         // Katex:

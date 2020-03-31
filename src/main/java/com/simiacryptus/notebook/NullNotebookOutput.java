@@ -107,13 +107,13 @@ public class NullNotebookOutput implements NotebookOutput {
 
   @Nonnull
   @Override
-  public File svgFile(@Nonnull String rawImage, File file) {
+  public File svgFile(@Nonnull String rawImage) {
     return null;
   }
 
   @Nonnull
   @Override
-  public File pngFile(@Nonnull final BufferedImage rawImage, final File file) {
+  public File pngFile(@Nonnull final BufferedImage rawImage) {
     return null;
   }
 
@@ -123,9 +123,8 @@ public class NullNotebookOutput implements NotebookOutput {
     return "";
   }
 
-  @Nonnull
   @Override
-  public File jpgFile(@Nonnull final BufferedImage rawImage, final File file) {
+  public File jpgFile(@Nonnull BufferedImage rawImage) {
     return null;
   }
 

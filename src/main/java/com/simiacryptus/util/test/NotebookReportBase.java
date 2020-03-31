@@ -19,6 +19,7 @@
 
 package com.simiacryptus.util.test;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.TestAbortedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +45,10 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @ExtendWith(NotebookReportBase.ReportingTestExtension.class)
 public abstract class NotebookReportBase {
@@ -120,13 +125,14 @@ public abstract class NotebookReportBase {
   @BeforeEach
   void initializeLog(TestInfo testInfo) {
     Class<?> targetClass = getTargetClass();
+    String timeId = new SimpleDateFormat("yyyyMMddmmss").format(new Date());
     @Nonnull
     File reportRoot = new File(Util.mkString(File.separator,
         TestSettings.INSTANCE.testRepo,
         toPathString(targetClass),
         testInfo.getTestClass().map(c1 -> c1.getSimpleName()).orElse(""),
         testInfo.getTestMethod().get().getName(),
-        new SimpleDateFormat("yyyyMMddmmss").format(new Date())
+        timeId
     ));
     reportRoot.mkdirs();
     logger.info(String.format("Output Location: %s", reportRoot.getAbsoluteFile()));
@@ -134,6 +140,10 @@ public abstract class NotebookReportBase {
     log = new MarkdownNotebookOutput(
         reportRoot, true, testInfo.getTestMethod().get().getName()
     );
+    String displayName = testInfo.getDisplayName();
+    if(displayName != null && !displayName.isEmpty()) {
+      log.setDisplayName(displayName);
+    }
     reports.put(log.getReportFile("html"), log.getDisplayName());
     log.setEnableZip(false);
     URI testArchive = TestSettings.INSTANCE.testArchive;
@@ -143,7 +153,7 @@ public abstract class NotebookReportBase {
               toPathString(targetClass, '/'),
               testInfo.getTestClass().map(c -> c.getSimpleName()).orElse(""),
               testInfo.getTestMethod().get().getName(),
-              new SimpleDateFormat("yyyyMMddmmss").format(new Date())
+              timeId
           )
       ));
     }
@@ -195,12 +205,21 @@ public abstract class NotebookReportBase {
       log.setMetadata("performance", perfData);
       Optional<Throwable> executionException = context.getExecutionException();
       if (executionException.isPresent()) {
-        String string = MarkdownNotebookOutput.getExceptionString(executionException.get()).toString();
-        string = string.replaceAll("\n", "<br/>").trim();
-        log.setMetadata("result", string);
+        Throwable throwable = executionException.get();
+        if(throwable instanceof TestAbortedException) {
+          log.setArchiveHome(null);
+        } else {
+          String string = MarkdownNotebookOutput.getExceptionString(throwable).toString();
+          string = string.replaceAll("\n", "<br/>").trim();
+          log.setMetadata("result", string);
+        }
       } else {
         log.setMetadata("result", "OK");
       }
+      log.out(//false, NotebookOutput.AdmonitionStyle.Info, "Metadata",
+          "\n\n```json\n  " +
+              new GsonBuilder().setPrettyPrinting().create().toJson(log.getMetadata()).replaceAll("\n", "\n  ") +
+              "\n```\n\n");
       store.remove(REFLEAK_MONITOR, AutoCloseable.class).close();
     }
 

@@ -27,6 +27,7 @@ import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
 import com.simiacryptus.util.test.NotebookReportBase;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nonnull;
@@ -46,11 +47,11 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
   }
 
   @Test
+  @DisplayName("Noteboook Example")
   public void test() {
     MarkdownNotebookOutput log = getLog();
-    log.h1("Notebook Example");
 
-    log.h2("Code");
+    log.h1("Code");
     log.eval(()->{
       System.out.println("This is some output");
       return "This is a STRING return value";
@@ -72,12 +73,12 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
       });
     });
 
-    log.h2("Math");
+    log.h1("Math");
     log.p("Output Message");
     log.p("Here is some math: $`a^2+b^2=c^2`$");
     log.math("a^2+b^2=c^2");
 
-    log.h2("Diagrams");
+    log.h1("Diagrams");
     // See http://mermaid-js.github.io/mermaid/#/examples
     log.mermaid(
         "graph TD;\n" +
@@ -96,7 +97,7 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
             "    Bob-->Alice: Checking with John...\n" +
             "    Alice->John: Yes... John, how are you?");
 
-    log.h2("Boxes");
+    log.h1("Boxes");
     // See https://github.com/vsch/flexmark-java/wiki/Admonition-Extension
     log.admonition(AdmonitionStyle.Help, "Flexmark Admonition Extension",
         "[https://github.com/vsch/flexmark-java/wiki/Admonition-Extension](https://github.com/vsch/flexmark-java/wiki/Admonition-Extension)");
