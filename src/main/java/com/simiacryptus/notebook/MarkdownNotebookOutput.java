@@ -73,9 +73,8 @@ import java.util.zip.ZipOutputStream;
 
 public class MarkdownNotebookOutput implements NotebookOutput {
   public static final String ADMONITION_INDENT_DELIMITER = "";//""\u00A0";
-  private static final boolean useAdmonition = false;
-
   public static final Random random = new Random();
+  private static final boolean useAdmonition = false;
   private static final Logger logger = LoggerFactory.getLogger(MarkdownNotebookOutput.class);
   @Nonnull
   public static RefMap<String, Object> uploadCache = new RefHashMap<>();
@@ -93,6 +92,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   private final FileNanoHTTPD httpd;
   private final ArrayList<Runnable> onWriteHandlers = new ArrayList<>();
   private final String fileName;
+  private final HashSet<String> headers = new HashSet<>();
   @Nonnull
   public List<CharSequence> toc = new ArrayList<>();
   int anchor = 0;
@@ -248,6 +248,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return MAX_OUTPUT;
   }
 
+  @Override
+  @NotNull
+  public JsonObject getMetadata() {
+    JsonObject jsonObject = new JsonObject();
+    metadata.forEach((key, value) -> jsonObject.add(key.toString(), value));
+    return jsonObject;
+  }
+
   public File getMetadataLocation() {
     return metadataLocation;
   }
@@ -360,9 +368,16 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     });
   }
 
+  @Override
+  public void addHeaderHtml(String html) {
+    headers.add(html);
+  }
+
   @Nonnull
   public File getReportFile(final String extension) {
-    return new File(getRoot(), getFileName() + "." + extension);
+    File file = new File(getRoot(), getFileName() + "." + extension);
+    file.getParentFile().mkdirs();
+    return file;
   }
 
   @Override
@@ -453,7 +468,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         ))
         .toImmutable();
     JsonObject metadata = getMetadata();
-    if(!metadata.keySet().isEmpty()) {
+    if (!metadata.keySet().isEmpty()) {
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
       FileUtils.write(getReportFile("metadata.json"), gson.toJson(metadata), "UTF-8");
     }
@@ -663,7 +678,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       String perfString = String.format(
           " executed in %.2f seconds (%.3f gc): ",
           obj.seconds(), obj.gc_seconds());
-      if(useAdmonition) {
+      if (useAdmonition) {
         out(codeTitle);
         collapsable(false, AdmonitionStyle.Abstract,
             codeID + perfString,
@@ -745,22 +760,22 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         escape = escape1;
       }
       if (escape.equals("txt")) {
-        if(useAdmonition) {
+        if (useAdmonition) {
           admonition(AdmonitionStyle.Success, "Returning", "```\n" + escape(str, maxLog) + "\n```");
         } else {
           out("Returns\n```\n" + escape(str, maxLog) + "\n```");
         }
       } else if (escape.equals("json")) {
-        if(useAdmonition) {
+        if (useAdmonition) {
           admonition(AdmonitionStyle.Success, "Returning", "```json\n" + escape(str, maxLog) + "\n```");
         } else {
           out("Returns\n```json\n" + escape(str, maxLog) + "\n```");
         }
       } else {
-        if(useAdmonition) {
+        if (useAdmonition) {
           admonition(AdmonitionStyle.Success, "Returning", str);
         } else {
-          out("Returns\n\n"+str);
+          out("Returns\n\n" + str);
         }
       }
     }
@@ -785,7 +800,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public CharSequence pathTo(@Nonnull File file) {
-    return Util.stripPrefix(Util.toString(Util.pathToFile(getRoot(), file)), "/");
+    return Util.pathTo(getRoot(), file);
   }
 
   @Override
@@ -818,8 +833,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, @Nonnull String name) {
-    return subreport(name, fn, this);
+  public <T> T subreport(@Nonnull String displayName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
+    return subreport(displayName, fn, this);
+  }
+
+  @Override
+  public <T> T subreport(@Nonnull String displayName, String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
+    return subreport(displayName, fileName, fn, this);
   }
 
   @Nonnull
@@ -843,14 +863,29 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     return this;
   }
 
-  protected <T> T subreport(@Nonnull String reportName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
+  public @NotNull String escape(String str, int maxLog) {
+    return escape(str, maxLog, "    " + ADMONITION_INDENT_DELIMITER);
+  }
+
+  @NotNull
+  public String escape(String str, int maxLog, String prefix) {
+    return prefix + summarize(str, maxLog)
+        .replaceAll("\n", "\n" + prefix)
+        .replaceAll(prefix + "~", "");
+  }
+
+  protected <T> T subreport(@Nonnull String displayName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
+    return subreport(displayName, displayName, fn, parent);
+  }
+
+  protected <T> T subreport(@Nonnull String displayName, @Nonnull String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
-      MarkdownNotebookOutput subreport = new MarkdownSubreport(root, parent, reportName);
+      MarkdownNotebookOutput subreport = new MarkdownSubreport(root, parent, displayName, fileName);
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
-        this.p(this.link(subreport.getReportFile("html"), "Subreport: " + reportName));
+        this.p(this.link(subreport.getReportFile("html"), "Subreport: " + displayName));
         getHttpd().addGET(subreport.getFileName() + ".html", "text/html", out -> {
           try {
             subreport.write();
@@ -871,19 +906,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       } finally {
         subreport.close();
       }
-    } catch (FileNotFoundException e) {
-      throw Util.throwException(e);
     } finally {
       RefUtil.freeRef(fn);
     }
-  }
-
-  @Override
-  @NotNull
-  public JsonObject getMetadata() {
-    JsonObject jsonObject = new JsonObject();
-    metadata.forEach((key, value) -> jsonObject.add(key.toString(), value));
-    return jsonObject;
   }
 
   @Nonnull
@@ -907,14 +932,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         .softBreak("\n")
         .build();
     String txt;
-    if(true) {
+    if (true) {
       txt = String.format("%s\n\n%s",
           toString(toc),
           toString(markdownData));
     } else {
       txt = String.format("???+ info \"%s\"\n    %s\n\n%s",
           getDisplayName(),
-          toString(toc).replaceAll("\n","\n    "),
+          toString(toc).replaceAll("\n", "\n    "),
           toString(markdownData));
     }
     FileUtils.write(getReportFile("md"), txt, "UTF-8");
@@ -922,7 +947,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     FileUtils.write(new File(getRoot(), "admonition.css"), AdmonitionExtension.getDefaultCSS(), "UTF-8");
     FileUtils.write(new File(getRoot(), "admonition.js"), AdmonitionExtension.getDefaultScript(), "UTF-8");
     String bodyInnerHtml = renderer.render(parser.parse(txt));
-    String headerInnerHtml = "<title>"+getDisplayName()+"</title>" +
+    String headerInnerHtml = "<title>" + getDisplayName() + "</title>" +
         // Mermaid:
         "<script src=\"https://cdn.jsdelivr.net/npm/mermaid@8.4.0/dist/mermaid.min.js\"></script>\n" +
         // Katex:
@@ -933,7 +958,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         "<link href=\"https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css\" rel=\"stylesheet\" />\n" +
         // Admonition:
         "<link href=\"admonition.css\" rel=\"stylesheet\" />\n" +
-        "";
+        "" + headers.stream().reduce((a, b) -> a + "\n" + b).orElse("");
     String bodyPrefix = "" +
         // Prism:
         "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/prism.min.js\"></script>\n" +
@@ -949,17 +974,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     }
     logger.info("Wrote " + htmlFile); //     log.info("Wrote " + htmlFile); //
     return htmlFile;
-  }
-
-  public @NotNull String escape(String str, int maxLog) {
-    return escape(str, maxLog, "    " + ADMONITION_INDENT_DELIMITER);
-  }
-
-  @NotNull
-  public String escape(String str, int maxLog, String prefix) {
-    return prefix + summarize(str, maxLog)
-        .replaceAll("\n", "\n" + prefix)
-        .replaceAll(prefix + "~", "");
   }
 
 }

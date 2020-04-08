@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Function;
@@ -33,8 +32,20 @@ import java.util.function.Function;
 class MarkdownSubreport extends MarkdownNotebookOutput {
   private final MarkdownNotebookOutput parent;
 
-  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String reportName) throws FileNotFoundException {
-    super(subreportFile, false, UUID.randomUUID(), reportName, -1);
+  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String displayName) {
+    this(subreportFile, parent, displayName, UUID.randomUUID());
+  }
+
+  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String displayName, UUID id) {
+    this(subreportFile, parent, displayName, id, id.toString());
+  }
+
+  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String displayName, String fileName) {
+    this(subreportFile, parent, displayName, UUID.randomUUID(), fileName);
+  }
+
+  public MarkdownSubreport(@Nonnull File subreportFile, MarkdownNotebookOutput parent, @Nonnull String displayName, UUID id, String fileName) {
+    super(subreportFile, false, displayName, fileName, id, -1);
     this.parent = parent;
     setEnableZip(false);
   }
@@ -45,10 +56,25 @@ class MarkdownSubreport extends MarkdownNotebookOutput {
   }
 
   @Override
-  public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, String name) {
-    assert null != name;
-    assert !name.isEmpty();
-    return subreport(name, fn, parent);
+  public @NotNull JsonObject getMetadata() {
+    // Subreports never have metadata
+    return new JsonObject();
+  }
+
+  @Override
+  public <T> T subreport(String displayName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
+    assert null != displayName;
+    assert !displayName.isEmpty();
+    return subreport(displayName, fn, parent);
+  }
+
+  @Override
+  public <T> T subreport(String displayName, String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
+    assert null != displayName;
+    assert !displayName.isEmpty();
+    assert null != fileName;
+    assert !fileName.isEmpty();
+    return subreport(displayName, fileName, fn, parent);
   }
 
   @Override
@@ -60,11 +86,5 @@ class MarkdownSubreport extends MarkdownNotebookOutput {
   public void write() throws IOException {
     super.write();
     //parent.write();
-  }
-
-  @Override
-  public @NotNull JsonObject getMetadata() {
-    // Subreports never have metadata
-    return new JsonObject();
   }
 }

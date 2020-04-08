@@ -54,11 +54,6 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public @NotNull JsonObject getMetadata() {
-    return new JsonObject();
-  }
-
-  @Override
   public String getDisplayName() {
     return name;
   }
@@ -89,6 +84,11 @@ public class NullNotebookOutput implements NotebookOutput {
     return 0;
   }
 
+  @Override
+  public @NotNull JsonObject getMetadata() {
+    return new JsonObject();
+  }
+
   @Nonnull
   @Override
   public File getResourceDir() {
@@ -99,6 +99,11 @@ public class NullNotebookOutput implements NotebookOutput {
   @Override
   public File getRoot() {
     return new File(".");
+  }
+
+  @Override
+  public void addHeaderHtml(String html) {
+
   }
 
   @Override
@@ -217,12 +222,17 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public <T> T subreport(@Nonnull @RefAware Function<NotebookOutput, T> fn, String name) {
+  public <T> T subreport(String displayName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
     try {
-      return fn.apply(new NullNotebookOutput(name));
+      return fn.apply(new NullNotebookOutput(displayName));
     } finally {
       RefUtil.freeRef(fn);
     }
+  }
+
+  @Override
+  public <T> T subreport(String displayName, String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn) {
+    return subreport(displayName, fn);
   }
 
   @Nonnull

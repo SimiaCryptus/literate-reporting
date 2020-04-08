@@ -53,6 +53,7 @@ import java.util.Optional;
 @ExtendWith(NotebookReportBase.ReportingTestExtension.class)
 public abstract class NotebookReportBase {
 
+  public static final Map<File, String> reports = new HashMap<>();
   protected static final Logger logger = LoggerFactory.getLogger(NotebookReportBase.class);
 
   static {
@@ -60,7 +61,6 @@ public abstract class NotebookReportBase {
   }
 
   private MarkdownNotebookOutput log;
-  public static final Map<File, String> reports = new HashMap<>();
 
   protected MarkdownNotebookOutput getLog() {
     return log;
@@ -80,11 +80,11 @@ public abstract class NotebookReportBase {
     String javadoc = CodeUtil.getJavadoc(networkClass);
     assert javadoc != null;
     JsonObject jsonObject = new JsonObject();
-    jsonObject.addProperty("simpleName",networkClass.getSimpleName());
-    jsonObject.addProperty("canonicalName",networkClass.getCanonicalName());
+    jsonObject.addProperty("simpleName", networkClass.getSimpleName());
+    jsonObject.addProperty("canonicalName", networkClass.getCanonicalName());
     String filename = CodeUtil.filename(networkClass);
-    if(null != filename) jsonObject.addProperty("link",CodeUtil.codeUrl(filename).toString());
-    jsonObject.addProperty("javaDoc",javadoc);
+    if (null != filename) jsonObject.addProperty("link", CodeUtil.codeUrl(filename).toString());
+    jsonObject.addProperty("javaDoc", javadoc);
     log.setMetadata(prefix, jsonObject);
     return javadoc;
   }
@@ -141,7 +141,7 @@ public abstract class NotebookReportBase {
         reportRoot, true, testInfo.getTestMethod().get().getName()
     );
     String displayName = testInfo.getDisplayName();
-    if(displayName != null && !displayName.isEmpty()) {
+    if (displayName != null && !displayName.isEmpty()) {
       log.setDisplayName(displayName);
     }
     reports.put(log.getReportFile("html"), log.getDisplayName());
@@ -177,6 +177,10 @@ public abstract class NotebookReportBase {
       return context.getStore(ExtensionContext.Namespace.create(ReportingTestExtension.class, context.getRequiredTestMethod()));
     }
 
+    public static long gcTime() {
+      return ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime()).sum();
+    }
+
     @Override
     public void beforeTestExecution(ExtensionContext context) {
       ExtensionContext.Store store = getStore(context);
@@ -184,10 +188,6 @@ public abstract class NotebookReportBase {
       store.put(START_GC_TIME, gcTime());
       NotebookReportBase reportingTest = (NotebookReportBase) context.getTestInstance().get();
       store.put(REFLEAK_MONITOR, CodeUtil.refLeakMonitor(reportingTest.getLog()));
-    }
-
-    public static long gcTime() {
-      return ManagementFactory.getGarbageCollectorMXBeans().stream().mapToLong(x -> x.getCollectionTime()).sum();
     }
 
     @Override
@@ -206,7 +206,7 @@ public abstract class NotebookReportBase {
       Optional<Throwable> executionException = context.getExecutionException();
       if (executionException.isPresent()) {
         Throwable throwable = executionException.get();
-        if(throwable instanceof TestAbortedException) {
+        if (throwable instanceof TestAbortedException) {
           log.setArchiveHome(null);
         } else {
           String string = MarkdownNotebookOutput.getExceptionString(throwable).toString();

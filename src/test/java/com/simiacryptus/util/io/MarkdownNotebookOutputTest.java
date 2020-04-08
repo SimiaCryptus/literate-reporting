@@ -52,11 +52,11 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
     MarkdownNotebookOutput log = getLog();
 
     log.h1("Code");
-    log.eval(()->{
+    log.eval(() -> {
       System.out.println("This is some output");
       return "This is a STRING return value";
     });
-    log.eval("JSON Test", ()->{
+    log.eval("JSON Test", () -> {
       HashMap<String, Object> map = new HashMap<>();
       {
         map.put("foo", "bar");
@@ -64,8 +64,8 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
       }
       return map;
     });
-    Assertions.assertThrows(RuntimeException.class, ()->{
-      log.eval(()->{
+    Assertions.assertThrows(RuntimeException.class, () -> {
+      log.eval(() -> {
         for (int i = 0; i < 10000; i++) {
           System.out.println("Very, very long output");
         }
@@ -126,17 +126,18 @@ public class MarkdownNotebookOutputTest extends NotebookReportBase {
   public void testSubreport() {
     NotebookOutput log = getLog();
     RefIntStream.range(0, 10).forEach(i -> {
-      log.subreport(subreport -> {
-        RefIntStream.range(0, 10).forEach(j -> {
-          try {
-            Thread.sleep(100);
-            subreport.p(RefString.format("Iteration: %d / %d", i, j));
-          } catch (InterruptedException e) {
-            throw Util.throwException(e);
-          }
-        });
-        return null;
-      }, String.format("%s (Iteration %d)", log.getDisplayName(), i));
+      log.subreport(String.format("%s (Iteration %d)", log.getDisplayName(), i),
+          subreport -> {
+            RefIntStream.range(0, 10).forEach(j -> {
+              try {
+                Thread.sleep(100);
+                subreport.p(RefString.format("Iteration: %d / %d", i, j));
+              } catch (InterruptedException e) {
+                throw Util.throwException(e);
+              }
+            });
+            return null;
+          });
     });
   }
 

@@ -45,8 +45,6 @@ public interface NotebookOutput extends Closeable {
   @javax.annotation.Nullable
   URI getArchiveHome();
 
-  @NotNull JsonObject getMetadata();
-
   @Nonnull
   NotebookOutput setArchiveHome(URI archiveHome);
 
@@ -64,45 +62,28 @@ public interface NotebookOutput extends Closeable {
 
   int getMaxOutSize();
 
+  @NotNull JsonObject getMetadata();
+
   @Nonnull
   File getResourceDir();
 
   @Nonnull
   File getRoot();
 
+  void addHeaderHtml(String html);
+
   default void math(String mathExpr) {
     out("```math\n" + mathExpr + "\n```\n");
   }
 
   default void mermaid(AdmonitionStyle qualifier, String title, String content) {
-    collapsable(true, qualifier, title,"```mermaid\n" + content + "\n```\n");
+    collapsable(true, qualifier, title, "```mermaid\n" + content + "\n```\n");
     //String indent = "    ";
     //out("!!! " + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
   }
 
   default void mermaid(String src) {
     out("```mermaid\n" + src + "\n```\n");
-  }
-
-  enum AdmonitionStyle {
-    Abstract("abstract"),
-    Bug("bug"),
-    Error("error"),
-    Example("example"),
-    Failure("failure"),
-    Help("help"),
-    Info("info"),
-    Note("note"),
-    Quote("quote"),
-    Success("success"),
-    Tip("tip"),
-    Warning("warning");
-
-    public final String id;
-
-    AdmonitionStyle(String id) {
-      this.id = id;
-    }
   }
 
   default void admonition(AdmonitionStyle qualifier, String title, String content) {
@@ -112,7 +93,7 @@ public interface NotebookOutput extends Closeable {
 
   default void collapsable(boolean initiallyOpen, AdmonitionStyle qualifier, String title, String content) {
     String indent = "    ";
-    out((initiallyOpen ?"???+ ":"??? ") + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
+    out((initiallyOpen ? "???+ " : "??? ") + qualifier.id + " \"" + title + "\"\n" + indent + content.replaceAll("\n", "\n" + indent) + "\n");
   }
 
   @Nonnull
@@ -177,7 +158,7 @@ public interface NotebookOutput extends Closeable {
   OutputStream file(CharSequence name);
 
   default void json(Object obj) {
-    out("\n\n```json\n  " + JsonUtil.toJson(obj).toString().replaceAll("\n","\n  ") + "\n```\n\n");
+    out("\n\n```json\n  " + JsonUtil.toJson(obj).toString().replaceAll("\n", "\n  ") + "\n```\n\n");
   }
 
   @Nonnull
@@ -235,10 +216,29 @@ public interface NotebookOutput extends Closeable {
 
   JsonElement getMetadata(CharSequence key);
 
-  <T> T subreport(@RefAware Function<NotebookOutput, T> fn, String name);
+  <T> T subreport(String displayName, @RefAware Function<NotebookOutput, T> fn);
 
-  default <T> T subreport(String name, @RefAware Function<NotebookOutput, T> fn) {
-    return subreport(fn, name);
+  <T> T subreport(String displayName, String fileName, @RefAware Function<NotebookOutput, T> fn);
+
+  enum AdmonitionStyle {
+    Abstract("abstract"),
+    Bug("bug"),
+    Error("error"),
+    Example("example"),
+    Failure("failure"),
+    Help("help"),
+    Info("info"),
+    Note("note"),
+    Quote("quote"),
+    Success("success"),
+    Tip("tip"),
+    Warning("warning");
+
+    public final String id;
+
+    AdmonitionStyle(String id) {
+      this.id = id;
+    }
   }
 
 }

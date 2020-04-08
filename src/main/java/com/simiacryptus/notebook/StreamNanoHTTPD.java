@@ -27,7 +27,6 @@ import com.simiacryptus.util.io.AsyncOutputStream;
 import com.simiacryptus.util.io.TeeOutputStream;
 
 import javax.annotation.Nonnull;
-import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;

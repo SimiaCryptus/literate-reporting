@@ -23,7 +23,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import com.simiacryptus.notebook.NotebookOutput;
-import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.lang.ReferenceCountingBase;
 import com.simiacryptus.ref.wrappers.RefConsumer;
 import com.simiacryptus.ref.wrappers.RefFunction;
@@ -58,14 +57,13 @@ import java.util.stream.IntStream;
 
 public class CodeUtil {
 
-  private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
-
-  private static String[] CODE_EXTENSIONS = {"scala", "java"};
-  private static String[] CODE_ROOTS = {"src/main/java", "src/test/java", "src/main/scala", "src/test/scala"};
   public static final String CLASS_SOURCE_INFO_RS = "META-INF/CodeUtil/classSourceInfo.json";
+  private static final Logger logger = LoggerFactory.getLogger(CodeUtil.class);
   @Nonnull
   public static File projectRoot = new File(
       System.getProperty("codeRoot", getDefaultProjectRoot()));
+  private static String[] CODE_EXTENSIONS = {"scala", "java"};
+  private static String[] CODE_ROOTS = {"src/main/java", "src/test/java", "src/main/scala", "src/test/scala"};
   public static Map<String, String> classSourceInfo = getClassSourceInfo();
 
   public static Map<String, String> getClassSourceInfo() {
@@ -76,6 +74,14 @@ public class CodeUtil {
     return map;
   }
 
+  @Nonnull
+  private static String getDefaultProjectRoot() {
+    if (new File("src").exists())
+      return "../..";
+    else
+      return ".";
+  }
+
   @NotNull
   public static Map<String, String> loadClassSourceInfo() {
     Map<String, String> map = new HashMap<>();
@@ -83,13 +89,13 @@ public class CodeUtil {
         .stream()
         .map(File::getAbsoluteFile)
         .distinct()
-        .collect(Collectors.groupingBy(x->gitRoot(x).getAbsoluteFile()))
-        .forEach((root,files) -> {
+        .collect(Collectors.groupingBy(x -> gitRoot(x).getAbsoluteFile()))
+        .forEach((root, files) -> {
           try {
             URI origin = gitOrigin(root.getCanonicalFile());
             for (File sourceRoot : findFiles(root, CODE_ROOTS)) {
               for (File file : files) {
-                if(file.getCanonicalPath().startsWith(sourceRoot.getCanonicalPath())) {
+                if (file.getCanonicalPath().startsWith(sourceRoot.getCanonicalPath())) {
                   String filePath = relative(sourceRoot, file).toString().replace('\\', '/');
                   String sourcePath = relative(root, sourceRoot).toString().replace('\\', '/');
                   map.put(
@@ -101,7 +107,7 @@ public class CodeUtil {
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
-    });
+        });
     //logger.debug("Class Info: " + JsonUtil.toJson(RefUtil.addRef(map)));
     return map;
   }
@@ -131,14 +137,6 @@ public class CodeUtil {
       }
     }
     return map;
-  }
-
-  @Nonnull
-  private static String getDefaultProjectRoot() {
-    if (new File("src").exists())
-      return "../..";
-    else
-      return ".";
   }
 
   @Nullable
@@ -178,7 +176,7 @@ public class CodeUtil {
   }
 
   public static URI findFile(final String path) {
-    if(null == path) return null;
+    if (null == path) return null;
     URL classpathEntry = ClassLoader.getSystemResource(path);
     if (classpathEntry != null) {
       try {
@@ -325,7 +323,7 @@ public class CodeUtil {
 
   public static LogInterception intercept(@Nonnull NotebookOutput log, String loggerName) {
     AtomicLong counter = new AtomicLong(0);
-    return log.subreport(sublog -> {
+    return log.subreport("Logs for " + loggerName, sublog -> {
       ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(loggerName);
       logger.setLevel(Level.ALL);
       logger.setAdditive(false);
@@ -384,7 +382,7 @@ public class CodeUtil {
           appender.stop();
         }
       };
-    }, "Logs for " + loggerName);
+    });
   }
 
   public static <T> T withRefLeakMonitor(@Nonnull NotebookOutput log, @Nonnull RefFunction<NotebookOutput, T> fn) {
@@ -428,7 +426,7 @@ public class CodeUtil {
   }
 
   public static File gitRoot(File file) {
-    if(!new File(file, ".git").exists()) {
+    if (!new File(file, ".git").exists()) {
       File parentFile = file.getParentFile();
       if (null == parentFile) return null;
       return gitRoot(parentFile);
@@ -438,9 +436,9 @@ public class CodeUtil {
   }
 
   public static URI gitOrigin(File absoluteFile) {
-    if(!new File(absoluteFile, ".git").exists()) {
+    if (!new File(absoluteFile, ".git").exists()) {
       File parentFile = absoluteFile.getParentFile();
-      if(null == parentFile) return null;
+      if (null == parentFile) return null;
       return gitOrigin(parentFile).resolve(absoluteFile.getName() + "/");
     }
     try {
