@@ -692,7 +692,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       }
 
       if (!result.log.isEmpty()) {
-        CharSequence summary = summarize(result.log, maxLog).replaceAll("\n", "\n    ").replaceAll("    ~", "");
+        CharSequence summary = summarize(result.log
+            .replaceAll("\r", "")
+            .replaceAll("\n{2,}", "\n"), maxLog)
+            .replaceAll("\n", "\n    ")
+            .replaceAll("    ~", "");
         collapsable(false, AdmonitionStyle.Quote, "Logging", "```\n    " + summary + "\n```");
       }
 
@@ -869,7 +873,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @NotNull
   public String escape(String str, int maxLog, String prefix) {
-    return prefix + summarize(str, maxLog)
+    return prefix + summarize(str
+        .replaceAll("\r", "")
+        .replaceAll("\n{2,}","\n"), maxLog)
         .replaceAll("\n", "\n" + prefix)
         .replaceAll(prefix + "~", "");
   }
