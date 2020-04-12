@@ -30,7 +30,7 @@
 
     <artifactId>literate-reporting</artifactId>
     <description>Reporting Toolkit for Literate Programming</description>
-    <url>https://simiacryptus.github.io/${github.project}/</url>
+
 
     <properties>
 
