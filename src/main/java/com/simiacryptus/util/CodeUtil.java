@@ -93,16 +93,19 @@ public class CodeUtil {
         .forEach((root, files) -> {
           try {
             URI origin = gitOrigin(root.getCanonicalFile());
-            for (File sourceRoot : findFiles(root, CODE_ROOTS)) {
-              for (File file : files) {
-                if (file.getCanonicalPath().startsWith(sourceRoot.getCanonicalPath())) {
-                  String filePath = relative(sourceRoot, file).toString().replace('\\', '/');
-                  String sourcePath = relative(root, sourceRoot).toString().replace('\\', '/');
-                  map.put(
-                      filePath,
-                      origin.resolve(sourcePath).toString());
+            if(null != origin) {
+              for (File sourceRoot : findFiles(root, CODE_ROOTS)) {
+                for (File file : files) {
+                  if (file.getCanonicalPath().startsWith(sourceRoot.getCanonicalPath())) {
+                    String filePath = relative(sourceRoot, file).toString().replace('\\', '/');
+                    String sourcePath = relative(root, sourceRoot).toString().replace('\\', '/');
+                    URI resolve = origin.resolve(sourcePath);
+                    if(null != resolve) map.put(filePath, resolve.toString());
+                  }
                 }
               }
+            } else {
+              logger.warn("No git origin url for " + root);
             }
           } catch (IOException e) {
             throw new RuntimeException(e);
