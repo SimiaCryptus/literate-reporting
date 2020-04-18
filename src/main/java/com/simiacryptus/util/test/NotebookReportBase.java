@@ -101,17 +101,25 @@ public abstract class NotebookReportBase {
         .replace('$', separatorChar);
   }
 
-  public void printHeader(@Nonnull NotebookOutput log) {
+  public void printHeader(@Nonnull NotebookOutput log, TestInfo testInfo) {
     log.setMetadata("created_on", new JsonPrimitive(System.currentTimeMillis()));
     log.setMetadata("report_type", getReportType().name());
     CharSequence targetDescription = setClassData(log, getTargetClass(), "target");
     if (null != targetDescription && targetDescription.length() > 0) {
       log.p("__Target Description:__ " + targetDescription);
+    } else {
+      log.p("__Target Class:__ " + getTargetClass().getSimpleName());
     }
     CharSequence reportDescription = setClassData(log, getClass(), "report");
     if (null != reportDescription && reportDescription.length() > 0) {
       log.p("__Report Description:__ " + reportDescription);
+    } else {
+      log.p("__Report Class:__ " + getClass().getSimpleName());
     }
+
+    String testName = testInfo.getTestMethod().get().getName();
+    String displayName = testInfo.getDisplayName();
+    log.p("__Test:__ " + displayName + " (via " + testName + ")");
   }
 
   @AfterEach
@@ -161,7 +169,7 @@ public abstract class NotebookReportBase {
     File metadataLocation = new File(TestSettings.INSTANCE.testRepo, "registry");
     metadataLocation.mkdirs();
     log.setMetadataLocation(metadataLocation);
-    printHeader(this.log);
+    printHeader(this.log, testInfo);
   }
 
   public enum ReportType {
