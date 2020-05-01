@@ -93,14 +93,14 @@ public class CodeUtil {
         .forEach((root, files) -> {
           try {
             URI origin = gitOrigin(root.getCanonicalFile());
-            if(null != origin) {
+            if (null != origin) {
               for (File sourceRoot : findFiles(root, CODE_ROOTS)) {
                 for (File file : files) {
                   if (file.getCanonicalPath().startsWith(sourceRoot.getCanonicalPath())) {
                     String filePath = relative(sourceRoot, file).toString().replace('\\', '/');
                     String sourcePath = relative(root, sourceRoot).toString().replace('\\', '/');
                     URI resolve = origin.resolve(sourcePath);
-                    if(null != resolve) map.put(filePath, resolve.toString());
+                    if (null != resolve) map.put(filePath, resolve.toString());
                   }
                 }
               }

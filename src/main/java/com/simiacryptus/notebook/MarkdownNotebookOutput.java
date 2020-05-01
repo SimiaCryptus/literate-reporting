@@ -875,13 +875,13 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   public String escape(String str, int maxLog, String prefix) {
     return prefix + summarize(str
         .replaceAll("\r", "")
-        .replaceAll("\n{2,}","\n"), maxLog)
+        .replaceAll("\n{2,}", "\n"), maxLog)
         .replaceAll("\n", "\n" + prefix)
         .replaceAll(prefix + "~", "");
   }
 
   protected <T> T subreport(@Nonnull String displayName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
-    return subreport(displayName, UUID.randomUUID().toString().replaceAll("-",""), fn, parent);
+    return subreport(displayName, UUID.randomUUID().toString().replaceAll("-", ""), fn, parent);
   }
 
   protected <T> T subreport(@Nonnull String displayName, @Nonnull String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
