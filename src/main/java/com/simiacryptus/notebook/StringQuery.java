@@ -30,7 +30,7 @@ public abstract class StringQuery<T> extends FormQuery<T> {
   @Nonnull
   String formVar = "data";
 
-  public StringQuery(@Nonnull MarkdownNotebookOutput log) {
+  public StringQuery(@Nonnull NotebookOutput log) {
     super(log);
     setSubmitLabel("Submit");
   }
@@ -54,7 +54,7 @@ public abstract class StringQuery<T> extends FormQuery<T> {
 
   public static class SimpleStringQuery extends StringQuery<String> {
 
-    public SimpleStringQuery(@Nonnull MarkdownNotebookOutput log) {
+    public SimpleStringQuery(@Nonnull NotebookOutput log) {
       super(log);
     }
 

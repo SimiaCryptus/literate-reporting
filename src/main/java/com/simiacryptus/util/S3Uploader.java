@@ -29,6 +29,7 @@ import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.test.NotebookReportBase;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,36 +244,8 @@ public class S3Uploader {
     String reportPath = path.resolve(URLEncoder.encode(file.getName(), "UTF-8")).getPath()
         .replaceAll("//", "/").replaceAll("^/", "");
     if (path.getScheme().startsWith("s3")) {
-      logger.info(RefString.format("Uploading file %s to s3 %s/%s", file.getAbsolutePath(), path.getHost(), reportPath));
-      boolean upload;
-      try {
-        ObjectMetadata existingMetadata;
-        if (s3.doesObjectExist(path.getHost(), reportPath))
-          existingMetadata = s3.getObjectMetadata(path.getHost(), reportPath);
-        else
-          existingMetadata = null;
-        if (null != existingMetadata) {
-          if (existingMetadata.getContentLength() != file.length()) {
-            logger.info(RefString.format("Removing outdated file %s/%s", path.getHost(), reportPath));
-            s3.deleteObject(path.getHost(), reportPath);
-            upload = true;
-          } else {
-            logger.info(RefString.format("Existing file %s/%s", path.getHost(), reportPath));
-            upload = false;
-          }
-        } else {
-          logger.info(RefString.format("Not found file %s/%s", path.getHost(), reportPath));
-          upload = true;
-        }
-      } catch (AmazonS3Exception e) {
-        logger.info(RefString.format("Error listing %s/%s", path.getHost(), reportPath), e);
-        upload = true;
-      }
-      if (upload) {
-        s3.putObject(
-            new PutObjectRequest(path.getHost(), reportPath, file).withCannedAcl(CannedAccessControlList.PublicRead));
-      }
-      map.put(file.getAbsoluteFile(), s3.getUrl(path.getHost(), reportPath));
+      String bucket = uploadFile(file, path, s3, reportPath);
+      map.put(file.getAbsoluteFile(), s3.getUrl(bucket, reportPath));
     } else {
       try {
         logger.info(RefString.format("Copy file %s to %s", file.getAbsolutePath(), reportPath));
@@ -281,5 +254,57 @@ public class S3Uploader {
         throw Util.throwException(e);
       }
     }
+  }
+
+  public static String uploadFile(@Nonnull File file, @NotNull URI path, @Nonnull AmazonS3 s3, String reportPath) {
+    String bucket = path.getHost();
+    logger.info(RefString.format("Uploading file %s to s3 %s/%s", file.getAbsolutePath(), bucket, reportPath));
+    boolean upload;
+    try {
+      ObjectMetadata existingMetadata;
+      if (s3.doesObjectExist(bucket, reportPath))
+        existingMetadata = s3.getObjectMetadata(bucket, reportPath);
+      else
+        existingMetadata = null;
+      if (null != existingMetadata) {
+        if (existingMetadata.getContentLength() != file.length()) {
+          logger.info(RefString.format("Removing outdated file %s/%s", bucket, reportPath));
+          s3.deleteObject(bucket, reportPath);
+          upload = true;
+        } else {
+          logger.info(RefString.format("Existing file %s/%s", bucket, reportPath));
+          upload = false;
+        }
+      } else {
+        logger.info(RefString.format("Not found file %s/%s", bucket, reportPath));
+        upload = true;
+      }
+    } catch (AmazonS3Exception e) {
+      logger.info(RefString.format("Error listing %s/%s", bucket, reportPath), e);
+      upload = true;
+    }
+    if (upload) {
+      s3.putObject(
+          new PutObjectRequest(bucket, reportPath, file).withCannedAcl(CannedAccessControlList.PublicRead));
+    }
+    return bucket;
+  }
+
+  public static <T> void upload(byte[] bytes, URI path) throws IOException {
+    File tempFile = File.createTempFile("runnable", "kryo");
+    FileUtils.writeByteArrayToFile(tempFile, bytes);
+    try {
+      uploadFile(tempFile, path, buildClientForBucket(path.getHost()), path.getPath()
+          .replaceAll("//", "/").replaceAll("^/", ""));
+    } finally {
+      tempFile.delete();
+    }
+  }
+
+  public static <T> byte[] download(URI path) throws IOException {
+    String bucket = path.getHost();
+    String key = path.getPath();
+    while(key.startsWith("/")) key = key.substring(1);
+    return IOUtils.toByteArray(buildClientForBucket(bucket).getObject(bucket, key).getObjectContent());
   }
 }
