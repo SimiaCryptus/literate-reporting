@@ -50,11 +50,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@ExtendWith(NotebookReportBase.ReportingTestExtension.class)
-public abstract class NotebookReportBase {
+@ExtendWith(NotebookTestBase.ReportingTestExtension.class)
+public abstract class NotebookTestBase {
 
   public static final Map<File, String> reports = new HashMap<>();
-  protected static final Logger logger = LoggerFactory.getLogger(NotebookReportBase.class);
+  protected static final Logger logger = LoggerFactory.getLogger(NotebookTestBase.class);
 
   static {
     SysOutInterceptor.INSTANCE.init();
@@ -194,7 +194,7 @@ public abstract class NotebookReportBase {
       ExtensionContext.Store store = getStore(context);
       store.put(START_TIME, System.currentTimeMillis());
       store.put(START_GC_TIME, gcTime());
-      NotebookReportBase reportingTest = (NotebookReportBase) context.getTestInstance().get();
+      NotebookTestBase reportingTest = (NotebookTestBase) context.getTestInstance().get();
       store.put(REFLEAK_MONITOR, CodeUtil.refLeakMonitor(reportingTest.getLog()));
     }
 
@@ -205,7 +205,7 @@ public abstract class NotebookReportBase {
       ExtensionContext.Store store = getStore(context);
       long duration = System.currentTimeMillis() - store.remove(START_TIME, long.class);
       long gcTime = gcTime() - store.remove(START_GC_TIME, long.class);
-      NotebookReportBase reportingTest = (NotebookReportBase) context.getTestInstance().get();
+      NotebookTestBase reportingTest = (NotebookTestBase) context.getTestInstance().get();
       MarkdownNotebookOutput log = reportingTest.getLog();
       JsonObject perfData = new JsonObject();
       perfData.addProperty("execution_time", String.format("%.3f", duration / 1e3));

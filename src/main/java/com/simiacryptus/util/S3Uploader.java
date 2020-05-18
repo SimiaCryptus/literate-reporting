@@ -27,7 +27,7 @@ import com.amazonaws.services.s3.model.*;
 import com.google.common.collect.Lists;
 import com.simiacryptus.notebook.MarkdownNotebookOutput;
 import com.simiacryptus.ref.wrappers.RefString;
-import com.simiacryptus.util.test.NotebookReportBase;
+import com.simiacryptus.util.test.NotebookTestBase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 
 public class S3Uploader {
 
-  protected static final Logger logger = LoggerFactory.getLogger(NotebookReportBase.class);
+  protected static final Logger logger = LoggerFactory.getLogger(NotebookTestBase.class);
   private static final AmazonS3 GLOBAL_S3 = AmazonS3ClientBuilder.standard()
       .withRegion(Regions.DEFAULT_REGION)
       .build();
@@ -304,7 +304,7 @@ public class S3Uploader {
   public static <T> byte[] download(URI path) throws IOException {
     String bucket = path.getHost();
     String key = path.getPath();
-    while(key.startsWith("/")) key = key.substring(1);
+    while (key.startsWith("/")) key = key.substring(1);
     return IOUtils.toByteArray(buildClientForBucket(bucket).getObject(bucket, key).getObjectContent());
   }
 }

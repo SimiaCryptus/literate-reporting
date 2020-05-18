@@ -25,7 +25,7 @@ import com.simiacryptus.notebook.NotebookOutput.AdmonitionStyle;
 import com.simiacryptus.ref.wrappers.RefIntStream;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
-import com.simiacryptus.util.test.NotebookReportBase;
+import com.simiacryptus.util.test.NotebookTestBase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class MarkdownNotebookOutputTest extends NotebookReportBase {
+public class MarkdownNotebookOutputTest extends NotebookTestBase {
 
   @Override
   public @Nonnull ReportType getReportType() {

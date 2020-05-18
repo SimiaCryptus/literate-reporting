@@ -118,10 +118,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     this(reportFile, browse, displayName, displayName, id, httpPort);
   }
 
-  public MarkdownNotebookOutput(@Nonnull final File reportFile, boolean browse, UUID id, @Nonnull String displayName, final int httpPort) {
-    this(reportFile, browse, displayName, id.toString(), id, httpPort);
-  }
-
   public MarkdownNotebookOutput(@Nonnull final File root, boolean browse, @Nonnull String displayName, @Nonnull String fileName, UUID id, final int httpPort) {
     this.setDisplayName(displayName);
     this.fileName = fileName;
@@ -437,7 +433,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Nonnull
   public CharSequence anchor(CharSequence anchorId) {
-    return RefString.format("<a id=\"%s\"></a>", anchorId);
+    return String.format("<a id=\"%s\"></a>", anchorId);
   }
 
   @Nonnull
@@ -566,7 +562,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     if (null == rawImage)
       return "";
     @Nonnull final File file = svgFile(rawImage);
-    return anchor(anchorId()) + "[" + caption + "](etc/" + file.getName() + ")";
+    return imageMarkdown(caption, file);
   }
 
   @Override
@@ -956,6 +952,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     String headerInnerHtml = "<title>" + getDisplayName() + "</title>" +
         // Mermaid:
         "<script src=\"https://cdn.jsdelivr.net/npm/mermaid@8.4.0/dist/mermaid.min.js\"></script>\n" +
+        "<script>\nmermaid.initialize({ 'securityLevel': 'loose' });\n</script>\n" +
         // Katex:
         "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css\" integrity=\"sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq\" crossorigin=\"anonymous\">\n" +
         "<script defer src=\"https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js\" integrity=\"sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz\" crossorigin=\"anonymous\"></script>\n" +
