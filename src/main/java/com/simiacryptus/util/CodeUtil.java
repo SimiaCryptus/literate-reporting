@@ -236,7 +236,7 @@ public class CodeUtil {
   public static String getInnerText(@Nonnull final StackTraceElement callingFrame) {
 
     String[] split = callingFrame.getClassName().split("\\.");
-    String fileResource = Arrays.stream(split).limit(split.length - 1).reduce((a, b) -> a + "/" + b).orElse("") + "/"
+     String fileResource = Arrays.stream(split).limit(split.length - 1).reduce((a, b) -> a + "/" + b).orElse("") + "/"
         + callingFrame.getFileName();
     URL resource = ClassLoader.getSystemResource(fileResource);
 

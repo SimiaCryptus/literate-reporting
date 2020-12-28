@@ -125,6 +125,10 @@ public interface NotebookOutput extends Closeable {
     return eval(null, fn, getMaxOutSize(), CodeUtil.getCallingFrame(3));
   }
 
+  default <T> T code(final @RefAware UncheckedSupplier<T> fn) {
+    return eval(null, fn, 0, CodeUtil.getCallingFrame(3));
+  }
+
   default <T> T eval(String title, final @RefAware UncheckedSupplier<T> fn) {
     return eval(title, fn, getMaxOutSize(), CodeUtil.getCallingFrame(3));
   }
