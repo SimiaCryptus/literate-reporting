@@ -1,5 +1,6 @@
 
 *.hprof
+*.pem
 .idea/
 java-util.iml literate-reporting.iml
 target/
