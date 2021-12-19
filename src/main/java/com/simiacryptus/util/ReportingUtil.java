@@ -33,7 +33,7 @@ public class ReportingUtil {
   public static boolean AUTO_BROWSE = Boolean.parseBoolean(
       RefSystem.getProperty("AUTOBROWSE", Boolean.toString(true))) && BROWSE_SUPPORTED;
   public static boolean AUTO_BROWSE_LIVE = Boolean
-      .parseBoolean(RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(false)))
+      .parseBoolean(RefSystem.getProperty("AUTOBROWSE_LIVE", Boolean.toString(true)))
       && BROWSE_SUPPORTED;
 
   public static void browse(@Nonnull final URI uri) throws IOException {
