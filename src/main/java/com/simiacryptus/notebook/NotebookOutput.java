@@ -154,7 +154,7 @@ public interface NotebookOutput extends Closeable {
 
   <T> T eval(String title, @RefAware UncheckedSupplier<T> fn, int maxLog, StackTraceElement callingFrame);
 
-  void onWrite(Runnable fn);
+  Closeable onWrite(Runnable fn);
 
   void write() throws IOException;
 

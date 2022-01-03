@@ -24,6 +24,7 @@ import com.simiacryptus.ref.lang.RefAware;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
@@ -78,8 +79,8 @@ class MarkdownSubreport extends MarkdownNotebookOutput {
   }
 
   @Override
-  public void onWrite(Runnable fn) {
-    parent.onWrite(fn);
+  public Closeable onWrite(Runnable fn) {
+    return parent.onWrite(fn);
   }
 
   @Override

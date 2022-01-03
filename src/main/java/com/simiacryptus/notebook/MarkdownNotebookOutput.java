@@ -442,8 +442,11 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void onWrite(Runnable fn) {
+  public Closeable onWrite(Runnable fn) {
     onWriteHandlers.add(fn);
+    return () -> {
+      if (!onWriteHandlers.remove(fn)) throw new IllegalStateException();
+    };
   }
 
   @Override

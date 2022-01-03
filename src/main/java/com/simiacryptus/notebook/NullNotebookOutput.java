@@ -31,6 +31,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.OutputStream;
 import java.net.URI;
@@ -145,7 +146,8 @@ public class NullNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void onWrite(Runnable fn) {
+  public Closeable onWrite(Runnable fn) {
+    return () -> {};
   }
 
   @Override
