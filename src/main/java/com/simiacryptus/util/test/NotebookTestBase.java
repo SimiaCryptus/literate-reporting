@@ -181,7 +181,7 @@ public abstract class NotebookTestBase {
     private static final String START_GC_TIME = "start gc time";
     private static final String REFLEAK_MONITOR = "refleak monitor";
 
-    public static ExtensionContext.Store getStore(ExtensionContext context) {
+    public static ExtensionContext.Store getTestStore(ExtensionContext context) {
       return context.getStore(ExtensionContext.Namespace.create(ReportingTestExtension.class, context.getRequiredTestMethod()));
     }
 
@@ -191,7 +191,7 @@ public abstract class NotebookTestBase {
 
     @Override
     public void beforeTestExecution(ExtensionContext context) {
-      ExtensionContext.Store store = getStore(context);
+      ExtensionContext.Store store = getTestStore(context);
       store.put(START_TIME, System.currentTimeMillis());
       store.put(START_GC_TIME, gcTime());
       NotebookTestBase reportingTest = (NotebookTestBase) context.getTestInstance().get();
@@ -202,7 +202,7 @@ public abstract class NotebookTestBase {
     public void afterTestExecution(ExtensionContext context) throws Exception {
       System.gc();
       logger.info("Total memory after GC: " + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
-      ExtensionContext.Store store = getStore(context);
+      ExtensionContext.Store store = getTestStore(context);
       long duration = System.currentTimeMillis() - store.remove(START_TIME, long.class);
       long gcTime = gcTime() - store.remove(START_GC_TIME, long.class);
       NotebookTestBase reportingTest = (NotebookTestBase) context.getTestInstance().get();

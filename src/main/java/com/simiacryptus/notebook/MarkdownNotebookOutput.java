@@ -127,7 +127,9 @@ public class MarkdownNotebookOutput implements NotebookOutput {
     setArchiveHome(null);
     this.id = id;
     try {
-      primaryOut = new PrintStream(new FileOutputStream(getReportFile("md")));
+      File md = getReportFile("md");
+      md.getParentFile().mkdirs();
+      primaryOut = new PrintStream(new FileOutputStream(md));
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
     }
