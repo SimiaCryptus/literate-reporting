@@ -445,6 +445,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
 
   @Override
   public Closeable onWrite(Runnable fn) {
+    assert null != fn;
     onWriteHandlers.add(fn);
     return () -> {
       if (!onWriteHandlers.remove(fn)) throw new IllegalStateException();
@@ -473,7 +474,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
       FileUtils.write(getReportFile("metadata.json"), gson.toJson(metadata), "UTF-8");
     }
-    onWriteHandlers.stream().forEach(runnable -> runnable.run());
+    onWriteHandlers.stream().filter(x->x!=null).forEach(runnable -> runnable.run());
     File htmlFile = writeHtml(options);
     try {
       if (isEnablePdf())
@@ -976,7 +977,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         // Admonition:
         "<script src=\"admonition.js\"></script>" +
         "";
-    bodyInnerHtml = "<html><head>" + headerInnerHtml + "</head><body>" + bodyPrefix + bodyInnerHtml + bodySuffix + "</body></html>";
+    bodyInnerHtml = "<!DOCTYPE html>\n<html><head>" + headerInnerHtml + "</head><body>" + bodyPrefix + bodyInnerHtml + bodySuffix + "</body></html>";
     try (FileOutputStream out = new FileOutputStream(htmlFile)) {
       IOUtils.write(bodyInnerHtml, out, Charset.forName("UTF-8"));
     }

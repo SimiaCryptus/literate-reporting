@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.simiacryptus.ref.lang.RefUtil;
 import com.simiacryptus.ref.wrappers.RefString;
 import com.simiacryptus.util.Util;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +140,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
         }
       } else if (file.exists() && file.isFile()) {
         try {
-          return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, null, new FileInputStream(file), file.length());
+          return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, getMimeType(file.getName()), new FileInputStream(file), file.length());
         } catch (@Nonnull final FileNotFoundException e) {
           throw Util.throwException(e);
         }
@@ -178,6 +179,19 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
       }
     } else {
       return NanoHTTPD.newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, "test/plain", "Invalid Method");
+    }
+  }
+
+  @Nullable
+  public String getMimeType(String fileName) {
+    String[] split = fileName.split("\\.");
+    switch (split[split.length - 1].toLowerCase()) {
+      case "svg":
+        return "image/svg+xml";
+      case "html":
+        return "text/html";
+      default:
+        return null;
     }
   }
 
