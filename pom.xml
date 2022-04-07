@@ -139,7 +139,6 @@
         <dependency>
             <groupId>com.simiacryptus</groupId>
             <artifactId>refcount-core</artifactId>
-
         </dependency>
     </dependencies>
     <build>
