@@ -3,4 +3,5 @@
 *.pem
 .idea/
 java-util.iml literate-reporting.iml
+literate-reporting.iml
 target/
