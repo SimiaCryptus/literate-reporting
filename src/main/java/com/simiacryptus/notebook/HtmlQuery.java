@@ -40,7 +40,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public abstract class HtmlQuery<T> {
-  protected static final Logger logger = LoggerFactory.getLogger(JsonQuery.class);
+  protected static final Logger logger = LoggerFactory.getLogger(HtmlQuery.class);
   protected final String rawId = UUID.randomUUID().toString();
   protected final String id = "input_" + rawId + ".html";
   @Nonnull

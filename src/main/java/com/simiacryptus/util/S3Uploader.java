@@ -139,6 +139,7 @@ public class S3Uploader {
       return map;
     } catch (Throwable e) {
       if (retries > 0) {
+        logger.debug("Retry");
         return upload(s3, path, file, retries - 1);
       }
       throw new RuntimeException("Error uploading " + file + " to " + path, e);
@@ -258,18 +259,15 @@ public class S3Uploader {
 
   public static String uploadFile(@Nonnull File file, @NotNull URI path, @Nonnull AmazonS3 s3, String reportPath) {
     String bucket = path.getHost();
-    logger.info(RefString.format("Uploading file %s to s3 %s/%s", file.getAbsolutePath(), bucket, reportPath));
     boolean upload;
+    long fileSize = file.length();
     try {
-      ObjectMetadata existingMetadata;
-      if (s3.doesObjectExist(bucket, reportPath))
-        existingMetadata = s3.getObjectMetadata(bucket, reportPath);
-      else
-        existingMetadata = null;
-      if (null != existingMetadata) {
-        if (existingMetadata.getContentLength() != file.length()) {
+      Long contentLength = getContentLength(s3, bucket, reportPath);
+      if (null != contentLength) {
+        if (contentLength != fileSize) {
           logger.info(RefString.format("Removing outdated file %s/%s", bucket, reportPath));
           s3.deleteObject(bucket, reportPath);
+          setContentLength(s3, bucket, reportPath, null);
           upload = true;
         } else {
           logger.info(RefString.format("Existing file %s/%s", bucket, reportPath));
@@ -284,10 +282,41 @@ public class S3Uploader {
       upload = true;
     }
     if (upload) {
+      logger.info(RefString.format("Uploading file %s to s3 %s/%s (%s bytes)", file.getAbsolutePath(), bucket, reportPath, fileSize));
       s3.putObject(
-          new PutObjectRequest(bucket, reportPath, file).withCannedAcl(CannedAccessControlList.PublicRead));
+          new PutObjectRequest(bucket, reportPath, file)
+              .withCannedAcl(CannedAccessControlList.PublicRead)
+      );
     }
     return bucket;
+  }
+
+  private final static HashMap<String, Long> cache = new HashMap<>();
+
+
+  private static void setContentLength(AmazonS3 s3, String bucket, String reportPath, Long length) {
+    if(null == length) cache.remove(bucket + reportPath);
+    else cache.put(bucket + reportPath, length);
+
+  }
+
+  private static Long getContentLength(AmazonS3 s3, String bucket, String reportPath) {
+    Long cached = cache.get(bucket + reportPath);
+    if (null == cached) {
+      return cached;
+    } else {
+      ObjectMetadata existingMetadata;
+      if (s3.doesObjectExist(bucket, reportPath))
+        existingMetadata = s3.getObjectMetadata(bucket, reportPath);
+      else
+        existingMetadata = null;
+      if(null==existingMetadata) {
+        return null;
+      } else {
+        setContentLength(s3, bucket, reportPath, existingMetadata.getContentLength());
+        return existingMetadata.getContentLength();
+      }
+    }
   }
 
   public static <T> void upload(byte[] bytes, URI path) throws IOException {

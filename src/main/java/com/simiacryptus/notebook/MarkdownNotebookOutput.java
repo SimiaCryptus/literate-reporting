@@ -145,7 +145,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           throw Util.throwException(e);
         }
       });
-    if (null != httpd)
+    if (null != httpd) {
       httpd.addGET("pdf", "application/pdf", out -> {
         try {
           write();
@@ -156,7 +156,6 @@ public class MarkdownNotebookOutput implements NotebookOutput {
           throw Util.throwException(e);
         }
       });
-    if (null != httpd)
       httpd.addGET("shutdown", "text/plain", out -> {
         try (PrintStream printStream = new PrintStream(out)) {
           printStream.print("Closing...");
@@ -166,6 +165,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         logger.warn("Exiting notebook", new RuntimeException("Stack Trace"));
         RefSystem.exit(0);
       });
+    }
     logger.info(RefString.format("Serving %s from %s at http://localhost:%d", getDisplayName(), this.root.getAbsoluteFile(), httpPort));
     if (null != httpd) {
       try {
@@ -453,7 +453,8 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   }
 
   @Override
-  public void write() throws IOException {
+  public synchronized void write() throws IOException {
+    //logger.info("Writing Log", new RuntimeException());
     DataSet options = new MutableDataSet()
         .set(TablesExtension.COLUMN_SPANS, false)
         .set(TablesExtension.APPEND_MISSING_COLUMNS, true)
@@ -889,7 +890,7 @@ public class MarkdownNotebookOutput implements NotebookOutput {
   protected <T> T subreport(@Nonnull String displayName, @Nonnull String fileName, @Nonnull @RefAware Function<NotebookOutput, T> fn, MarkdownNotebookOutput parent) {
     try {
       File root = getRoot();
-      MarkdownNotebookOutput subreport = new MarkdownSubreport(root, parent, displayName, fileName);
+      MarkdownNotebookOutput subreport = new MarkdownSubreport(root, parent, displayName, fileName, getArchiveHome());
       subreport.setArchiveHome(getArchiveHome());
       subreport.setMaxImageSize(getMaxImageSize());
       try {
@@ -978,10 +979,14 @@ public class MarkdownNotebookOutput implements NotebookOutput {
         "<script src=\"admonition.js\"></script>" +
         "";
     bodyInnerHtml = "<!DOCTYPE html>\n<html><head>" + headerInnerHtml + "</head><body>" + bodyPrefix + bodyInnerHtml + bodySuffix + "</body></html>";
-    try (FileOutputStream out = new FileOutputStream(htmlFile)) {
-      IOUtils.write(bodyInnerHtml, out, Charset.forName("UTF-8"));
+    long prevSize = htmlFile.exists()?htmlFile.length():0l;
+    int newSize = bodyInnerHtml.getBytes().length;
+    if(newSize != prevSize) {
+      try (FileOutputStream out = new FileOutputStream(htmlFile)) {
+        IOUtils.write(bodyInnerHtml, out, Charset.forName("UTF-8"));
+      }
+      logger.info(String.format("Wrote %s (%s bytes; was %s)", htmlFile, newSize, prevSize)); //     log.info("Wrote " + htmlFile); //
     }
-    logger.info("Wrote " + htmlFile); //     log.info("Wrote " + htmlFile); //
     return htmlFile;
   }
 

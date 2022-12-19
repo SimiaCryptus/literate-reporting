@@ -331,6 +331,10 @@ public abstract class NanoHTTPD {
   }
 
   public void start(final int timeout, boolean daemon) throws IOException {
+    if(this.myServerSocket != null) {
+      //return;
+      this.stop();
+    }
     this.myServerSocket = this.getServerSocketFactory().create();
     this.myServerSocket.setReuseAddress(true);
 

@@ -79,6 +79,7 @@ public class FileNanoHTTPD extends NanoHTTPD implements FileHTTPD {
   @Nonnull
   @Override
   public Closeable addGET(final CharSequence path, final Function<IHTTPSession, Response> value) {
+    System.out.println("Added handler: " + path);
     getHandlers.put(path, value);
     return () -> {
       if (!getHandlers.remove(path, value)) throw new IllegalStateException("No Handler: " + path);
